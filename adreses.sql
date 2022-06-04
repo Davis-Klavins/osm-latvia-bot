@@ -936,21 +936,6 @@ WHERE to_timestamp(dat_mod, 'dd.mm.yyyy HH24:MI:SS')::TIMESTAMP > (
     WHERE tips_cd = 113
     );
 
-/*
----Correct date errors.
-UPDATE vzd.adreses_his
-SET dat_sak = '2000-04-05'
-WHERE dat_sak = '0200-04-05';
-
-UPDATE vzd.adreses_his
-SET dat_sak = '2000-10-04'
-WHERE dat_sak = '0200-10-04';
-
-UPDATE vzd.adreses_his
-SET dat_sak = '2002-09-25'
-WHERE dat_sak = '0202-09-25';
-*/
-
 END;
 $BODY$;
 
