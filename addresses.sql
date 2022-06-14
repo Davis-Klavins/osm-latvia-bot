@@ -475,6 +475,38 @@ WHERE tags = ''::hstore
     );
 
 --Add addresses for address points (nodes containing only addr:* tags) from the State Address Register. Only address codes not already assigned to ways (buildings).
+---Address code matches (address points added previously).
+CREATE TEMPORARY TABLE nodes_addr_add_5 AS
+WITH t
+AS (
+  SELECT id
+    ,UNNEST((%# tags) [1:999] [1]) tag
+    ,UNNEST((%# tags) [1:999] [2:2]) val
+  FROM nodes
+  )
+SELECT a.id
+  ,(hstore('addr:country', 'LV') || hstore('addr:district', v.novads) || hstore('addr:city', v.pilseta) || hstore('addr:subdistrict', v.pagasts) || hstore('addr:place', v.ciems) || hstore('addr:housename', v.nosaukums) || hstore('addr:street', v.iela) || hstore('addr:housenumber', v.nr) || hstore('ref:latvia:addr', v.adr_cd::TEXT)) - 'addr:district=>NULL, addr:city=>NULL, addr:subdistrict=>NULL, addr:place=>NULL, addr:housename=>NULL, addr:street=>NULL, addr:housenumber=>NULL'::hstore tags
+  ,v.geom
+FROM nodes a
+INNER JOIN nodes_old o ON a.id = o.id
+INNER JOIN adreses_ekas_sadalitas v ON o.tags -> 'ref:latvia:addr' = v.adr_cd::TEXT
+LEFT OUTER JOIN t ON a.id = t.id
+  AND t.tag NOT LIKE 'addr:%'
+WHERE t.id IS NULL
+  AND v.adr_cd NOT IN (
+    SELECT CAST(tags -> 'ref:latvia:addr' AS INT) adr_cd
+    FROM ways
+    WHERE tags ? 'ref:latvia:addr'
+    );
+
+ALTER TABLE nodes_addr_add_5 ADD PRIMARY KEY (id);
+
+UPDATE nodes
+SET tags = s.tags
+  ,geom = s.geom
+FROM nodes_addr_add_5 s
+WHERE nodes.id = s.id;
+
 ---House names matches, distance up to 0.01 decimal degree (~1.1 km).
 CREATE TEMPORARY TABLE nodes_addr_add AS
 WITH t
@@ -499,8 +531,12 @@ WHERE t.id IS NULL
     SELECT CAST(tags -> 'ref:latvia:addr' AS INT) adr_cd
     FROM ways
     WHERE tags ? 'ref:latvia:addr'
+    )
+  AND v.adr_cd NOT IN (
+    SELECT CAST(tags -> 'ref:latvia:addr' AS INT) adr_cd
+    FROM nodes
+    WHERE tags ? 'ref:latvia:addr'
     );
-
 ALTER TABLE nodes_addr_add ADD PRIMARY KEY (id);
 
 UPDATE nodes
@@ -533,6 +569,11 @@ WHERE t.id IS NULL
   AND v.adr_cd NOT IN (
     SELECT CAST(tags -> 'ref:latvia:addr' AS INT) adr_cd
     FROM ways
+    WHERE tags ? 'ref:latvia:addr'
+    )
+  AND v.adr_cd NOT IN (
+    SELECT CAST(tags -> 'ref:latvia:addr' AS INT) adr_cd
+    FROM nodes
     WHERE tags ? 'ref:latvia:addr'
     );
 
