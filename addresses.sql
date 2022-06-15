@@ -12,6 +12,13 @@ INNER JOIN vzd.state b ON ST_Within(a.geom, b.geom);
 
 CREATE INDEX adreses_ekas_sadalitas_geom_idx ON adreses_ekas_sadalitas USING GIST (geom);
 
+--All tags and values of nodes as a table with a row for each element in the array.
+CREATE TEMPORARY TABLE nodes_unnest AS
+SELECT id
+  ,UNNEST((%# tags) [1:999] [1]) tag
+  ,UNNEST((%# tags) [1:999] [2:2]) val
+FROM nodes;
+
 /*
 --Add name tags and values to streets where names are mistagged as addresses.
 WITH c
@@ -477,20 +484,13 @@ WHERE tags = ''::hstore
 --Add addresses for address points (nodes containing only addr:* tags) from the State Address Register. Only address codes not already assigned to ways (buildings).
 ---Address code matches (address points added previously).
 CREATE TEMPORARY TABLE nodes_addr_add_5 AS
-WITH t
-AS (
-  SELECT id
-    ,UNNEST((%# tags) [1:999] [1]) tag
-    ,UNNEST((%# tags) [1:999] [2:2]) val
-  FROM nodes
-  )
 SELECT a.id
   ,(hstore('addr:country', 'LV') || hstore('addr:district', v.novads) || hstore('addr:city', v.pilseta) || hstore('addr:subdistrict', v.pagasts) || hstore('addr:place', v.ciems) || hstore('addr:housename', v.nosaukums) || hstore('addr:street', v.iela) || hstore('addr:housenumber', v.nr) || hstore('ref:latvia:addr', v.adr_cd::TEXT)) - 'addr:district=>NULL, addr:city=>NULL, addr:subdistrict=>NULL, addr:place=>NULL, addr:housename=>NULL, addr:street=>NULL, addr:housenumber=>NULL'::hstore tags
   ,v.geom
 FROM nodes a
 INNER JOIN nodes_old o ON a.id = o.id
 INNER JOIN adreses_ekas_sadalitas v ON o.tags -> 'ref:latvia:addr' = v.adr_cd::TEXT
-LEFT OUTER JOIN t ON a.id = t.id
+LEFT OUTER JOIN nodes_unnest t ON a.id = t.id
   AND t.tag NOT LIKE 'addr:%'
 WHERE t.id IS NULL
   AND v.adr_cd NOT IN (
@@ -509,20 +509,13 @@ WHERE nodes.id = s.id;
 
 ---House names matches, distance up to 0.01 decimal degree (~1.1 km).
 CREATE TEMPORARY TABLE nodes_addr_add AS
-WITH t
-AS (
-  SELECT id
-    ,UNNEST((%# tags) [1:999] [1]) tag
-    ,UNNEST((%# tags) [1:999] [2:2]) val
-  FROM nodes
-  )
 SELECT a.id
   ,(a.tags || hstore('addr:country', 'LV') || hstore('addr:district', v.novads) || hstore('addr:city', v.pilseta) || hstore('addr:subdistrict', v.pagasts) || hstore('addr:place', v.ciems) || hstore('addr:housename', v.nosaukums) || hstore('ref:latvia:addr', v.adr_cd::TEXT)) - 'addr:district=>NULL, addr:city=>NULL, addr:subdistrict=>NULL, addr:place=>NULL, addr:housename=>NULL'::hstore tags
   ,v.geom
 FROM nodes a
 INNER JOIN nodes_old o ON a.id = o.id
   AND o.tags ? 'addr:housename'
-LEFT OUTER JOIN t ON a.id = t.id
+LEFT OUTER JOIN nodes_unnest t ON a.id = t.id
   AND t.tag NOT LIKE 'addr:%'
 CROSS JOIN LATERAL(SELECT v.*, v.geom <-> a.geom AS dist FROM adreses_ekas_sadalitas v WHERE REPLACE(o.tags -> 'addr:housename'::TEXT, ' ', '') LIKE REPLACE(v.nosaukums, ' ', '') ORDER BY dist LIMIT 1) v
 WHERE t.id IS NULL
@@ -537,6 +530,7 @@ WHERE t.id IS NULL
     FROM nodes
     WHERE tags ? 'ref:latvia:addr'
     );
+
 ALTER TABLE nodes_addr_add ADD PRIMARY KEY (id);
 
 UPDATE nodes
@@ -547,20 +541,13 @@ WHERE nodes.id = s.id;
 
 ---House number and street matches, distance up to 0.01 decimal degree (~1.1 km).
 CREATE TEMPORARY TABLE nodes_addr_add_2 AS
-WITH t
-AS (
-  SELECT id
-    ,UNNEST((%# tags) [1:999] [1]) tag
-    ,UNNEST((%# tags) [1:999] [2:2]) val
-  FROM nodes
-  )
 SELECT a.id
   ,(a.tags || hstore('addr:country', 'LV') || hstore('addr:district', v.novads) || hstore('addr:city', v.pilseta) || hstore('addr:subdistrict', v.pagasts) || hstore('addr:place', v.ciems) || hstore('addr:street', v.iela) || hstore('addr:housenumber', v.nr) || hstore('ref:latvia:addr', v.adr_cd::TEXT)) - 'addr:district=>NULL, addr:city=>NULL, addr:subdistrict=>NULL, addr:place=>NULL, addr:street=>NULL, addr:housenumber=>NULL'::hstore tags
   ,v.geom
 FROM nodes a
 INNER JOIN nodes_old o ON a.id = o.id
   AND o.tags ?& ARRAY['addr:housenumber', 'addr:street']
-LEFT OUTER JOIN t ON a.id = t.id
+LEFT OUTER JOIN nodes_unnest t ON a.id = t.id
   AND t.tag NOT LIKE 'addr:%'
 CROSS JOIN LATERAL(SELECT v.*, v.geom <-> a.geom AS dist FROM adreses_ekas_sadalitas v WHERE REPLACE(o.tags -> 'addr:housenumber'::TEXT, ' ', '') LIKE REPLACE(v.nr, ' ', '')
     AND REPLACE(o.tags -> 'addr:street'::TEXT, ' ', '') LIKE REPLACE(v.iela, ' ', '') ORDER BY dist LIMIT 1) v
@@ -822,10 +809,8 @@ WHERE relations.id = s.id;
 CREATE TEMPORARY TABLE tags_4_addresses_nodes AS
 WITH t
 AS (
-  SELECT id
-    ,UNNEST((%# tags) [1:999] [1]) tag
-    ,UNNEST((%# tags) [1:999] [2:2]) val
-  FROM nodes
+  SELECT *
+  FROM nodes_unnest
   WHERE id NOT IN (
       SELECT id
       FROM nodes
@@ -895,10 +880,8 @@ WHERE nodes.id = s.id;
 CREATE TEMPORARY TABLE tags_4_addresses_nodes_2 AS
 WITH t
 AS (
-  SELECT id
-    ,UNNEST((%# tags) [1:999] [1]) tag
-    ,UNNEST((%# tags) [1:999] [2:2]) val
-  FROM nodes
+  SELECT *
+  FROM nodes_unnest
   WHERE id NOT IN (
       SELECT id
       FROM nodes
