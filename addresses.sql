@@ -492,6 +492,7 @@ INNER JOIN nodes_old o ON a.id = o.id
 INNER JOIN adreses_ekas_sadalitas v ON o.tags -> 'ref:latvia:addr' = v.adr_cd::TEXT
 LEFT OUTER JOIN nodes_unnest t ON a.id = t.id
   AND t.tag NOT LIKE 'addr:%'
+  AND t.tag NOT LIKE 'ref:latvia:addr'
 WHERE t.id IS NULL
   AND v.adr_cd NOT IN (
     SELECT CAST(tags -> 'ref:latvia:addr' AS INT) adr_cd
@@ -517,6 +518,7 @@ INNER JOIN nodes_old o ON a.id = o.id
   AND o.tags ? 'addr:housename'
 LEFT OUTER JOIN nodes_unnest t ON a.id = t.id
   AND t.tag NOT LIKE 'addr:%'
+  AND t.tag NOT LIKE 'ref:latvia:addr'
 CROSS JOIN LATERAL(SELECT v.*, v.geom <-> a.geom AS dist FROM adreses_ekas_sadalitas v WHERE REPLACE(o.tags -> 'addr:housename'::TEXT, ' ', '') LIKE REPLACE(v.nosaukums, ' ', '') ORDER BY dist LIMIT 1) v
 WHERE t.id IS NULL
   AND v.dist < 0.01
@@ -549,6 +551,7 @@ INNER JOIN nodes_old o ON a.id = o.id
   AND o.tags ?& ARRAY['addr:housenumber', 'addr:street']
 LEFT OUTER JOIN nodes_unnest t ON a.id = t.id
   AND t.tag NOT LIKE 'addr:%'
+  AND t.tag NOT LIKE 'ref:latvia:addr'
 CROSS JOIN LATERAL(SELECT v.*, v.geom <-> a.geom AS dist FROM adreses_ekas_sadalitas v WHERE REPLACE(o.tags -> 'addr:housenumber'::TEXT, ' ', '') LIKE REPLACE(v.nr, ' ', '')
     AND REPLACE(o.tags -> 'addr:street'::TEXT, ' ', '') LIKE REPLACE(v.iela, ' ', '') ORDER BY dist LIMIT 1) v
 WHERE t.id IS NULL
