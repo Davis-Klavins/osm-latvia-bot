@@ -603,7 +603,7 @@ SELECT - ROW_NUMBER() OVER()
   ,15008076
   ,NOW()::TIMESTAMP
   ,-1
-  ,(hstore('addr:country', 'LV') || hstore('addr:district', novads) || hstore('addr:city', pilseta) || hstore('addr:subdistrict', pagasts) || hstore('addr:place', ciems) || hstore('addr:street', iela) || hstore('addr:housename', nosaukums) || hstore('addr:housenumber', nr) || hstore('addr:postcode', v.atrib) || hstore('ref:LV:addr', adr_cd::TEXT)) - 'addr:district=>NULL, addr:city=>NULL, addr:subdistrict=>NULL, addr:place=>NULL, addr:street=>NULL, addr:housename=>NULL, addr:housenumber=>NULL'::hstore
+  ,(hstore('addr:country', 'LV') || hstore('addr:district', novads) || hstore('addr:city', pilseta) || hstore('addr:subdistrict', pagasts) || hstore('addr:place', ciems) || hstore('addr:street', iela) || hstore('addr:housename', nosaukums) || hstore('addr:housenumber', nr) || hstore('addr:postcode', atrib) || hstore('ref:LV:addr', adr_cd::TEXT)) - 'addr:district=>NULL, addr:city=>NULL, addr:subdistrict=>NULL, addr:place=>NULL, addr:street=>NULL, addr:housename=>NULL, addr:housenumber=>NULL'::hstore
   ,geom
 FROM adreses_ekas_sadalitas
 WHERE adr_cd NOT IN (
