@@ -6,8 +6,9 @@ Prerequisites:
 * wget,
 * [oauth_cookie_client.py](https://github.com/geofabrik/sendfile_osm_oauth_protector/blob/master/oauth_cookie_client.py),
 * [jq](https://stedolan.github.io/jq/),
+* [XMLStarlet](http://xmlstar.sourceforge.net/),
 * [osmosis](https://github.com/openstreetmap/osmosis),
-* [upload.py](https://wiki.openstreetmap.org/wiki/Upload.py),
+* [upload.py](https://wiki.openstreetmap.org/wiki/Upload.py) (files used have been modified and placed in [upload.py directory](https://github.com/Davis-Klavins/osm-latvia-bot/tree/main/upload.py)),
 * If used on Windows, Git to run files with .sh extension.
 
 [tags_4_addresses.csv](https://github.com/Davis-Klavins/osm-latvia-bot/blob/main/tags_4_addresses.csv) - tags that allow object to have address tags.
@@ -35,7 +36,7 @@ cd vzd
 mkdir aw_csv
 ```
 
-Place [oauth_cookie_client.py](https://github.com/geofabrik/sendfile_osm_oauth_protector/blob/master/oauth_cookie_client.py), [settings.json](https://github.com/Davis-Klavins/osm-latvia-bot/blob/main/settings.json) (set `password`) and [upload.py](https://wiki.openstreetmap.org/wiki/Upload.py) in the directory where data will be stored locally.
+Place [oauth_cookie_client.py](https://github.com/geofabrik/sendfile_osm_oauth_protector/blob/master/oauth_cookie_client.py), [settings.json](https://github.com/Davis-Klavins/osm-latvia-bot/blob/main/settings.json) (set `password`) and files from the [upload.py directory](https://github.com/Davis-Klavins/osm-latvia-bot/tree/main/upload.py) in the directory where data will be stored locally.
 
 Set up PostgreSQL database:
 
@@ -118,4 +119,4 @@ To be run daily.
 
 1. [osm_1.sh](https://github.com/Davis-Klavins/osm-latvia-bot/blob/main/osm_1.sh) - download newest OSM data of Latvia from Geofabrik and [tags_4_addresses.csv](https://github.com/Davis-Klavins/osm-latvia-bot/blob/main/tags_4_addresses.csv) (set `DIRECTORY`, `PGPASSWORD`, `IP_ADDRESS` and `PORT` variables). TODO: add [diffs](https://wiki.openstreetmap.org/wiki/Planet.osm/diffs) after Geofabrik's file has been published?
 2. [osm_2.bat](https://github.com/Davis-Klavins/osm-latvia-bot/blob/main/osm_2.bat) - update OSM data in the local PostgreSQL database and derive osmChange file (set `DIRECTORY`, `PGPASSWORD`, `IP_ADDRESS` and `PORT` variables). Probably due to large amount of changes, initial deriving of changes for the whole country lead to an error. Thus, deriving of changes are commented. Must be rewritten and merged with [osm_1.sh](https://github.com/Davis-Klavins/osm-latvia-bot/blob/main/osm_1.sh) and [osm_3.sh](https://github.com/Davis-Klavins/osm-latvia-bot/blob/main/osm_3.sh) to run under Linux.
-4. [osm_3.sh](https://github.com/Davis-Klavins/osm-latvia-bot/blob/main/osm_3.sh) - edit osmChange file and upload changes (set `OSMPASSWORD` variable and edit comment). Uncomment last line if actual upload of changes is intended. TODO: must be realized as [multi-part upload](https://wiki.openstreetmap.org/wiki/Upload.py#Multi-part_uploads).
+4. [osm_3.sh](https://github.com/Davis-Klavins/osm-latvia-bot/blob/main/osm_3.sh) - split osmChange file and upload changes (set `DIRECTORY` variable, [OSM user password](https://github.com/Davis-Klavins/osm-latvia-bot/blob/main/osm_3.sh#L7) and [path to Python 2](https://github.com/Davis-Klavins/osm-latvia-bot/blob/main/osm_3.sh#L33)).
