@@ -1,8 +1,12 @@
-CREATE OR REPLACE PROCEDURE addresses(
+-- PROCEDURE: public.addresses()
+
+-- DROP PROCEDURE IF EXISTS public.addresses();
+
+CREATE OR REPLACE PROCEDURE public.addresses(
 	)
 LANGUAGE 'plpgsql'
-
-AS $BODY$BEGIN
+AS $BODY$
+BEGIN
 
 --Needed in case smaller territory than state is selected in materialized view vzd.state.
 CREATE TEMPORARY TABLE adreses_ekas_sadalitas AS
@@ -489,10 +493,10 @@ SELECT a.id
   ,v.geom
 FROM nodes a
 INNER JOIN nodes_old o ON a.id = o.id
-INNER JOIN adreses_ekas_sadalitas v ON o.tags -> 'ref:LV:addr' = v.adr_cd::TEXT
+INNER JOIN adreses_ekas_sadalitas v ON o.tags -> 'ref:latvia:addr' = v.adr_cd::TEXT
 LEFT OUTER JOIN nodes_unnest t ON a.id = t.id
   AND t.tag NOT LIKE 'addr:%'
-  AND t.tag NOT LIKE 'ref:LV:addr'
+  AND t.tag NOT LIKE 'ref:latvia:addr'
 WHERE t.id IS NULL
   AND v.adr_cd NOT IN (
     SELECT CAST(tags -> 'ref:LV:addr' AS INT) adr_cd
@@ -919,6 +923,7 @@ AS (
     ,c.pagasts
     ,c.pilseta
     ,c.novads
+    ,c.atrib
     ,a.geom
   FROM vzd.nivkis_zemes_vienibas a
   INNER JOIN vzd.nivkis_adreses b ON a.code = b."ObjectCadastreNr"
@@ -940,4 +945,9 @@ WHERE nodes.id = s.id;
 END;
 $BODY$;
 
-REVOKE ALL ON PROCEDURE addresses() FROM PUBLIC;
+ALTER PROCEDURE public.addresses()
+    OWNER TO osm;
+
+GRANT EXECUTE ON PROCEDURE public.addresses() TO osm;
+
+REVOKE ALL ON PROCEDURE public.addresses() FROM PUBLIC;
