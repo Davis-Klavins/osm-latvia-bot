@@ -1,13 +1,43 @@
 #!/bin/bash
 # Directory where data are stored locally.
 export DIRECTORY=
-# Password of OSM user latvia-bot.
-export OSMPASSWORD=
+# OsmChange file name without extension.
+input=latvia-diff
+# OSM user name and password.
+ident="-u latvia-bot -p "
 
 cd $DIRECTORY
 
-# Delete bounds element (3rd line) from the osmChange file.
-sed -i '4d' latvia-diff.osc
+# Create comment file.
+echo "Updated addresses in Latvia." > latvia-diff.comment
 
-# Upload changes (https://wiki.openstreetmap.org/wiki/Upload.py).
-# python upload.py -u latvia-bot -p $OSMPASSWORD -c yes -m "Comment." -y "Valsts adrešu reģistra informācijas sistēmas atvērtie dati" $DIRECTORY/latvia-diff.osc
+# Split OsmChange file in pieces no larger than 5000 elements.
+python split.py "$input.osc" 5000 || exit -1
+
+# Delete bounds element from the 1st OsmChange file.
+xml ed -d '//osmChange/modify/bounds' latvia-diff-part1.osc > latvia-diff-part1-edited.osc
+mv latvia-diff-part1-edited.osc latvia-diff-part1.osc
+
+# Number of parts as count of *-part*.osc files (https://askubuntu.com/a/454568).
+parts=`find -maxdepth 1 -type f -name "*-part*.osc" -printf x | wc -c`
+
+# Open a new changeset and exit without uploading anything.
+chgset=`python upload.py $ident -c yes -y "Valsts adrešu reģistra informācijas sistēmas atvērtie dati" -n "$input.osc"`
+[ -z "$chgset" ] && exit -1
+
+# Upload changes.
+for num in `seq 1 $parts`; do
+        python upload.py $ident -c yes "$input-part$num.osc" -s $chgset || exit -1
+
+        for rnum in `seq $num $parts`; do
+                path/to/python2/python diffpatch.py "$input-part$num.diff.xml" "$input-part$rnum.osc" || exit -1
+                mv "$input-part$rnum.osc.diffed" "$input-part$rnum.osc" || exit -1
+        done
+done
+
+# Close changeset.
+#python close.py $chgset
+
+# Delete OsmChange and comment files.
+#rm *.osc
+#rm *.comment
