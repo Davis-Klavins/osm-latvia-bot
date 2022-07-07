@@ -28,4 +28,4 @@ REM Execute PostgreSQL data processing procedure of addresses.
 psql -h %IP_ADDRESS% -p %PORT% -U osm -d osm -w -c "CALL addresses()"
 
 REM Get OsmChange file.
-REM CALL osmosis --read-pgsql host="%IP_ADDRESS%:%PORT%" database="osm" user="osm" password="%PGPASSWORD%" --dataset-dump --sort type="TypeThenId" --read-pbf %DIRECTORY%\latvia-latest-internal.osm.pbf --sort type="TypeThenId" --derive-change --write-xml-change file="%DIRECTORY%\latvia-diff.osc"
+CALL osmosis --read-pgsql host="%IP_ADDRESS%:%PORT%" database="osm" user="osm" password="%PGPASSWORD%" --dataset-dump --sort type="TypeThenId" --read-pbf %DIRECTORY%\latvia-latest-internal.osm.pbf --sort type="TypeThenId" --derive-change --write-xml-change file="%DIRECTORY%\latvia-diff.osc"
