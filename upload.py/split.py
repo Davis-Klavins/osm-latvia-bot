@@ -1,7 +1,7 @@
 #! /usr/bin/python3
 # vim: fileencoding=utf-8 encoding=utf-8 et sw=4
 
-# Modified by Dāvis Kļaviņš (https://github.com/Davis-Klavins) on July 7, 2022. To facilitate large uploads of various size, changed input argument number of pieces (num_parts) to maximum part size (max_part_size), default 5000.
+# Modified by Dāvis Kļaviņš (https://github.com/Davis-Klavins) on July 7, 2022. To facilitate large uploads of various size, changed input argument number of pieces (num_parts) to maximum part size (max_part_size), default 10000.
 
 # Copyright (C) 2009 Jacek Konieczny <jajcus@jajcus.net>
 # Copyright (C) 2009 Andrzej Zaborowski <balrogg@gmail.com>
