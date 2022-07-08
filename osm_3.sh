@@ -1,4 +1,5 @@
 #!/bin/bash
+# Based on https://wiki.openstreetmap.org/wiki/Upload.py#Multi-part_uploads.
 # Directory where data are stored locally.
 export DIRECTORY=
 # OsmChange file name without extension.
