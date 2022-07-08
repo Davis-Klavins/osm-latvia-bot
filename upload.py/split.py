@@ -76,7 +76,7 @@ try:
     if len(sys.argv) > 2:
         max_part_size = int(sys.argv[2])
     else:
-        max_part_size = 5000
+        max_part_size = 10000
     num_parts = int(math.ceil(element_count / max_part_size))
     part_size = int((element_count + num_parts - 1) / num_parts)
 
