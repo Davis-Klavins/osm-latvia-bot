@@ -123,4 +123,4 @@ To be run daily.
 
 ## Optional
 
-To change tags of an open changeset, e.g., comment, run [set-changeset-tag.py](https://github.com/Davis-Klavins/osm-latvia-bot/blob/main/upload.py/optional/set-changeset-tag.py) (set path to Python 2, `changeset-id` and edit comment): `path/to/python2/python set-changeset-tag.py changeset-id comment "Comment."`.
+To change tags of an open changeset, e.g., comment, run [set-changeset-tag.py](https://github.com/Davis-Klavins/osm-latvia-bot/blob/main/upload.py/optional/set-changeset-tag.py) (set path to Python 2, change `changeset-id` to changeset ID and edit comment): `path/to/python2/python set-changeset-tag.py changeset-id comment "Comment."`.
