@@ -22,7 +22,7 @@ mv latvia-diff-part1-edited.osc latvia-diff-part1.osc
 # Number of parts as count of *-part*.osc files (https://askubuntu.com/a/454568).
 parts=`find -maxdepth 1 -type f -name "*-part*.osc" -printf x | wc -c`
 
-# Upload changes. New changeset for every 10000 elements.
+# Upload changes. Separate changeset for every 10 000 elements.
 for num in `seq 1 $parts`; do
         python upload.py $ident -c yes -y "Valsts adrešu reģistra informācijas sistēmas atvērtie dati" "$input-part$num.osc" || exit -1
 
