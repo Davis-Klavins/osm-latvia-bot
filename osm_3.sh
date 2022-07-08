@@ -12,7 +12,7 @@ cd $DIRECTORY
 # Create comment file.
 echo "Updated addresses in Latvia." > latvia-diff.comment
 
-# Split OsmChange file in pieces no larger than 10000 elements (changeset limit).
+# Split OsmChange file in pieces no larger than 10 000 elements (changeset limit).
 python split.py "$input.osc" 10000 || exit -1
 
 # Delete bounds element from the 1st OsmChange file.
