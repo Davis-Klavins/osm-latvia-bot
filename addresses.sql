@@ -575,18 +575,23 @@ SET tags = s.tags
 FROM nodes_addr_add_2 s
 WHERE nodes.id = s.id;
 
---Delete nodes that are not part of relations, have no tags, but previously had only address tags.
+--Delete nodes that are not part of ways or relations, have no tags, but previously had only address tags.
 DELETE
 FROM nodes
 WHERE tags = ''::hstore
   AND id NOT IN (
     SELECT DISTINCT member_id
     FROM relation_members
-    WHERE member_type = 'N')
-      AND id IN (
-        SELECT id
-        FROM nodes_old
-        );
+    WHERE member_type = 'N'
+    )
+  AND id NOT IN (
+    SELECT DISTINCT node_id
+    FROM way_nodes
+    )
+  AND id IN (
+    SELECT id
+    FROM nodes_old
+    );
 
 --Insert missing addresses.
 INSERT INTO nodes (
