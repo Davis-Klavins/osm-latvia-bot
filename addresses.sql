@@ -481,7 +481,7 @@ WHERE tags = ''::hstore
     FROM relations_old
     );
 
---Add addresses for address points (nodes containing only addr:* tags) from the State Address Register. Only address codes not already assigned to ways (buildings).
+--Add addresses for address points (nodes containing only addr:* tags) from the State Address Register. Only address codes not already assigned to ways and relations (buildings).
 ---Address code matches (address points added previously).
 CREATE TEMPORARY TABLE nodes_addr_add_5 AS
 SELECT a.id
@@ -497,6 +497,11 @@ WHERE t.id IS NULL
   AND v.adr_cd NOT IN (
     SELECT CAST(tags -> 'ref:LV:addr' AS INT) adr_cd
     FROM ways
+    WHERE tags ? 'ref:LV:addr'
+    )
+  AND v.adr_cd NOT IN (
+    SELECT CAST(tags -> 'ref:LV:addr' AS INT) adr_cd
+    FROM relations
     WHERE tags ? 'ref:LV:addr'
     );
 
@@ -525,6 +530,11 @@ WHERE t.id IS NULL
   AND v.adr_cd NOT IN (
     SELECT CAST(tags -> 'ref:LV:addr' AS INT) adr_cd
     FROM ways
+    WHERE tags ? 'ref:LV:addr'
+    )
+  AND v.adr_cd NOT IN (
+    SELECT CAST(tags -> 'ref:LV:addr' AS INT) adr_cd
+    FROM relations
     WHERE tags ? 'ref:LV:addr'
     )
   AND v.adr_cd NOT IN (
@@ -559,6 +569,11 @@ WHERE t.id IS NULL
   AND v.adr_cd NOT IN (
     SELECT CAST(tags -> 'ref:LV:addr' AS INT) adr_cd
     FROM ways
+    WHERE tags ? 'ref:LV:addr'
+    )
+  AND v.adr_cd NOT IN (
+    SELECT CAST(tags -> 'ref:LV:addr' AS INT) adr_cd
+    FROM relations
     WHERE tags ? 'ref:LV:addr'
     )
   AND v.adr_cd NOT IN (
