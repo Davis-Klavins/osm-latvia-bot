@@ -3,6 +3,7 @@ Collection of scripts to update and maintain OpenStreetMap data in Latvia (curre
 
 Prerequisites:
 * PostgreSQL with PostGIS,
+* Python 2 and 3 (incl. pip and requests package),
 * wget,
 * [oauth_cookie_client.py](https://github.com/geofabrik/sendfile_osm_oauth_protector/blob/master/oauth_cookie_client.py),
 * [jq](https://stedolan.github.io/jq/),
@@ -119,10 +120,10 @@ To be run daily.
 
 1. [osm_1.sh](https://github.com/Davis-Klavins/osm-latvia-bot/blob/main/osm_1.sh) - download newest OSM data of Latvia from Geofabrik and [tags_4_addresses.csv](https://github.com/Davis-Klavins/osm-latvia-bot/blob/main/tags_4_addresses.csv) (set `DIRECTORY`, `PGPASSWORD`, `IP_ADDRESS` and `PORT` variables). TODO: add [diffs](https://wiki.openstreetmap.org/wiki/Planet.osm/diffs) after Geofabrik's file has been published?
 2. [osm_2.bat](https://github.com/Davis-Klavins/osm-latvia-bot/blob/main/osm_2.bat) - update OSM data in the local PostgreSQL database and derive osmChange file (set `DIRECTORY`, `PGPASSWORD`, `IP_ADDRESS` and `PORT` variables). Large amount of changes lead to an error. Must be rewritten and merged with [osm_1.sh](https://github.com/Davis-Klavins/osm-latvia-bot/blob/main/osm_1.sh) and [osm_3.sh](https://github.com/Davis-Klavins/osm-latvia-bot/blob/main/osm_3.sh) to run under Linux.
-4. [osm_3.sh](https://github.com/Davis-Klavins/osm-latvia-bot/blob/main/osm_3.sh) - split osmChange file and upload changes (set `DIRECTORY` variable, [OSM user password](https://github.com/Davis-Klavins/osm-latvia-bot/blob/main/osm_3.sh#L8) and [path to Python 2](https://github.com/Davis-Klavins/osm-latvia-bot/blob/main/osm_3.sh#L34)). Separate changeset is created for every 10 000 elements.
+4. [osm_3.sh](https://github.com/Davis-Klavins/osm-latvia-bot/blob/main/osm_3.sh) - split osmChange file and upload changes (set `DIRECTORY` variable and [OSM user password](https://github.com/Davis-Klavins/osm-latvia-bot/blob/main/osm_3.sh#L8)). Separate changeset is created for every 10 000 elements.
 
 ## Optional
 
-To change tags of an open changeset, e.g., comment, run [set-changeset-tag.py](https://github.com/Davis-Klavins/osm-latvia-bot/blob/main/upload.py/optional/set-changeset-tag.py) (set path to Python 2, change `changeset-id` to changeset ID and edit comment; username and password to be provided interactively): `path/to/python2/python set-changeset-tag.py changeset-id comment "Comment."`.
+To change tags of an open changeset, e.g., comment, run [set-changeset-tag.py](https://github.com/Davis-Klavins/osm-latvia-bot/blob/main/upload.py/optional/set-changeset-tag.py) (change `changeset-id` to changeset ID and edit comment; username and password to be provided interactively): `py set-changeset-tag.py changeset-id comment "Comment."`.
 
-To close changeset, run [close.py](https://github.com/Davis-Klavins/osm-latvia-bot/blob/main/upload.py/optional/close.py) (change `changeset-id` to changeset ID; username and password to be provided interactively): `python close.py changeset-id`.
+To close changeset, run [close.py](https://github.com/Davis-Klavins/osm-latvia-bot/blob/main/upload.py/optional/close.py) (change `changeset-id` to changeset ID; username and password to be provided interactively): `py close.py changeset-id`.
