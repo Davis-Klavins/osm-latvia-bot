@@ -33,6 +33,7 @@ rm Pagasti.*
 psql -h $IP_ADDRESS -p $PORT -U osm -d osm -w -c "CALL vzd.territorial_units()"
 
 ## Addresses (points).
+mkdir aw_csv
 cd aw_csv
 wget -q https://data.gov.lv/dati/dataset/0c5e1a3b-0097-45a9-afa9-7f7262f3f623/resource/1d3cbdf2-ee7d-4743-90c7-97d38824d0bf/download/aw_csv.zip
 unzip -o -q aw_csv.zip
@@ -75,3 +76,5 @@ psql -h $IP_ADDRESS -p $PORT -U osm -d osm -w -c "\COPY vzd.aw_rajons (kods, tip
 psql -h $IP_ADDRESS -p $PORT -U osm -d osm -w -c "TRUNCATE TABLE vzd.aw_vietu_centroidi RESTART IDENTITY;"
 psql -h $IP_ADDRESS -p $PORT -U osm -d osm -w -c "\COPY vzd.aw_vietu_centroidi (kods, tips_cd, nosaukums, vkur_cd, vkur_tips, std, koord_x, koord_y, dd_n, dd_e) FROM AW_VIETU_CENTROIDI.CSV WITH (FORMAT CSV, DELIMITER ';', QUOTE '#', HEADER, FORCE_NULL (koord_x, koord_y, dd_n, dd_e))"
 psql -h $IP_ADDRESS -p $PORT -U osm -d osm -w -c "CALL vzd.adreses()"
+cd ..
+rm -r aw_csv
