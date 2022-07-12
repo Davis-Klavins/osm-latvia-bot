@@ -7,7 +7,7 @@ Prerequisites:
 * [oauth_cookie_client.py](https://github.com/geofabrik/sendfile_osm_oauth_protector/blob/master/oauth_cookie_client.py),
 * [jq](https://stedolan.github.io/jq/),
 * [XMLStarlet](http://xmlstar.sourceforge.net/),
-* [osmosis](https://github.com/openstreetmap/osmosis),
+* [osmosis](https://github.com/openstreetmap/osmosis) (set path to Java in bin\osmosis.bat on Windows),
 * [upload.py](https://wiki.openstreetmap.org/wiki/Upload.py) (files used have been modified and placed in [upload.py directory](https://github.com/Davis-Klavins/osm-latvia-bot/tree/main/upload.py)),
 * If used on Windows, Git to run files with .sh extension.
 
