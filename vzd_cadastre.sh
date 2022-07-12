@@ -22,11 +22,11 @@ for i in $(find . -name "*.xml" -type f); do
   cat $i | psql.exe -h $IP_ADDRESS -p $PORT -U osm -d osm -w -c '\COPY vzd.nivkis_adreses_tmp FROM stdin'
 done
 
+cd ..
 rm -r address
 psql -h $IP_ADDRESS -p $PORT -U osm -d osm -w -c "CALL vzd.nivkis_adreses()"
 
 ## Buildings and parcels. Script based on https://gist.github.com/laacz/8dfb7b69221790eb8d88e5fb91b9b088.
-cd ..
 mkdir kk_shp
 cd kk_shp
 
