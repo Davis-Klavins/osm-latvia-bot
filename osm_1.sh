@@ -14,6 +14,7 @@ cd $DIRECTORY
 wget -q -O tags_4_addresses.csv https://raw.githubusercontent.com/Davis-Klavins/osm-latvia-bot/main/tags_4_addresses.csv
 psql -h $IP_ADDRESS -p $PORT -U osm -d osm -w -c "TRUNCATE TABLE tags_4_addresses;"
 psql -h $IP_ADDRESS -p $PORT -U osm -d osm -w -c '\COPY tags_4_addresses FROM tags_4_addresses.csv CSV HEADER'
+rm tags_4_addresses.csv
 
 # Download latest internal OSM data.
 python oauth_cookie_client.py -o cookie.txt -s settings.json
