@@ -12,7 +12,6 @@ export PORT=
 ## Addresses of buildings and parcels.
 cd $DIRECTORY/vzd
 wget -q https://data.gov.lv/dati/dataset/be841486-4af9-4d38-aa14-6502a2ddb517/resource/2aeea249-6948-4713-92c2-e01543ea0f33/download/address.zip
-rm -r address
 mkdir address
 unzip -o -q address.zip -d address
 rm *.zip
@@ -23,6 +22,7 @@ for i in $(find . -name "*.xml" -type f); do
   cat $i | psql.exe -h $IP_ADDRESS -p $PORT -U osm -d osm -w -c '\COPY vzd.nivkis_adreses_tmp FROM stdin'
 done
 
+rm -r address
 psql -h $IP_ADDRESS -p $PORT -U osm -d osm -w -c "CALL vzd.nivkis_adreses()"
 
 ## Buildings and parcels. Script based on https://gist.github.com/laacz/8dfb7b69221790eb8d88e5fb91b9b088.
