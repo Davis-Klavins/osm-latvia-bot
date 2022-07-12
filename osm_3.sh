@@ -35,3 +35,4 @@ done
 # Delete OsmChange and comment files.
 #rm *.osc
 #rm *.comment
+#rm *.diff.xml
