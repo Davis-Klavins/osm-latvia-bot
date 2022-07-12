@@ -17,6 +17,6 @@ psql -h $IP_ADDRESS -p $PORT -U osm -d osm -w -c '\COPY tags_4_addresses FROM ta
 rm tags_4_addresses.csv
 
 # Download latest internal OSM data.
-python oauth_cookie_client.py -o cookie.txt -s settings.json
+py oauth_cookie_client.py -o cookie.txt -s settings.json
 # Workaround from https://pavie.info/2020/08/12/complete-full-history-osm/ because command "wget -O latvia-latest-internal.osm.pbf --load-cookies cookie.txt --max-redirect 0 https://osm-internal.download.geofabrik.de/europe/latvia-latest-internal.osm.pbf" returns "ERROR 403: Forbidden".
 wget -q -O latvia-latest-internal.osm.pbf -N --no-cookies --header "Cookie: $(cat cookie.txt | cut -d ';' -f 1)" https://osm-internal.download.geofabrik.de/europe/latvia-latest-internal.osm.pbf
