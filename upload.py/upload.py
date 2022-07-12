@@ -1,4 +1,4 @@
-#! /usr/bin/python3
+#!/usr/bin/env python3
 # vim: fileencoding=utf-8 encoding=utf-8 et sw=4
 
 # Modified by Dāvis Kļaviņš (https://github.com/Davis-Klavins) on July 7, 2022. Included ssl lib.
