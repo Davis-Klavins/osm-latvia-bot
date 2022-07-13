@@ -122,7 +122,7 @@ To be run daily.
 
 1. [osm_1.sh](https://github.com/Davis-Klavins/osm-latvia-bot/blob/main/osm_1.sh) - download [tags_4_addresses.csv](https://github.com/Davis-Klavins/osm-latvia-bot/blob/main/tags_4_addresses.csv) and OSM data of Latvia (combine most recent data from Geofabrik and changes made afterwards) (set `DIRECTORY`, `PGPASSWORD`, `IP_ADDRESS` and `PORT` variables).
 2. [osm_2.bat](https://github.com/Davis-Klavins/osm-latvia-bot/blob/main/osm_2.bat) - update OSM data in the local PostgreSQL database and derive osmChange file (set `DIRECTORY`, `PGPASSWORD`, `IP_ADDRESS` and `PORT` variables). Large amount of changes lead to an error. Must be rewritten and merged with [osm_1.sh](https://github.com/Davis-Klavins/osm-latvia-bot/blob/main/osm_1.sh) and [osm_3.sh](https://github.com/Davis-Klavins/osm-latvia-bot/blob/main/osm_3.sh) to run under Linux.
-4. [osm_3.sh](https://github.com/Davis-Klavins/osm-latvia-bot/blob/main/osm_3.sh) - split osmChange file and upload changes (set `DIRECTORY` variable and [OSM user password](https://github.com/Davis-Klavins/osm-latvia-bot/blob/main/osm_3.sh#L8)). Separate changeset is created for every 10 000 elements.
+4. [osm_3.sh](https://github.com/Davis-Klavins/osm-latvia-bot/blob/main/osm_3.sh) - split osmChange file and upload changes (set `DIRECTORY` variable and [OSM user password](https://github.com/Davis-Klavins/osm-latvia-bot/blob/main/osm_3.sh#L8)). Separate changeset is created for every 10 000 elements and closed.
 
 ## Optional
 
