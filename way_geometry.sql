@@ -4,7 +4,7 @@ LANGUAGE 'plpgsql'
 
 AS $BODY$BEGIN
 
---Downloaded from https://github.com/openstreetmap/osmosis/blob/master/package/script/contrib/CreateGeometryForWays.sql, replaced Collect with ST_Collect.
+--Downloaded from https://github.com/openstreetmap/osmosis/blob/master/package/script/contrib/CreateGeometryForWays.sql, replaced Collect with ST_Collect and excluded ways that have been clipped (don't have all nodes) during osmupdate with *.poly file.
 
 -------------------------------------------------------------------------------
 -- The following script creates a new table for the pgsql simple schema for storing full way geometries.
@@ -35,7 +35,7 @@ SELECT id
     )
 FROM ways;
 
--- A.fter creating a line for every way (polyline), we want closed ways to be stored as polygones. 
+-- After creating a line for every way (polyline), we want closed ways to be stored as polygones. 
 -- So we need to delete the previously created polylines for these ways first.
 DELETE
 FROM way_geometry
@@ -66,6 +66,17 @@ SELECT ways.id
     WHERE way_nodes.way_id = ways.id
     )
 FROM ways
+LEFT JOIN (
+  SELECT way_id
+  FROM way_nodes a
+  LEFT JOIN nodes b ON a.node_id = b.id
+  GROUP BY way_id
+  HAVING COUNT(*) != COUNT(CASE 
+        WHEN b.id IS NOT NULL
+          THEN 1
+        ELSE NULL
+        END)
+  ) b ON ways.id = b.way_id
 WHERE ST_IsClosed((
       SELECT ST_LineFromMultiPoint(ST_Collect(n.geom))
       FROM nodes n
@@ -77,7 +88,8 @@ WHERE ST_IsClosed((
       FROM nodes n
       LEFT JOIN way_nodes wn ON n.id = wn.node_id
       WHERE ways.id = wn.way_id
-      )) >= 3;
+      )) >= 3
+  AND b.way_id IS NULL; -- Exclude ways that have been clipped (don't have all nodes) during osmupdate with *.poly file.
 
 -------------------------------------------------------------------------------
 
