@@ -638,7 +638,12 @@ WHERE adr_cd NOT IN (
     FROM ways
     WHERE tags ? 'ref:LV:addr'
     )
-  AND adr_cd NOT IN (
+AND adr_cd NOT IN (
+    SELECT CAST(tags -> 'ref:LV:addr' AS INT) adr_cd
+    FROM relations
+    WHERE tags ? 'ref:LV:addr'
+    )
+AND adr_cd NOT IN (
     SELECT CAST(tags -> 'ref:LV:addr' AS INT) adr_cd
     FROM nodes
     WHERE tags ? 'ref:LV:addr'
