@@ -22,7 +22,7 @@ SELECT a.id
 FROM nodes_tmp a
 INNER JOIN vzd.state b ON ST_Intersects(a.geom, b.geom);
 
--- 
+--Table containing way IDs that have tags and are located in Latvia.
 DROP TABLE IF EXISTS ways_lv;
 
 CREATE TABLE ways_lv (id BIGINT NOT NULL PRIMARY KEY);
