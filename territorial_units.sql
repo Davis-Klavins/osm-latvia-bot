@@ -156,8 +156,6 @@ AS (
   SELECT ST_Buffer(ST_Collect(geom), 0) geom
   FROM vzd.territorial_units
   )
-CREATE MATERIALIZED VIEW vzd.state
-AS
 SELECT ST_Buffer(ST_Collect(geom), 0) geom
 FROM b;
 
