@@ -591,21 +591,28 @@ FROM nodes_addr_add_2 s
 WHERE nodes.id = s.id;
 
 --Delete nodes that are not part of ways or relations, have no tags, but previously had only address tags.
+CREATE TEMPORARY TABLE nodes_del AS
+SELECT a.id
+FROM nodes a
+INNER JOIN nodes_old b ON a.id = b.id
+LEFT OUTER JOIN (
+  SELECT DISTINCT member_id
+  FROM relation_members
+  WHERE member_type = 'N'
+  ) c ON a.id = c.member_id
+LEFT OUTER JOIN (
+  SELECT DISTINCT node_id
+  FROM way_nodes
+  ) d ON a.id = d.node_id
+WHERE a.tags = ''::hstore
+  AND c.member_id IS NULL
+  AND d.node_id IS NULL;
+
 DELETE
 FROM nodes
-WHERE tags = ''::hstore
-  AND id NOT IN (
-    SELECT DISTINCT member_id
-    FROM relation_members
-    WHERE member_type = 'N'
-    )
-  AND id NOT IN (
-    SELECT DISTINCT node_id
-    FROM way_nodes
-    )
-  AND id IN (
+WHERE id IN (
     SELECT id
-    FROM nodes_old
+    FROM nodes_del
     );
 
 --Insert missing addresses.
