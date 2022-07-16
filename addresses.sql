@@ -877,7 +877,7 @@ SELECT a.id
   ,g.geom
 FROM ways a
 INNER JOIN way_geometry g ON a.id = g.way_id
-INNER JOIN vzd.state b ON ST_Within(g.geom, b.geom)
+INNER JOIN vzd.nivkis_zemes_vienibas b ON ST_Intersects(g.geom, b.geom)
 WHERE a.tags ?& ARRAY ['building', 'ref:LV:addr']
 
 UNION
@@ -887,7 +887,7 @@ SELECT a.id
   ,g.geom
 FROM relations a
 INNER JOIN relations_geometry g ON a.id = g.id
-INNER JOIN vzd.state b ON ST_Within(g.geom, b.geom)
+INNER JOIN vzd.nivkis_zemes_vienibas b ON ST_Intersects(g.geom, b.geom)
 WHERE a.tags ?& ARRAY ['building', 'ref:LV:addr'];
 
 CREATE INDEX building_addr_geom_geom_idx ON building_addr_geom USING GIST (geom);
