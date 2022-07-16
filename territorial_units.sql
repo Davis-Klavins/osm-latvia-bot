@@ -135,33 +135,10 @@ UPDATE vzd.territorial_units
 SET geom = ST_MakeValid(geom)
 WHERE ST_IsValid(geom) = false;
 
---View with area covered by cadastre (includes administrative territories, Baltic Sea up to ~2 km from the coast and the island of Kolka Lighthouse).
+/*
+--Materialized view with dissolved administrative territories.
 DROP MATERIALIZED VIEW IF EXISTS vzd.state;
 
-CREATE MATERIALIZED VIEW vzd.state
-AS
-WITH a
-AS (
-  SELECT ST_Transform(ST_Difference(ST_Buffer(ST_Collect(geom), 6000), ST_Buffer(ST_Collect(geom), 0)), 4326) geom
-  FROM vzd.adm_rob
-  )
-  ,b
-AS (
-  SELECT ST_Buffer(ST_Collect(b.geom), 0) geom
-  FROM a
-  INNER JOIN vzd.nivkis_zemes_vienibas b ON ST_Intersects(a.geom, b.geom)
-  
-  UNION ALL
-  
-  SELECT ST_Buffer(ST_Collect(geom), 0) geom
-  FROM vzd.territorial_units
-  )
-SELECT 1::SMALLINT ID
-  ,ST_Buffer(ST_Collect(geom), 0) geom
-FROM b;
-
-/*
---Faster but simpler option to include only administrative territories.
 CREATE MATERIALIZED VIEW vzd.state
 AS
 (
@@ -170,9 +147,9 @@ AS
     FROM vzd.territorial_units
     --WHERE l1_name LIKE 'Viļāni' -- Limit to process smaller territory (NUTS3 region (nuts3_code/nuts3_name)/municipality (l0_code/l0_name)/city/town/rural territory (l1_code/l1_name)).
     );
-*/
 
 CREATE INDEX state_geom_idx ON vzd.state USING GIST (geom);
+*/
 
 END
 $$ LANGUAGE plpgsql;
