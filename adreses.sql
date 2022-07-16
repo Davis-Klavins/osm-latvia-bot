@@ -690,7 +690,8 @@ LEFT JOIN (
   WHERE tips_cd = 113
   ) novads_no_pilsetas_no_ielas ON novads_no_pilsetas_no_ielas.adr_cd = pilseta_no_ielas.vkur_cd
 WHERE a.tips_cd = 108
-  AND a.statuss LIKE 'EKS';
+  AND a.statuss LIKE 'EKS'
+  AND b.geom IS NOT NULL;
 
 COMMENT ON MATERIALIZED VIEW vzd.adreses_ekas_sadalitas IS 'Ēku un apbūvei paredzēto zemes vienību adresācijas objekti ar aktuālo adreses pierakstu, kas sadalīts pa laukiem.';
 
