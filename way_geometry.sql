@@ -91,7 +91,7 @@ WHERE ST_IsClosed((
       )) >= 3
   AND b.way_id IS NULL; -- Exclude ways that have been clipped (don't have all nodes) during osmupdate with *.poly file.
 
---Repair invalid geometries.
+--Make geometries valid.
 UPDATE way_geometry
 SET geom = ST_MakeValid(geom)
 WHERE ST_IsValid(geom) = FALSE;
