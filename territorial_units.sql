@@ -156,7 +156,8 @@ AS (
   SELECT ST_Buffer(ST_Collect(geom), 0) geom
   FROM vzd.territorial_units
   )
-SELECT ST_Buffer(ST_Collect(geom), 0) geom
+SELECT 1::SMALLINT ID
+  ,ST_Buffer(ST_Collect(geom), 0) geom
 FROM b;
 
 /*
@@ -164,7 +165,8 @@ FROM b;
 CREATE MATERIALIZED VIEW vzd.state
 AS
 (
-    SELECT ST_Union(geom) geom
+    SELECT 1::SMALLINT ID
+      ,ST_Union(geom) geom
     FROM vzd.territorial_units
     --WHERE l1_name LIKE 'Viļāni' -- Limit to process smaller territory (NUTS3 region (nuts3_code/nuts3_name)/municipality (l0_code/l0_name)/city/town/rural territory (l1_code/l1_name)).
     );
