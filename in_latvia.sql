@@ -7,7 +7,7 @@ AS $BODY$BEGIN
 --Table containing node IDs that have tags and are located in Latvia.
 DROP TABLE IF EXISTS nodes_lv;
 
-CREATE TABLE nodes_lv (id BIGINT NOT NULL PRIMARY KEY);
+CREATE TABLE nodes_lv (id BIGINT NOT NULL);
 
 CREATE TEMPORARY TABLE nodes_tmp AS
 SELECT id
@@ -20,23 +20,27 @@ CREATE INDEX nodes_tmp_geom_idx ON nodes_tmp USING GIST (geom);
 INSERT INTO nodes_lv
 SELECT a.id
 FROM nodes_tmp a
-INNER JOIN vzd.state b ON ST_Intersects(a.geom, b.geom);
+INNER JOIN vzd.nivkis_zemes_vienibas b ON ST_Intersects(a.geom, b.geom);
+
+ALTER TABLE nodes_lv ADD PRIMARY KEY (id);
 
 --Table containing way IDs that have tags and are located in Latvia.
 DROP TABLE IF EXISTS ways_lv;
 
-CREATE TABLE ways_lv (id BIGINT NOT NULL PRIMARY KEY);
+CREATE TABLE ways_lv (id BIGINT NOT NULL);
 
 INSERT INTO ways_lv
-SELECT a.id
+SELECT DISTINCT a.id
 FROM ways a
 INNER JOIN way_geometry b ON a.id = b.way_id
-INNER JOIN vzd.state c ON ST_Intersects(b.geom, c.geom);
+INNER JOIN vzd.nivkis_zemes_vienibas c ON ST_Intersects(b.geom, c.geom);
+
+ALTER TABLE ways_lv ADD PRIMARY KEY (id);
 
 --Table containing relation IDs that are located in Latvia.
 DROP TABLE IF EXISTS relations_lv;
 
-CREATE TABLE relations_lv (id BIGINT NOT NULL PRIMARY KEY);
+CREATE TABLE relations_lv (id BIGINT NOT NULL);
 
 INSERT INTO relations_lv
 SELECT a.id
@@ -52,6 +56,8 @@ FROM relations a
 INNER JOIN relation_members m ON a.id = m.relation_id
 INNER JOIN ways_lv w ON m.member_id = w.id
 WHERE m.member_type LIKE 'W';
+
+ALTER TABLE relations_lv ADD PRIMARY KEY (id);
 
 --Relation can contain other relations.
 DO $$
