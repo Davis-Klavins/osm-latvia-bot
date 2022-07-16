@@ -4,13 +4,15 @@ LANGUAGE 'plpgsql'
 
 AS $BODY$BEGIN
 
---Needed in case smaller territory than state is selected in materialized view vzd.state.
+/*
+--In case materialized view vzd.state is used and smaller territory than state is selected in it, create temporary table to contain data from table vzd.adreses_ekas_sadalitas only within selected territory. Replace vzd.adreses_ekas_sadalitas with adreses_ekas_sadalitas elsewhere in the procedure.
 CREATE TEMPORARY TABLE adreses_ekas_sadalitas AS
 SELECT a.*
 FROM vzd.adreses_ekas_sadalitas a
 INNER JOIN vzd.state b ON ST_Within(a.geom, b.geom);
 
 CREATE INDEX adreses_ekas_sadalitas_geom_idx ON adreses_ekas_sadalitas USING GIST (geom);
+*/
 
 --All tags and values of nodes as a table with a row for each element in the array.
 CREATE TEMPORARY TABLE nodes_unnest AS
@@ -337,7 +339,7 @@ AS (
   SELECT a.id
   FROM ways a
   INNER JOIN way_geometry g ON a.id = g.way_id
-  INNER JOIN adreses_ekas_sadalitas v ON ST_Within(v.geom, g.geom)
+  INNER JOIN vzd.adreses_ekas_sadalitas v ON ST_Within(v.geom, g.geom)
   WHERE a.tags ? 'building'
   GROUP BY a.id
   HAVING COUNT(*) = 1
@@ -346,7 +348,7 @@ SELECT a.id
   ,(a.tags || hstore('addr:country', 'LV') || hstore('addr:district', v.novads) || hstore('addr:city', v.pilseta) || hstore('addr:subdistrict', v.pagasts) || hstore('addr:place', v.ciems) || hstore('addr:street', v.iela) || hstore('addr:housename', v.nosaukums) || hstore('addr:housenumber', v.nr) || hstore('addr:postcode', v.atrib) || hstore('ref:LV:addr', v.adr_cd::TEXT)) - 'addr:district=>NULL, addr:city=>NULL, addr:subdistrict=>NULL, addr:place=>NULL, addr:street=>NULL, addr:housename=>NULL, addr:housenumber=>NULL, addr:postcode=>NULL'::hstore tags
 FROM ways a
 INNER JOIN way_geometry g ON a.id = g.way_id
-INNER JOIN adreses_ekas_sadalitas v ON ST_Within(v.geom, g.geom)
+INNER JOIN vzd.adreses_ekas_sadalitas v ON ST_Within(v.geom, g.geom)
 INNER JOIN c ON a.id = c.id
 WHERE a.tags ? 'building';
 
@@ -364,7 +366,7 @@ AS (
   SELECT a.id
   FROM relations a
   INNER JOIN relations_geometry g ON a.id = g.id
-  INNER JOIN adreses_ekas_sadalitas v ON ST_Within(v.geom, g.geom)
+  INNER JOIN vzd.adreses_ekas_sadalitas v ON ST_Within(v.geom, g.geom)
   WHERE a.tags ? 'building'
   GROUP BY a.id
   HAVING COUNT(*) = 1
@@ -373,7 +375,7 @@ SELECT a.id
   ,(a.tags || hstore('addr:country', 'LV') || hstore('addr:district', v.novads) || hstore('addr:city', v.pilseta) || hstore('addr:subdistrict', v.pagasts) || hstore('addr:place', v.ciems) || hstore('addr:street', v.iela) || hstore('addr:housename', v.nosaukums) || hstore('addr:housenumber', v.nr) || hstore('addr:postcode', v.atrib) || hstore('ref:LV:addr', v.adr_cd::TEXT)) - 'addr:district=>NULL, addr:city=>NULL, addr:subdistrict=>NULL, addr:place=>NULL, addr:street=>NULL, addr:housename=>NULL, addr:housenumber=>NULL, addr:postcode=>NULL'::hstore tags
 FROM relations a
 INNER JOIN relations_geometry g ON a.id = g.id
-INNER JOIN adreses_ekas_sadalitas v ON ST_Within(v.geom, g.geom)
+INNER JOIN vzd.adreses_ekas_sadalitas v ON ST_Within(v.geom, g.geom)
 INNER JOIN c ON a.id = c.id
 WHERE a.tags ? 'building';
 
@@ -393,7 +395,7 @@ AS (
   FROM ways a
   INNER JOIN way_geometry g ON a.id = g.way_id
   INNER JOIN vzd.nivkis_buves n ON ST_Intersects(g.geom, n.geom)
-  INNER JOIN adreses_ekas_sadalitas v ON ST_Within(v.geom, n.geom)
+  INNER JOIN vzd.adreses_ekas_sadalitas v ON ST_Within(v.geom, n.geom)
   LEFT OUTER JOIN (
     SELECT id
     FROM ways
@@ -410,7 +412,7 @@ SELECT a.id
 FROM ways a
 INNER JOIN way_geometry g ON a.id = g.way_id
 INNER JOIN vzd.nivkis_buves n ON ST_Intersects(g.geom, n.geom)
-INNER JOIN adreses_ekas_sadalitas v ON ST_Within(v.geom, n.geom)
+INNER JOIN vzd.adreses_ekas_sadalitas v ON ST_Within(v.geom, n.geom)
 INNER JOIN c ON a.id = c.id
 WHERE a.tags ? 'building'
   AND ST_Area(ST_Intersection(g.geom, n.geom)) / ST_Area(g.geom) > 0.5;
@@ -430,7 +432,7 @@ AS (
   FROM relations a
   INNER JOIN relations_geometry g ON a.id = g.id
   INNER JOIN vzd.nivkis_buves n ON ST_Intersects(g.geom, n.geom)
-  INNER JOIN adreses_ekas_sadalitas v ON ST_Within(v.geom, n.geom)
+  INNER JOIN vzd.adreses_ekas_sadalitas v ON ST_Within(v.geom, n.geom)
   LEFT OUTER JOIN (
     SELECT id
     FROM relations
@@ -447,7 +449,7 @@ SELECT a.id
 FROM relations a
 INNER JOIN relations_geometry g ON a.id = g.id
 INNER JOIN vzd.nivkis_buves n ON ST_Intersects(g.geom, n.geom)
-INNER JOIN adreses_ekas_sadalitas v ON ST_Within(v.geom, n.geom)
+INNER JOIN vzd.adreses_ekas_sadalitas v ON ST_Within(v.geom, n.geom)
 INNER JOIN c ON a.id = c.id
 WHERE a.tags ? 'building'
   AND ST_Area(ST_Intersection(g.geom, n.geom)) / ST_Area(g.geom) > 0.5;
@@ -489,7 +491,7 @@ SELECT a.id
   ,v.geom
 FROM nodes a
 INNER JOIN nodes_old o ON a.id = o.id
-INNER JOIN adreses_ekas_sadalitas v ON o.tags -> 'ref:LV:addr' = v.adr_cd::TEXT
+INNER JOIN vzd.adreses_ekas_sadalitas v ON o.tags -> 'ref:LV:addr' = v.adr_cd::TEXT
 LEFT OUTER JOIN nodes_unnest t ON a.id = t.id
   AND t.tag NOT LIKE 'addr:%'
   AND t.tag NOT LIKE 'ref:LV:addr'
@@ -524,7 +526,7 @@ INNER JOIN nodes_old o ON a.id = o.id
 LEFT OUTER JOIN nodes_unnest t ON a.id = t.id
   AND t.tag NOT LIKE 'addr:%'
   AND t.tag NOT LIKE 'ref:LV:addr'
-CROSS JOIN LATERAL(SELECT v.*, v.geom <-> a.geom AS dist FROM adreses_ekas_sadalitas v WHERE REPLACE(o.tags -> 'addr:housename'::TEXT, ' ', '') LIKE REPLACE(v.nosaukums, ' ', '') ORDER BY dist LIMIT 1) v
+CROSS JOIN LATERAL(SELECT v.*, v.geom <-> a.geom AS dist FROM vzd.adreses_ekas_sadalitas v WHERE REPLACE(o.tags -> 'addr:housename'::TEXT, ' ', '') LIKE REPLACE(v.nosaukums, ' ', '') ORDER BY dist LIMIT 1) v
 WHERE t.id IS NULL
   AND v.dist < 0.01
   AND v.adr_cd NOT IN (
@@ -562,7 +564,7 @@ INNER JOIN nodes_old o ON a.id = o.id
 LEFT OUTER JOIN nodes_unnest t ON a.id = t.id
   AND t.tag NOT LIKE 'addr:%'
   AND t.tag NOT LIKE 'ref:LV:addr'
-CROSS JOIN LATERAL(SELECT v.*, v.geom <-> a.geom AS dist FROM adreses_ekas_sadalitas v WHERE REPLACE(o.tags -> 'addr:housenumber'::TEXT, ' ', '') LIKE REPLACE(v.nr, ' ', '')
+CROSS JOIN LATERAL(SELECT v.*, v.geom <-> a.geom AS dist FROM vzd.adreses_ekas_sadalitas v WHERE REPLACE(o.tags -> 'addr:housenumber'::TEXT, ' ', '') LIKE REPLACE(v.nr, ' ', '')
     AND REPLACE(o.tags -> 'addr:street'::TEXT, ' ', '') LIKE REPLACE(v.iela, ' ', '') ORDER BY dist LIMIT 1) v
 WHERE t.id IS NULL
   AND v.dist < 0.01
@@ -632,7 +634,7 @@ SELECT - ROW_NUMBER() OVER()
   ,-1
   ,(hstore('addr:country', 'LV') || hstore('addr:district', novads) || hstore('addr:city', pilseta) || hstore('addr:subdistrict', pagasts) || hstore('addr:place', ciems) || hstore('addr:street', iela) || hstore('addr:housename', nosaukums) || hstore('addr:housenumber', nr) || hstore('addr:postcode', atrib) || hstore('ref:LV:addr', adr_cd::TEXT)) - 'addr:district=>NULL, addr:city=>NULL, addr:subdistrict=>NULL, addr:place=>NULL, addr:street=>NULL, addr:housename=>NULL, addr:housenumber=>NULL, addr:postcode=>NULL'::hstore
   ,geom
-FROM adreses_ekas_sadalitas
+FROM vzd.adreses_ekas_sadalitas
 WHERE adr_cd NOT IN (
     SELECT CAST(tags -> 'ref:LV:addr' AS INT) adr_cd
     FROM ways
@@ -794,7 +796,7 @@ AS (
   SELECT a.id
   FROM ways a
   INNER JOIN way_geometry g ON a.id = g.way_id
-  INNER JOIN adreses_ekas_sadalitas v ON ST_Within(v.geom, g.geom)
+  INNER JOIN vzd.adreses_ekas_sadalitas v ON ST_Within(v.geom, g.geom)
   INNER JOIN tags_4_addresses_ways t ON a.id = t.id
   GROUP BY a.id
   HAVING COUNT(*) = 1
@@ -803,7 +805,7 @@ SELECT a.id
   ,(a.tags || hstore('addr:country', 'LV') || hstore('addr:district', v.novads) || hstore('addr:city', v.pilseta) || hstore('addr:subdistrict', v.pagasts) || hstore('addr:place', v.ciems) || hstore('addr:street', v.iela) || hstore('addr:housename', v.nosaukums) || hstore('addr:housenumber', v.nr) || hstore('addr:postcode', v.atrib) || hstore('ref:LV:addr', v.adr_cd::TEXT)) - 'addr:district=>NULL, addr:city=>NULL, addr:subdistrict=>NULL, addr:place=>NULL, addr:street=>NULL, addr:housename=>NULL, addr:housenumber=>NULL, addr:postcode=>NULL'::hstore tags
 FROM ways a
 INNER JOIN way_geometry g ON a.id = g.way_id
-INNER JOIN adreses_ekas_sadalitas v ON ST_Within(v.geom, g.geom)
+INNER JOIN vzd.adreses_ekas_sadalitas v ON ST_Within(v.geom, g.geom)
 INNER JOIN c ON a.id = c.id;
 
 ALTER TABLE ways_addr_add_3 ADD PRIMARY KEY (id);
@@ -820,7 +822,7 @@ AS (
   SELECT a.id
   FROM relations a
   INNER JOIN relations_geometry_2 g ON a.id = g.id
-  INNER JOIN adreses_ekas_sadalitas v ON ST_Within(v.geom, g.geom)
+  INNER JOIN vzd.adreses_ekas_sadalitas v ON ST_Within(v.geom, g.geom)
   INNER JOIN tags_4_addresses_relations t ON a.id = t.id
   GROUP BY a.id
   HAVING COUNT(*) = 1
@@ -829,7 +831,7 @@ SELECT a.id
   ,(a.tags || hstore('addr:country', 'LV') || hstore('addr:district', v.novads) || hstore('addr:city', v.pilseta) || hstore('addr:subdistrict', v.pagasts) || hstore('addr:place', v.ciems) || hstore('addr:street', v.iela) || hstore('addr:housename', v.nosaukums) || hstore('addr:housenumber', v.nr) || hstore('addr:postcode', v.atrib) || hstore('ref:LV:addr', v.adr_cd::TEXT)) - 'addr:district=>NULL, addr:city=>NULL, addr:subdistrict=>NULL, addr:place=>NULL, addr:street=>NULL, addr:housename=>NULL, addr:housenumber=>NULL, addr:postcode=>NULL'::hstore tags
 FROM relations a
 INNER JOIN relations_geometry_2 g ON a.id = g.id
-INNER JOIN adreses_ekas_sadalitas v ON ST_Within(v.geom, g.geom)
+INNER JOIN vzd.adreses_ekas_sadalitas v ON ST_Within(v.geom, g.geom)
 INNER JOIN c ON a.id = c.id;
 
 ALTER TABLE relations_addr_add_3 ADD PRIMARY KEY (id);
@@ -957,7 +959,7 @@ AS (
     ,a.geom
   FROM vzd.nivkis_zemes_vienibas a
   INNER JOIN vzd.nivkis_adreses b ON a.code = b."ObjectCadastreNr"
-  INNER JOIN adreses_ekas_sadalitas c ON b."ARCode" = c.adr_cd
+  INNER JOIN vzd.adreses_ekas_sadalitas c ON b."ARCode" = c.adr_cd
   )
 SELECT a.id
   ,(a.tags || hstore('addr:country', 'LV') || hstore('addr:district', v.novads) || hstore('addr:city', v.pilseta) || hstore('addr:subdistrict', v.pagasts) || hstore('addr:place', v.ciems) || hstore('addr:street', v.iela) || hstore('addr:housename', v.nosaukums) || hstore('addr:housenumber', v.nr) || hstore('addr:postcode', v.atrib) || hstore('ref:LV:addr', v.adr_cd::TEXT)) - 'addr:district=>NULL, addr:city=>NULL, addr:subdistrict=>NULL, addr:place=>NULL, addr:street=>NULL, addr:housename=>NULL, addr:housenumber=>NULL, addr:postcode=>NULL'::hstore tags
