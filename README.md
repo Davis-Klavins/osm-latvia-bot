@@ -95,6 +95,7 @@ Set up PostgreSQL database:
 7. In osm database, create ogr_fdw foreign servers, schemas and tables (adjust `datasource` if necessary):
 
    * [ogr_fdw_atu_nuts_codes.sql](https://github.com/Davis-Klavins/osm-latvia-bot/blob/main/ogr_fdw_atu_nuts_codes.sql),
+   * [ogr_fdw_dpa.sql](https://github.com/Davis-Klavins/osm-latvia-bot/blob/main/ogr_fdw_dpa.sql),
    * [ogr_fdw_vzd.sql](https://github.com/Davis-Klavins/osm-latvia-bot/blob/main/ogr_fdw_vzd.sql),
    * [aw_csv.sql](https://github.com/Davis-Klavins/osm-latvia-bot/blob/main/aw_csv.sql).
 
