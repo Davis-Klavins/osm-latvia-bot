@@ -7,6 +7,9 @@ cd $DIRECTORY
 # Download and import in the local PostgreSQL database open data of the Central Statistical Bureau of Latvia.
 cd csp
 wget -q https://data.gov.lv/dati/dataset/f4c3be02-cca3-4fd1-b3ea-c3050a155852/resource/6d8624c4-e75a-4080-88eb-c755b5de230a/download/atu_nuts_codes.csv
+wget -q https://data.gov.lv/dati/dataset/2c07c211-0d78-49d3-9500-20b6f54f2a63/resource/93c8a5ed-0930-45f1-afeb-1105b6d5a7ca/download/dpa_2019_public.zip
+unzip -o -q dpa_2019_public.zip
+rm *.zip
 
 # Download and import in the local PostgreSQL database open data of the State Land Service.
 cd ..
