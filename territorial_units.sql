@@ -151,6 +151,28 @@ AS
 CREATE INDEX state_geom_idx ON vzd.state USING GIST (geom);
 */
 
+--Villages.
+DROP TABLE IF EXISTS vzd.villages;
+
+CREATE TABLE vzd.villages (
+  id serial PRIMARY KEY
+  ,geom geometry(MultiPolygon, 4326) NOT NULL
+  ,code BIGINT NOT NULL
+  ,name TEXT NOT NULL
+  );
+
+INSERT INTO vzd.villages (
+  geom
+  ,code
+  ,name
+  )
+SELECT ST_Transform(ST_Multi(geom), 4326)
+  ,kods
+  ,nosaukums
+FROM vzd.ciemi;
+
+CREATE INDEX villages_geom_idx ON vzd.villages USING GIST (geom);
+
 END
 $$ LANGUAGE plpgsql;
 
