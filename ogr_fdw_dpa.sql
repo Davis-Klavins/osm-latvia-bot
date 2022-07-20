@@ -29,3 +29,17 @@ SELECT ST_Transform(ST_Subdivide(geom, 1024), 4326)
 FROM csp.dpa;
 
 CREATE INDEX dpa_div_geom_idx ON csp.dpa_div USING GIST (geom);
+
+--Make geometries valid.
+WITH s
+AS (
+  SELECT id
+    ,(ST_Dump(ST_MakeValid(geom))).geom geom
+  FROM csp.dpa_div
+  WHERE ST_IsValid(geom) = FALSE
+  )
+UPDATE csp.dpa_div u
+SET geom = s.geom
+FROM s
+WHERE u.id = s.id
+  AND ST_GeometryType(s.geom) = 'ST_Polygon';
