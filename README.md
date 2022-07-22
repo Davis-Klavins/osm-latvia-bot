@@ -34,6 +34,7 @@ cd $DIRECTORY
 mkdir osm
 cd osm
 mkdir csp
+mkdir lgia
 mkdir vzd
 cd vzd
 mkdir aw_csv
