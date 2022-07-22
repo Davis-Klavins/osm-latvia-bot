@@ -108,6 +108,7 @@ Set up PostgreSQL database:
    * [vzd.nivkis_adreses()](https://github.com/Davis-Klavins/osm-latvia-bot/blob/main/nivkis_adreses.sql) - maintains addresses of buildings and land parcels (data of the State Land Service);
    * [vzd.nivkis()](https://github.com/Davis-Klavins/osm-latvia-bot/blob/main/nivkis.sql) - maintains buildings and land parcels (data of the State Land Service);
    * [vzd.nivkis_buves_attr()](https://github.com/Davis-Klavins/osm-latvia-bot/blob/main/nivkis_buves_attr.sql) - maintains attributes of buildings (data of the State Land Service);
+   * [lgia.vdb()](https://github.com/Davis-Klavins/osm-latvia-bot/blob/main/vdb.sql) - maintains the Place Names Database (data of the Latvian Geospatial Information Agency);
    * [pgsnapshot_schema()](https://github.com/Davis-Klavins/osm-latvia-bot/blob/main/pgsnapshot_schema.sql) - recreates tables and functions needed to maintain OSM data;
    * [way_geometry()](https://github.com/Davis-Klavins/osm-latvia-bot/blob/main/way_geometry.sql) - creates geometry columns of ways;
    * [in_latvia()](https://github.com/Davis-Klavins/osm-latvia-bot/blob/main/in_latvia.sql) - creates tables with IDs and summary of tags that are located in Latvia;
