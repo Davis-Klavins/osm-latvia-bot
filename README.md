@@ -97,6 +97,7 @@ Set up PostgreSQL database:
 
    * [ogr_fdw_atu_nuts_codes.sql](https://github.com/Davis-Klavins/osm-latvia-bot/blob/main/ogr_fdw_atu_nuts_codes.sql),
    * [ogr_fdw_dpa.sql](https://github.com/Davis-Klavins/osm-latvia-bot/blob/main/ogr_fdw_dpa.sql),
+   * [ogr_fdw_vdb.sql](https://github.com/Davis-Klavins/osm-latvia-bot/blob/main/ogr_fdw_vdb.sql),
    * [ogr_fdw_vzd.sql](https://github.com/Davis-Klavins/osm-latvia-bot/blob/main/ogr_fdw_vzd.sql),
    * [aw_csv.sql](https://github.com/Davis-Klavins/osm-latvia-bot/blob/main/aw_csv.sql).
 
