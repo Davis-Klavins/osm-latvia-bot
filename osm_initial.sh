@@ -18,7 +18,7 @@ for f in dpa_2019_public.*; do
   mv  -- "$f" "dpa${f#dpa_2019_public}"
 done
 
-# Download Place Names DB of the Latvian Geospatial Information Agency.
+# Download the Place Names Database of the Latvian Geospatial Information Agency.
 cd ../..
 cd lgia
 wget -q -O index.html https://www.lgia.gov.lv/lv/place-names-data-open-data
