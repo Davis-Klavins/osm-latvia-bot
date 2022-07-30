@@ -10,7 +10,6 @@ CREATE TEMPORARY TABLE adreses_ekas_sadalitas AS
 SELECT a.*
 FROM vzd.adreses_ekas_sadalitas a
 INNER JOIN vzd.state b ON ST_Within(a.geom, b.geom);
-
 CREATE INDEX adreses_ekas_sadalitas_geom_idx ON adreses_ekas_sadalitas USING GIST (geom);
 */
 
@@ -254,6 +253,25 @@ SET tags = s.tags
 FROM s
 WHERE relations.id = s.id;
 
+--Add address for the closest isolated dwelling whose name matches and is located no more than 25 m from the address point. While data quality of isolated dwellings is being improved, only for nodes that list the Place Names Database as source.
+CREATE TEMPORARY TABLE nodes_addr_add_iso_dw AS
+SELECT a.id
+  ,a.tags || hstore('name', v.nosaukums) || (hstore('addr:country', 'LV') || hstore('addr:district', v.novads) || hstore('addr:city', v.pilseta) || hstore('addr:subdistrict', v.pagasts) || hstore('addr:place', v.ciems) || hstore('addr:housename', v.nosaukums) || hstore('addr:postcode', v.atrib) || hstore('ref:LV:addr', v.adr_cd::TEXT)) - 'addr:district=>NULL, addr:city=>NULL, addr:subdistrict=>NULL, addr:place=>NULL, addr:housename=>NULL, addr:postcode=>NULL'::hstore tags
+FROM nodes a
+INNER JOIN nodes_lv l ON a.id = l.id
+CROSS JOIN LATERAL(SELECT b.*, b.geom <-> a.geom AS dist FROM vzd.adreses_ekas_sadalitas b ORDER BY dist LIMIT 1) v
+WHERE a.tags -> 'place' LIKE 'isolated_dwelling'
+  AND LOWER(a.tags -> 'source') LIKE 'lģia vietvārdu db'
+  AND LOWER(a.tags -> 'name') = LOWER(v.nosaukums)
+  AND ST_Transform(v.geom, 3059) <-> ST_Transform(a.geom, 3059) <= 25;
+
+ALTER TABLE nodes_addr_add_iso_dw ADD PRIMARY KEY (id);
+
+UPDATE nodes
+SET tags = s.tags
+FROM nodes_addr_add_iso_dw s
+WHERE nodes.id = s.id;
+
 --Relations containing building polygons.
 CREATE TEMPORARY TABLE relations_geometry AS
 WITH i
@@ -331,7 +349,7 @@ WHERE tags ? 'building'
   AND ST_GeometryType(c.geom) = 'ST_Polygon'
   AND bi.relation_id IS NULL;
 
---Add addresses for building polygons from the State Address Register. Polygon contains only one address point.
+--Add addresses for building polygons from the State Address Register. Polygon contains only one address point. Only address codes not already assigned to isolated dwellings.
 ---Ways.
 CREATE TEMPORARY TABLE ways_addr_add AS
 WITH c
@@ -350,7 +368,12 @@ FROM ways a
 INNER JOIN way_geometry g ON a.id = g.way_id
 INNER JOIN vzd.adreses_ekas_sadalitas v ON ST_Within(v.geom, g.geom)
 INNER JOIN c ON a.id = c.id
-WHERE a.tags ? 'building';
+WHERE a.tags ? 'building'
+  AND v.adr_cd NOT IN (
+    SELECT CAST(tags -> 'ref:LV:addr' AS INT) adr_cd
+    FROM nodes
+    WHERE tags ? 'ref:LV:addr'
+    );
 
 ALTER TABLE ways_addr_add ADD PRIMARY KEY (id);
 
@@ -377,7 +400,12 @@ FROM relations a
 INNER JOIN relations_geometry g ON a.id = g.id
 INNER JOIN vzd.adreses_ekas_sadalitas v ON ST_Within(v.geom, g.geom)
 INNER JOIN c ON a.id = c.id
-WHERE a.tags ? 'building';
+WHERE a.tags ? 'building'
+  AND v.adr_cd NOT IN (
+    SELECT CAST(tags -> 'ref:LV:addr' AS INT) adr_cd
+    FROM nodes
+    WHERE tags ? 'ref:LV:addr'
+    );
 
 ALTER TABLE relations_addr_add ADD PRIMARY KEY (id);
 
@@ -386,7 +414,7 @@ SET tags = s.tags
 FROM relations_addr_add s
 WHERE relations.id = s.id;
 
---Add remaining addresses for building polygons from the State Address Register. Polygon covers more than half of building polygon in cadaster containing address point from which the address is taken.
+--Add remaining addresses for building polygons from the State Address Register. Polygon covers more than half of building polygon in cadaster containing address point from which the address is taken. Only address codes not already assigned to isolated dwellings.
 ---Ways.
 CREATE TEMPORARY TABLE ways_addr_add_2 AS
 WITH c
@@ -415,7 +443,12 @@ INNER JOIN vzd.nivkis_buves n ON ST_Intersects(g.geom, n.geom)
 INNER JOIN vzd.adreses_ekas_sadalitas v ON ST_Within(v.geom, n.geom)
 INNER JOIN c ON a.id = c.id
 WHERE a.tags ? 'building'
-  AND ST_Area(ST_Intersection(g.geom, n.geom)) / ST_Area(g.geom) > 0.5;
+  AND ST_Area(ST_Intersection(g.geom, n.geom)) / ST_Area(g.geom) > 0.5
+  AND v.adr_cd NOT IN (
+    SELECT CAST(tags -> 'ref:LV:addr' AS INT) adr_cd
+    FROM nodes
+    WHERE tags ? 'ref:LV:addr'
+    );
 
 ALTER TABLE ways_addr_add_2 ADD PRIMARY KEY (id);
 
@@ -452,7 +485,12 @@ INNER JOIN vzd.nivkis_buves n ON ST_Intersects(g.geom, n.geom)
 INNER JOIN vzd.adreses_ekas_sadalitas v ON ST_Within(v.geom, n.geom)
 INNER JOIN c ON a.id = c.id
 WHERE a.tags ? 'building'
-  AND ST_Area(ST_Intersection(g.geom, n.geom)) / ST_Area(g.geom) > 0.5;
+  AND ST_Area(ST_Intersection(g.geom, n.geom)) / ST_Area(g.geom) > 0.5
+  AND v.adr_cd NOT IN (
+    SELECT CAST(tags -> 'ref:LV:addr' AS INT) adr_cd
+    FROM nodes
+    WHERE tags ? 'ref:LV:addr'
+    );
 
 ALTER TABLE relations_addr_add_2 ADD PRIMARY KEY (id);
 
@@ -483,7 +521,7 @@ WHERE tags = ''::hstore
     FROM relations_old
     );
 
---Add addresses for address points (nodes containing only addr:* tags) from the State Address Register. Only address codes not already assigned to ways and relations (buildings).
+--Add addresses for address points (nodes containing only addr:* tags) from the State Address Register. Only address codes not already assigned to isolated dwellings, ways and relations (buildings).
 ---Address code matches (address points added previously).
 CREATE TEMPORARY TABLE nodes_addr_add_5 AS
 SELECT a.id
@@ -504,6 +542,11 @@ WHERE t.id IS NULL
   AND v.adr_cd NOT IN (
     SELECT CAST(tags -> 'ref:LV:addr' AS INT) adr_cd
     FROM relations
+    WHERE tags ? 'ref:LV:addr'
+    )
+  AND v.adr_cd NOT IN (
+    SELECT CAST(tags -> 'ref:LV:addr' AS INT) adr_cd
+    FROM nodes
     WHERE tags ? 'ref:LV:addr'
     );
 
