@@ -133,11 +133,12 @@ INSERT INTO vzd.adreses_ekas_koord_del (
   adr_cd
   ,geom
   )
-SELECT adr_cd
-  ,geom
+SELECT a.adr_cd
+  ,a.geom
 FROM vzd.adreses_ekas a
-LEFT OUTER JOIN vzd.aw_eka b ON a.adr_cd = b.kods
-WHERE b.kods IS NULL;
+INNER JOIN vzd.aw_eka b ON a.adr_cd = b.kods
+WHERE a.geom IS NOT NULL
+  AND b.koord_x IS NULL;
 
 --Current, erroneous and deleted addresses.
 ---Main table with objects of addressation.
