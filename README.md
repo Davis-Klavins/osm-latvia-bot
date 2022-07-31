@@ -116,9 +116,11 @@ Set up PostgreSQL database:
 
 ## Source data update
 
-1. [vzd_cadastre.sh](https://github.com/Davis-Klavins/osm-latvia-bot/blob/main/vzd_cadastre.sh) - download and import in the local PostgreSQL database open data of the State Land Service Cadastre Information System (set `DIRECTORY`, `PGPASSWORD`, `IP_ADDRESS` and `PORT` variables). Remove `.exe` if run under Linux. To be run weekly.
+1. [lgia_vdb.sh](https://github.com/Davis-Klavins/osm-latvia-bot/blob/main/lgia_vdb.sh) - download and renew in the local PostgreSQL database open data of the Place Names Database of the Latvian Geospatial Information Agency (set `DIRECTORY`, `PGPASSWORD`, `IP_ADDRESS` and `PORT` variables). To be run occasionally (source data not updated frequently).
 
-2. [csp_vzd_borders_addresses.sh](https://github.com/Davis-Klavins/osm-latvia-bot/blob/main/csp_vzd_borders_addresses.sh) - download and import in the local PostgreSQL database open data of the Central Statistical Bureau of Latvia and the State Land Service (borders and address points) (set `DIRECTORY`, `PGPASSWORD`, `IP_ADDRESS` and `PORT` variables). To be run on working days. For the first time, run also [adreses_his.sql](https://github.com/Davis-Klavins/osm-latvia-bot/blob/main/adreses_his.sql).
+2. [vzd_cadastre.sh](https://github.com/Davis-Klavins/osm-latvia-bot/blob/main/vzd_cadastre.sh) - download and import in the local PostgreSQL database open data of the State Land Service Cadastre Information System (set `DIRECTORY`, `PGPASSWORD`, `IP_ADDRESS` and `PORT` variables). Remove `.exe` if run under Linux. To be run weekly.
+
+3. [csp_vzd_borders_addresses.sh](https://github.com/Davis-Klavins/osm-latvia-bot/blob/main/csp_vzd_borders_addresses.sh) - download and import in the local PostgreSQL database open data of the Central Statistical Bureau of Latvia and the State Land Service (borders and address points) (set `DIRECTORY`, `PGPASSWORD`, `IP_ADDRESS` and `PORT` variables). To be run on working days. For the first time, run also [adreses_his.sql](https://github.com/Davis-Klavins/osm-latvia-bot/blob/main/adreses_his.sql).
 
 ## OSM data update
 
