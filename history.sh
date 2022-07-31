@@ -26,3 +26,4 @@ psql -h $IP_ADDRESS -p $PORT -U osm -d osm -w -c "\COPY history.ways_import (id,
 rm latvia-internal-w.osm.opl
 psql -h $IP_ADDRESS -p $PORT -U osm -d osm -w -c "\COPY history.relations_import (id, version, deleted, changeset_id, tstamp, user_id, user_name, tags, relation_members) FROM latvia-internal-r.osm.opl WITH (DELIMITER ' ')"
 rm latvia-internal-r.osm.opl
+psql -h $IP_ADDRESS -p $PORT -U osm -d osm -w -c "CALL history.history()"
