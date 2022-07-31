@@ -11,6 +11,7 @@ Prerequisites:
 * [jq](https://stedolan.github.io/jq/),
 * [XMLStarlet](http://xmlstar.sourceforge.net/),
 * [osmosis](https://github.com/openstreetmap/osmosis) (set path to Java in bin\osmosis.bat on Windows),
+* [Osmium Tool](https://osmcode.org/osmium-tool/),
 * [upload.py](https://wiki.openstreetmap.org/wiki/Upload.py) (files used have been modified and placed in [upload.py directory](https://github.com/Davis-Klavins/osm-latvia-bot/tree/main/upload.py)),
 * If used on Windows, Git to run files with .sh extension.
 
@@ -99,7 +100,8 @@ Set up PostgreSQL database:
    * [ogr_fdw_dpa.sql](https://github.com/Davis-Klavins/osm-latvia-bot/blob/main/ogr_fdw_dpa.sql),
    * [ogr_fdw_vdb.sql](https://github.com/Davis-Klavins/osm-latvia-bot/blob/main/ogr_fdw_vdb.sql),
    * [ogr_fdw_vzd.sql](https://github.com/Davis-Klavins/osm-latvia-bot/blob/main/ogr_fdw_vzd.sql),
-   * [aw_csv.sql](https://github.com/Davis-Klavins/osm-latvia-bot/blob/main/aw_csv.sql).
+   * [aw_csv.sql](https://github.com/Davis-Klavins/osm-latvia-bot/blob/main/aw_csv.sql),
+   * [history.sql](https://github.com/Davis-Klavins/osm-latvia-bot/blob/main/history.sql).
 
 8. In osm database, create procedures:
 
@@ -112,6 +114,7 @@ Set up PostgreSQL database:
    * [pgsnapshot_schema()](https://github.com/Davis-Klavins/osm-latvia-bot/blob/main/pgsnapshot_schema.sql) - recreates tables and functions needed to maintain OSM data;
    * [way_geometry()](https://github.com/Davis-Klavins/osm-latvia-bot/blob/main/way_geometry.sql) - creates geometry columns of ways;
    * [in_latvia()](https://github.com/Davis-Klavins/osm-latvia-bot/blob/main/in_latvia.sql) - creates tables with IDs and summary of tags that are located in Latvia;
+   * [history.history()](https://github.com/Davis-Klavins/osm-latvia-bot/blob/main/history_proc.sql) - maintains historical OSM data;
    * [addresses()](https://github.com/Davis-Klavins/osm-latvia-bot/blob/main/addresses.sql) - data processing procedure of addresses.
 
 ## Source data update
@@ -129,6 +132,12 @@ To be run daily.
 1. [osm_1.sh](https://github.com/Davis-Klavins/osm-latvia-bot/blob/main/osm_1.sh) - download [tags_4_addresses.csv](https://github.com/Davis-Klavins/osm-latvia-bot/blob/main/tags_4_addresses.csv) and OSM data of Latvia (combine most recent data from Geofabrik and changes made afterwards) (set `DIRECTORY`, `PGPASSWORD`, `IP_ADDRESS` and `PORT` variables).
 2. [osm_2.bat](https://github.com/Davis-Klavins/osm-latvia-bot/blob/main/osm_2.bat) - update OSM data in the local PostgreSQL database and derive osmChange file (set `DIRECTORY`, `PGPASSWORD`, `IP_ADDRESS` and `PORT` variables). Large amount of changes lead to an error. Must be rewritten and merged with [osm_1.sh](https://github.com/Davis-Klavins/osm-latvia-bot/blob/main/osm_1.sh) and [osm_3.sh](https://github.com/Davis-Klavins/osm-latvia-bot/blob/main/osm_3.sh) to run under Linux.
 4. [osm_3.sh](https://github.com/Davis-Klavins/osm-latvia-bot/blob/main/osm_3.sh) - split osmChange file and upload changes (set `DIRECTORY` variable and [OSM user password](https://github.com/Davis-Klavins/osm-latvia-bot/blob/main/osm_3.sh#L8)). Separate changeset is created for every 10 000 elements and closed.
+
+## OSM historical data update
+
+1. Download latest internal OSM history data from Geofabrik: `wget -q -O latvia-internal.osh.pbf -N --no-cookies --header "Cookie: $(cat cookie.txt | cut -d ';' -f 1)" https://osm-internal.download.geofabrik.de/europe/latvia-internal.osh.pbf`.
+2. Convert to the [OPL file format](https://osmcode.org/opl-file-format/): `osmium cat latvia-internal.osh.pbf -o latvia-internal.osm.opl`.
+3. [history.sh](https://github.com/Davis-Klavins/osm-latvia-bot/blob/main/history.sh) - preprocess and update data in the local PostgreSQL database (set `DIRECTORY`, `PGPASSWORD`, `IP_ADDRESS` and `PORT` variables).
 
 ## Optional
 
