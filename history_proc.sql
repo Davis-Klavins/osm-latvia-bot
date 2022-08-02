@@ -46,7 +46,7 @@ SELECT id
   ,CASE 
     WHEN longitude LIKE ''
       THEN NULL
-    ELSE ST_SetSRID(ST_MakePoint(longitude::DECIMAL(9, 7), latitude::DECIMAL(9, 7)), 4326)
+    ELSE ST_SetSRID(ST_MakePoint(longitude::DECIMAL(10, 7), latitude::DECIMAL(9, 7)), 4326)
     END
 FROM history.nodes_import
 ORDER BY tstamp
