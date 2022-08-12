@@ -72,7 +72,7 @@ amenity,stripclub,TRUE,TRUE,TRUE
 amenity,student_accommodation,TRUE,TRUE,TRUE
 amenity,studio,TRUE,TRUE,TRUE
 amenity,theatre,TRUE,TRUE,TRUE
-amenity,toilets,TRUE,TRUE,TRUE
+amenity,toilets,,,TRUE
 amenity,townhall,TRUE,TRUE,TRUE
 amenity,university,TRUE,TRUE,TRUE
 amenity,vehicle_inspection,TRUE,TRUE,TRUE
