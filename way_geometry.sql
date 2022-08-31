@@ -4,7 +4,7 @@ LANGUAGE 'plpgsql'
 
 AS $BODY$BEGIN
 
---Downloaded from https://github.com/openstreetmap/osmosis/blob/master/package/script/contrib/CreateGeometryForWays.sql, replaced Collect with ST_Collect and excluded ways that have been clipped (don't have all nodes) during osmupdate with *.poly file.
+--Downloaded from https://github.com/openstreetmap/osmosis/blob/master/package/script/contrib/CreateGeometryForWays.sql, replaced Collect with ST_Collect, increased ST_NumPoints to 4 and excluded ways that have been clipped (don't have all nodes) during osmupdate with *.poly file.
 
 -------------------------------------------------------------------------------
 -- The following script creates a new table for the pgsql simple schema for storing full way geometries.
@@ -53,7 +53,7 @@ WHERE way_id IN (
           FROM nodes n
           LEFT JOIN way_nodes wn ON n.id = wn.node_id
           WHERE ways.id = wn.way_id
-          )) >= 3
+          )) >= 4
     );
 
 -- Now we need to add the polyline geometry for every closed way.
@@ -88,7 +88,7 @@ WHERE ST_IsClosed((
       FROM nodes n
       LEFT JOIN way_nodes wn ON n.id = wn.node_id
       WHERE ways.id = wn.way_id
-      )) >= 3
+      )) >= 4
   AND b.way_id IS NULL; -- Exclude ways that have been clipped (don't have all nodes) during osmupdate with *.poly file.
 
 --Make geometries valid.
