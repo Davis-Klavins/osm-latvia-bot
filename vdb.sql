@@ -65,9 +65,9 @@ SELECT objektaid
   ,galv_rajons_agrak
   ,atkkods
   ,arisid
-  ,raksturojums
-  ,zinas_par_objektu
-  ,papildus_zinas_par_nosaukumu
+  ,TRIM(raksturojums)
+  ,TRIM(zinas_par_objektu)
+  ,TRIM(papildus_zinas_par_nosaukumu)
   ,ST_SetSRID(ST_MakePoint(geogarums, geoplatums), 4326)
   ,REPLACE(izveides_datums, ',', '.')::TIMESTAMP
   ,REPLACE(pedejo_izmainu_datums, ',', '.')::TIMESTAMP
