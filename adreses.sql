@@ -488,6 +488,7 @@ INSERT INTO vzd.adreses (
   ,statuss
   ,apstipr
   ,apst_pak
+  ,std
   ,vkur_cd
   ,vkur_tips
   ,nosaukums
@@ -502,6 +503,7 @@ SELECT kods
   ,statuss
   ,apstipr
   ,apst_pak
+  ,nosaukums
   ,vkur_cd
   ,vkur_tips
   ,nosaukums
