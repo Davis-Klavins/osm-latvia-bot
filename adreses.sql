@@ -940,6 +940,10 @@ WHERE to_timestamp(dat_mod, 'dd.mm.yyyy HH24:MI:SS')::TIMESTAMP > (
     WHERE tips_cd = 113
     );
 
+DELETE
+FROM vzd.adreses_his
+WHERE adr_cd = adr_cd_his;
+
 END;
 $BODY$;
 
