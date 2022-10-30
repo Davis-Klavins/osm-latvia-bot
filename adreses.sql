@@ -216,11 +216,11 @@ SELECT kods
   ,statuss
   ,apstipr
   ,apst_pak
-  ,std
+  ,TRIM(regexp_replace(std, '\s+', ' ', 'g'))
   ,vkur_cd
   ,vkur_tips
-  ,TRIM(nosaukums)
-  ,TRIM(sort_nos)
+  ,TRIM(regexp_replace(nosaukums, '\s+', ' ', 'g'))
+  ,TRIM(regexp_replace(sort_nos, '\s+', ' ', 'g'))
   ,CASE 
     WHEN atrib LIKE ''
       THEN NULL
@@ -257,11 +257,11 @@ SELECT kods
   ,statuss
   ,apstipr
   ,apst_pak
-  ,std
+  ,TRIM(regexp_replace(std, '\s+', ' ', 'g'))
   ,vkur_cd
   ,vkur_tips
-  ,TRIM(nosaukums)
-  ,TRIM(sort_nos)
+  ,TRIM(regexp_replace(nosaukums, '\s+', ' ', 'g'))
+  ,TRIM(regexp_replace(sort_nos, '\s+', ' ', 'g'))
   ,CASE 
     WHEN atrib LIKE ''
       THEN NULL
@@ -298,11 +298,11 @@ SELECT kods
   ,statuss
   ,apstipr
   ,apst_pak
-  ,std
+  ,TRIM(regexp_replace(std, '\s+', ' ', 'g'))
   ,vkur_cd
   ,vkur_tips
-  ,TRIM(nosaukums)
-  ,TRIM(sort_nos)
+  ,TRIM(regexp_replace(nosaukums, '\s+', ' ', 'g'))
+  ,TRIM(regexp_replace(sort_nos, '\s+', ' ', 'g'))
   ,CASE 
     WHEN atrib LIKE ''
       THEN NULL
@@ -339,11 +339,11 @@ SELECT kods
   ,statuss
   ,apstipr
   ,apst_pak
-  ,std
+  ,TRIM(regexp_replace(std, '\s+', ' ', 'g'))
   ,vkur_cd
   ,vkur_tips
-  ,TRIM(nosaukums)
-  ,TRIM(sort_nos)
+  ,TRIM(regexp_replace(nosaukums, '\s+', ' ', 'g'))
+  ,TRIM(regexp_replace(sort_nos, '\s+', ' ', 'g'))
   ,CASE 
     WHEN atrib LIKE ''
       THEN NULL
@@ -380,11 +380,11 @@ SELECT kods
   ,statuss
   ,apstipr
   ,apst_pak
-  ,std
+  ,TRIM(regexp_replace(std, '\s+', ' ', 'g'))
   ,vkur_cd
   ,vkur_tips
-  ,TRIM(nosaukums)
-  ,TRIM(sort_nos)
+  ,TRIM(regexp_replace(nosaukums, '\s+', ' ', 'g'))
+  ,TRIM(regexp_replace(sort_nos, '\s+', ' ', 'g'))
   ,CASE 
     WHEN atrib LIKE ''
       THEN NULL
@@ -421,11 +421,11 @@ SELECT kods
   ,statuss
   ,apstipr
   ,apst_pak
-  ,std
+  ,TRIM(regexp_replace(std, '\s+', ' ', 'g'))
   ,vkur_cd
   ,vkur_tips
-  ,TRIM(nosaukums)
-  ,TRIM(sort_nos)
+  ,TRIM(regexp_replace(nosaukums, '\s+', ' ', 'g'))
+  ,TRIM(regexp_replace(sort_nos, '\s+', ' ', 'g'))
   ,CASE 
     WHEN atrib LIKE ''
       THEN NULL
@@ -462,11 +462,11 @@ SELECT kods
   ,statuss
   ,apstipr
   ,apst_pak
-  ,std
+  ,TRIM(regexp_replace(std, '\s+', ' ', 'g'))
   ,vkur_cd
   ,vkur_tips
-  ,TRIM(nosaukums)
-  ,TRIM(sort_nos)
+  ,TRIM(regexp_replace(nosaukums, '\s+', ' ', 'g'))
+  ,TRIM(regexp_replace(sort_nos, '\s+', ' ', 'g'))
   ,CASE 
     WHEN atrib LIKE ''
       THEN NULL
@@ -503,11 +503,11 @@ SELECT kods
   ,statuss
   ,apstipr
   ,apst_pak
-  ,nosaukums
+  ,TRIM(regexp_replace(nosaukums, '\s+', ' ', 'g'))
   ,vkur_cd
   ,vkur_tips
-  ,TRIM(nosaukums)
-  ,TRIM(sort_nos)
+  ,TRIM(regexp_replace(nosaukums, '\s+', ' ', 'g'))
+  ,TRIM(regexp_replace(sort_nos, '\s+', ' ', 'g'))
   ,CASE 
     WHEN atrib LIKE ''
       THEN NULL
@@ -544,7 +544,7 @@ INSERT INTO vzd.adreses_pp (
   ,ppils
   )
 SELECT kods
-  ,TRIM(ppils)
+  ,TRIM(regexp_replace(ppils, '\s+', ' ', 'g'))
 FROM vzd.aw_ppils;
 
 ---Additional data on buildings.
@@ -767,7 +767,7 @@ INSERT INTO vzd.adreses_his (
   )
 SELECT kods
   ,tips_cd
-  ,std
+  ,TRIM(regexp_replace(std, '\s+', ' ', 'g'))
   ,dat_sak::DATE
   ,to_timestamp(dat_mod, 'dd.mm.yyyy HH24:MI:SS')::TIMESTAMP
   ,CASE 
@@ -795,7 +795,7 @@ INSERT INTO vzd.adreses_his (
 SELECT kods
   ,kods_his
   ,tips_cd
-  ,std
+  ,TRIM(regexp_replace(std, '\s+', ' ', 'g'))
   ,dat_sak::DATE
   ,to_timestamp(dat_mod, 'dd.mm.yyyy HH24:MI:SS')::TIMESTAMP
   ,CASE 
@@ -821,7 +821,7 @@ INSERT INTO vzd.adreses_his (
   )
 SELECT kods
   ,tips_cd
-  ,std
+  ,TRIM(regexp_replace(std, '\s+', ' ', 'g'))
   ,dat_sak::DATE
   ,to_timestamp(dat_mod, 'dd.mm.yyyy HH24:MI:SS')::TIMESTAMP
   ,CASE 
@@ -847,7 +847,7 @@ INSERT INTO vzd.adreses_his (
   )
 SELECT kods
   ,tips_cd
-  ,std
+  ,TRIM(regexp_replace(std, '\s+', ' ', 'g'))
   ,dat_sak::DATE
   ,to_timestamp(dat_mod, 'dd.mm.yyyy HH24:MI:SS')::TIMESTAMP
   ,CASE 
@@ -873,7 +873,7 @@ INSERT INTO vzd.adreses_his (
   )
 SELECT kods
   ,tips_cd
-  ,std
+  ,TRIM(regexp_replace(std, '\s+', ' ', 'g'))
   ,dat_sak::DATE
   ,to_timestamp(dat_mod, 'dd.mm.yyyy HH24:MI:SS')::TIMESTAMP
   ,CASE 
@@ -899,7 +899,7 @@ INSERT INTO vzd.adreses_his (
   )
 SELECT kods
   ,tips_cd
-  ,std
+  ,TRIM(regexp_replace(std, '\s+', ' ', 'g'))
   ,dat_sak::DATE
   ,to_timestamp(dat_mod, 'dd.mm.yyyy HH24:MI:SS')::TIMESTAMP
   ,CASE 
@@ -925,7 +925,7 @@ INSERT INTO vzd.adreses_his (
   )
 SELECT kods
   ,tips_cd
-  ,std
+  ,TRIM(regexp_replace(std, '\s+', ' ', 'g'))
   ,dat_sak::DATE
   ,to_timestamp(dat_mod, 'dd.mm.yyyy HH24:MI:SS')::TIMESTAMP
   ,CASE 
