@@ -219,8 +219,8 @@ SELECT kods
   ,std
   ,vkur_cd
   ,vkur_tips
-  ,nosaukums
-  ,sort_nos
+  ,TRIM(nosaukums)
+  ,TRIM(sort_nos)
   ,CASE 
     WHEN atrib LIKE ''
       THEN NULL
@@ -260,8 +260,8 @@ SELECT kods
   ,std
   ,vkur_cd
   ,vkur_tips
-  ,nosaukums
-  ,sort_nos
+  ,TRIM(nosaukums)
+  ,TRIM(sort_nos)
   ,CASE 
     WHEN atrib LIKE ''
       THEN NULL
@@ -301,8 +301,8 @@ SELECT kods
   ,std
   ,vkur_cd
   ,vkur_tips
-  ,nosaukums
-  ,sort_nos
+  ,TRIM(nosaukums)
+  ,TRIM(sort_nos)
   ,CASE 
     WHEN atrib LIKE ''
       THEN NULL
@@ -342,8 +342,8 @@ SELECT kods
   ,std
   ,vkur_cd
   ,vkur_tips
-  ,nosaukums
-  ,sort_nos
+  ,TRIM(nosaukums)
+  ,TRIM(sort_nos)
   ,CASE 
     WHEN atrib LIKE ''
       THEN NULL
@@ -383,8 +383,8 @@ SELECT kods
   ,std
   ,vkur_cd
   ,vkur_tips
-  ,nosaukums
-  ,sort_nos
+  ,TRIM(nosaukums)
+  ,TRIM(sort_nos)
   ,CASE 
     WHEN atrib LIKE ''
       THEN NULL
@@ -424,8 +424,8 @@ SELECT kods
   ,std
   ,vkur_cd
   ,vkur_tips
-  ,nosaukums
-  ,sort_nos
+  ,TRIM(nosaukums)
+  ,TRIM(sort_nos)
   ,CASE 
     WHEN atrib LIKE ''
       THEN NULL
@@ -465,8 +465,8 @@ SELECT kods
   ,std
   ,vkur_cd
   ,vkur_tips
-  ,nosaukums
-  ,sort_nos
+  ,TRIM(nosaukums)
+  ,TRIM(sort_nos)
   ,CASE 
     WHEN atrib LIKE ''
       THEN NULL
@@ -506,8 +506,8 @@ SELECT kods
   ,nosaukums
   ,vkur_cd
   ,vkur_tips
-  ,nosaukums
-  ,sort_nos
+  ,TRIM(nosaukums)
+  ,TRIM(sort_nos)
   ,CASE 
     WHEN atrib LIKE ''
       THEN NULL
@@ -544,7 +544,7 @@ INSERT INTO vzd.adreses_pp (
   ,ppils
   )
 SELECT kods
-  ,ppils
+  ,TRIM(ppils)
 FROM vzd.aw_ppils;
 
 ---Additional data on buildings.
