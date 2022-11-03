@@ -27,7 +27,7 @@ Prerequisites:
 
 ## Initial setup
 
-Set up local directories (set `DIRECTORY` variable to the directory where data will be stored locally):
+Set up local directories (set `DIRECTORY` variable to the directory where data will be stored locally (data directory)):
 
 ```sh
 export DIRECTORY=
@@ -41,7 +41,9 @@ cd vzd
 mkdir aw_csv
 ```
 
-Place [oauth_cookie_client.py](https://github.com/geofabrik/sendfile_osm_oauth_protector/blob/master/oauth_cookie_client.py), [settings.json](settings.json) (set `password`), [latvia.poly](https://download.geofabrik.de/europe/latvia.poly) and files from the [upload.py directory](upload.py) in the directory where data will be stored locally.
+Clone this repository in the data directory.
+
+Place [oauth_cookie_client.py](https://github.com/geofabrik/sendfile_osm_oauth_protector/blob/master/oauth_cookie_client.py), [settings.json](settings.json) (set `password`), [latvia.poly](https://download.geofabrik.de/europe/latvia.poly) and files from the [upload.py directory](upload.py) in the data directory.
 
 Set up PostgreSQL database:
 
