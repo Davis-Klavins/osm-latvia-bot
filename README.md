@@ -29,7 +29,7 @@ Prerequisites:
 
 Set up local directories (set `DIRECTORY` variable to the directory where data will be stored locally):
 
-```
+```sh
 export DIRECTORY=
 cd $DIRECTORY
 mkdir osm
@@ -47,7 +47,7 @@ Set up PostgreSQL database:
 
 1. Create user for data editing (change `password` to user's password):
 
-   ```
+   ```sql
    DROP USER IF EXISTS osm;
 
    CREATE USER osm
@@ -58,7 +58,7 @@ Set up PostgreSQL database:
 
 3. Create database to store OSM data.
 
-   ```
+   ```sql
    CREATE DATABASE osm;
 
    GRANT ALL
@@ -68,7 +68,7 @@ Set up PostgreSQL database:
 
 4. In osm database:
 
-   ```
+   ```sql
    CREATE EXTENSION postgis;
 
    CREATE EXTENSION hstore;
@@ -82,7 +82,7 @@ Set up PostgreSQL database:
 
 5. In osm database, create table to contain tags that allow object to have address tags:
 
-   ```
+   ```sql
    CREATE TABLE tags_4_addresses (
      key TEXT NOT NULL
      ,value TEXT
