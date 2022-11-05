@@ -102,6 +102,7 @@ Set up PostgreSQL database:
    * [ogr_fdw_dpa.sql](ogr_fdw_dpa.sql),
    * [ogr_fdw_vdb.sql](ogr_fdw_vdb.sql),
    * [ogr_fdw_vzd.sql](ogr_fdw_vzd.sql),
+   * [ogr_fdw_vzd_aw_del.sql](ogr_fdw_vzd_aw_del.sql),
    * [aw_csv.sql](aw_csv.sql),
    * [history.sql](history.sql).
 
