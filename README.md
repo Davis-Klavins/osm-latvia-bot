@@ -110,6 +110,8 @@ Set up PostgreSQL database:
 
    * [vzd.territorial_units()](territorial_units.sql) - maintains borders of administrative and territorial units (data of the State Land Service and the Central Statistical Bureau of Latvia);
    * [vzd.adreses()](adreses.sql) - maintains addresses (points, data of the State Land Service), execute also sections commented out that create tables;
+   * [vzd.adreses_his_ekas_split()](adreses_his_ekas_split.sql) - splits historical notations of addresses of buildings.
+   * [vzd.adreses_his_ekas_previous()](adreses_his_ekas_previous.sql) - returns previous house name or number and street name of addresses of buildings.
    * [vzd.nivkis_adreses()](nivkis_adreses.sql) - maintains addresses of buildings and land parcels (data of the State Land Service);
    * [vzd.nivkis()](nivkis.sql) - maintains buildings and land parcels (data of the State Land Service);
    * [vzd.nivkis_buves_attr()](nivkis_buves_attr.sql) - maintains attributes of buildings (data of the State Land Service);
