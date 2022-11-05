@@ -11,7 +11,7 @@ export PORT=
 cd $DIRECTORY/osm-latvia-bot
 
 # Update local repository.
-git pull origin main
+# git pull origin main
 
 # Import data of tags that allow object to have address tags.
 psql -h $IP_ADDRESS -p $PORT -U osm -d osm -w -c "TRUNCATE TABLE tags_4_addresses;"
