@@ -51,7 +51,7 @@ wget -q https://data.gov.lv/dati/dataset/0c5e1a3b-0097-45a9-afa9-7f7262f3f623/re
 unzip -o -q aw_his_csv.zip
 rm *.zip
 
-## Coordinates of deleted addresses of buildings.
+## Coordinates of deleted addresses of buildings. Script based on https://gist.github.com/laacz/8dfb7b69221790eb8d88e5fb91b9b088.
 cd ..
 mkdir aw_del
 cd aw_del
