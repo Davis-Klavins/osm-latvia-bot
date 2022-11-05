@@ -50,3 +50,17 @@ rm *.zip
 wget -q https://data.gov.lv/dati/dataset/0c5e1a3b-0097-45a9-afa9-7f7262f3f623/resource/c3d36546-f92c-4822-a0c4-ee7f1b7760a4/download/aw_his_csv.zip
 unzip -o -q aw_his_csv.zip
 rm *.zip
+
+## Coordinates of deleted addresses of buildings.
+cd ..
+mkdir aw_del
+cd aw_del
+
+FILES=$(curl https://data.gov.lv/dati/lv/dataset/f0624a01-4612-4092-a04e-5e1b6489668c.jsonld | jq -r '."@graph"[]."dcat:accessURL"."@id" | select(. != null)')
+
+for FILE in $FILES
+do
+  curl "$FILE" -o ${FILE##*/}
+done
+
+mv dzestas_ek_koordinates_*.xlsx aw_eka_del.xlsx
