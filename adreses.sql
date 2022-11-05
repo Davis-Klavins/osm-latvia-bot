@@ -127,6 +127,16 @@ COMMENT ON COLUMN vzd.adreses_ekas_koord_del.id IS 'ID.';
 COMMENT ON COLUMN vzd.adreses_ekas_koord_del.adr_cd IS 'Adresācijas objekta kods.';
 
 COMMENT ON COLUMN vzd.adreses_ekas_koord_del.geom IS 'Ģeometrija.';
+
+--Import historical data published by the State Land Service.
+INSERT INTO vzd.adreses_ekas_koord_del (
+  adr_cd
+  ,geom
+  )
+SELECT dz__st__s_adreses_kods
+  ,ST_SetSRID(ST_MakePoint(koordin__ta_y__austrumu__virziens_, koordin__ta_x__zieme__u_virziens__), 3059)
+FROM vzd.aw_eka_del
+ORDER BY beigu_datums::DATE;
 */
 
 INSERT INTO vzd.adreses_ekas_koord_del (
