@@ -43,7 +43,7 @@ mkdir aw_csv
 
 Clone this repository in the data directory.
 
-Place [oauth_cookie_client.py](https://github.com/geofabrik/sendfile_osm_oauth_protector/blob/master/oauth_cookie_client.py), [settings.json](settings.json) (set `password`), [latvia.poly](https://download.geofabrik.de/europe/latvia.poly) and files from the [upload.py directory](upload.py) in the data directory.
+Place [oauth_cookie_client.py](https://github.com/geofabrik/sendfile_osm_oauth_protector/blob/master/oauth_cookie_client.py), [settings.json](settings.json) (set `password`) and [latvia.poly](https://download.geofabrik.de/europe/latvia.poly) in the data directory.
 
 Set up PostgreSQL database:
 
