@@ -59,7 +59,7 @@ CREATE TABLE nodes_old (
   ,geom geometry(Point, 4326)
   );
 
----Insert all nodes in Latvia that have at least one tag containing "addr", except "old_addr", "addr:unit", "addr:door", "addr:flats" and "addr:floor".
+---Insert all nodes in Latvia that have at least one tag containing "addr", except "addr:unit", "addr:door", "addr:flats" and "addr:floor".
 INSERT INTO nodes_old (
   id
   ,version
@@ -82,7 +82,6 @@ WHERE a.tags ?| (
     SELECT array_agg(tag)
     FROM tags
     WHERE tag LIKE '%addr%'
-      AND tag NOT LIKE 'old_addr%'
       AND tag NOT LIKE 'addr:unit'
       AND tag NOT LIKE 'addr:door'
       AND tag NOT LIKE 'addr:flats'
@@ -90,7 +89,7 @@ WHERE a.tags ?| (
     )
 ORDER BY id;
 
---Delete all tags in Latvia from nodes containing "addr", except "old_addr", "addr:unit", "addr:door", "addr:flats" and "addr:floor".
+--Delete all tags in Latvia from nodes containing "addr", except "addr:unit", "addr:door", "addr:flats" and "addr:floor".
 WITH s
 AS (
   SELECT a.id
@@ -98,7 +97,6 @@ AS (
       SELECT array_agg(tag)
       FROM tags
       WHERE tag LIKE '%addr%'
-        AND tag NOT LIKE 'old_addr%'
         AND tag NOT LIKE 'addr:unit'
         AND tag NOT LIKE 'addr:door'
         AND tag NOT LIKE 'addr:flats'
@@ -110,7 +108,6 @@ AS (
       SELECT array_agg(tag)
       FROM tags
       WHERE tag LIKE '%addr%'
-        AND tag NOT LIKE 'old_addr%'
         AND tag NOT LIKE 'addr:unit'
         AND tag NOT LIKE 'addr:door'
         AND tag NOT LIKE 'addr:flats'
@@ -135,7 +132,7 @@ CREATE TABLE ways_old (
   ,nodes BIGINT []
   );
 
----Insert all ways in Latvia that have at least one tag containing "addr", except "old_addr" and "addr:unit".
+---Insert all ways in Latvia that have at least one tag containing "addr", except "addr:unit".
 INSERT INTO ways_old (
   id
   ,version
@@ -158,12 +155,11 @@ WHERE a.tags ?| (
     SELECT array_agg(tag)
     FROM tags
     WHERE tag LIKE '%addr%'
-      AND tag NOT LIKE 'old_addr%'
       AND tag NOT LIKE 'addr:unit'
     )
 ORDER BY id;
 
---Delete all tags in Latvia from ways containing "addr", except "old_addr" and "addr:unit".
+--Delete all tags in Latvia from ways containing "addr", except "addr:unit".
 WITH s
 AS (
   SELECT a.id
@@ -171,7 +167,6 @@ AS (
       SELECT array_agg(tag)
       FROM tags
       WHERE tag LIKE '%addr%'
-        AND tag NOT LIKE 'old_addr%'
         AND tag NOT LIKE 'addr:unit'
       ) tags
   FROM ways a
@@ -180,7 +175,6 @@ AS (
       SELECT array_agg(tag)
       FROM tags
       WHERE tag LIKE '%addr%'
-        AND tag NOT LIKE 'old_addr%'
         AND tag NOT LIKE 'addr:unit'
       )
   )
@@ -201,7 +195,7 @@ CREATE TABLE relations_old (
   ,tags hstore
   );
 
----Insert all relations in Latvia that have at least one tag containing "addr", except "old_addr" and "addr:region".
+---Insert all relations in Latvia that have at least one tag containing "addr", except "addr:region".
 INSERT INTO relations_old (
   id
   ,version
@@ -222,12 +216,11 @@ WHERE a.tags ?| (
     SELECT array_agg(tag)
     FROM tags
     WHERE tag LIKE '%addr%'
-      AND tag NOT LIKE 'old_addr%'
       AND tag NOT LIKE 'addr:region'
     )
 ORDER BY id;
 
---Delete all tags in Latvia from relations containing "addr", except "old_addr" and "addr:region".
+--Delete all tags in Latvia from relations containing "addr", except "addr:region".
 WITH s
 AS (
   SELECT a.id
@@ -235,7 +228,6 @@ AS (
       SELECT array_agg(tag)
       FROM tags
       WHERE tag LIKE '%addr%'
-        AND tag NOT LIKE 'old_addr%'
         AND tag NOT LIKE 'addr:region'
       ) tags
   FROM relations a
@@ -244,7 +236,6 @@ AS (
       SELECT array_agg(tag)
       FROM tags
       WHERE tag LIKE '%addr%'
-        AND tag NOT LIKE 'old_addr%'
         AND tag NOT LIKE 'addr:region'
       )
   )
@@ -256,16 +247,29 @@ WHERE relations.id = s.id;
 --Add address for the closest isolated dwelling whose name matches and is located no more than 25 m from the address point. While data quality of isolated dwellings is being improved, only for nodes that list the Place Names Database as source.
 CREATE TEMPORARY TABLE nodes_addr_add_iso_dw AS
 SELECT a.id
-  ,a.tags || hstore('name', v.nosaukums) || (hstore('addr:country', 'LV') || hstore('addr:district', v.novads) || hstore('addr:city', v.pilseta) || hstore('addr:subdistrict', v.pagasts) || hstore('addr:place', v.ciems) || hstore('addr:housename', v.nosaukums) || hstore('addr:postcode', v.atrib) || hstore('ref:LV:addr', v.adr_cd::TEXT)) - 'addr:district=>NULL, addr:city=>NULL, addr:subdistrict=>NULL, addr:place=>NULL, addr:housename=>NULL, addr:postcode=>NULL'::hstore tags
+  ,a.tags || hstore('name', v.nosaukums) || (hstore('addr:country', 'LV') || hstore('addr:district', v.novads) || hstore('addr:city', v.pilseta) || hstore('addr:subdistrict', v.pagasts) || hstore('addr:place', v.ciems) || hstore('addr:housename', v.nosaukums) || hstore('addr:postcode', v.atrib) || hstore('ref:LV:addr', v.adr_cd::TEXT) || hstore('old_addr:housename', p.nosaukums) || hstore('old_addr:housenumber', p.nr) || hstore('old_addr:street', p.iela)) - 'addr:district=>NULL, addr:city=>NULL, addr:subdistrict=>NULL, addr:place=>NULL, addr:housename=>NULL, addr:postcode=>NULL, old_addr:housename=>NULL, old_addr:housenumber=>NULL, old_addr:street=>NULL'::hstore tags
 FROM nodes a
 INNER JOIN nodes_lv l ON a.id = l.id
 CROSS JOIN LATERAL(SELECT b.*, b.geom <-> a.geom AS dist FROM vzd.adreses_ekas_sadalitas b ORDER BY dist LIMIT 1) v
+LEFT OUTER JOIN vzd.adreses_his_ekas_previous p ON v.adr_cd = p.adr_cd
 WHERE a.tags -> 'place' LIKE 'isolated_dwelling'
   AND LOWER(a.tags -> 'source') LIKE 'lģia vietvārdu db'
   AND LOWER(a.tags -> 'name') = LOWER(v.nosaukums)
   AND ST_Transform(v.geom, 3059) <-> ST_Transform(a.geom, 3059) <= 25;
 
 ALTER TABLE nodes_addr_add_iso_dw ADD PRIMARY KEY (id);
+
+UPDATE nodes_addr_add_iso_dw
+SET tags = tags - 'old_addr:housename'::TEXT
+WHERE tags -> 'addr:housename' = tags -> 'old_addr:housename';
+
+UPDATE nodes_addr_add_iso_dw
+SET tags = tags - 'old_addr:housenumber'::TEXT
+WHERE tags -> 'addr:housenumber' = tags -> 'old_addr:housenumber';
+
+UPDATE nodes_addr_add_iso_dw
+SET tags = tags - 'old_addr:street'::TEXT
+WHERE tags -> 'addr:street' = tags -> 'old_addr:street';
 
 UPDATE nodes
 SET tags = s.tags
@@ -363,11 +367,12 @@ AS (
   HAVING COUNT(*) = 1
   )
 SELECT a.id
-  ,(a.tags || hstore('addr:country', 'LV') || hstore('addr:district', v.novads) || hstore('addr:city', v.pilseta) || hstore('addr:subdistrict', v.pagasts) || hstore('addr:place', v.ciems) || hstore('addr:street', v.iela) || hstore('addr:housename', v.nosaukums) || hstore('addr:housenumber', v.nr) || hstore('addr:postcode', v.atrib) || hstore('ref:LV:addr', v.adr_cd::TEXT)) - 'addr:district=>NULL, addr:city=>NULL, addr:subdistrict=>NULL, addr:place=>NULL, addr:street=>NULL, addr:housename=>NULL, addr:housenumber=>NULL, addr:postcode=>NULL'::hstore tags
+  ,(a.tags || hstore('addr:country', 'LV') || hstore('addr:district', v.novads) || hstore('addr:city', v.pilseta) || hstore('addr:subdistrict', v.pagasts) || hstore('addr:place', v.ciems) || hstore('addr:street', v.iela) || hstore('addr:housename', v.nosaukums) || hstore('addr:housenumber', v.nr) || hstore('addr:postcode', v.atrib) || hstore('ref:LV:addr', v.adr_cd::TEXT) || hstore('old_addr:housename', p.nosaukums) || hstore('old_addr:housenumber', p.nr) || hstore('old_addr:street', p.iela)) - 'addr:district=>NULL, addr:city=>NULL, addr:subdistrict=>NULL, addr:place=>NULL, addr:street=>NULL, addr:housename=>NULL, addr:housenumber=>NULL, addr:postcode=>NULL, old_addr:housename=>NULL, old_addr:housenumber=>NULL, old_addr:street=>NULL'::hstore tags
 FROM ways a
 INNER JOIN way_geometry g ON a.id = g.way_id
 INNER JOIN vzd.adreses_ekas_sadalitas v ON ST_Within(v.geom, g.geom)
 INNER JOIN c ON a.id = c.id
+LEFT OUTER JOIN vzd.adreses_his_ekas_previous p ON v.adr_cd = p.adr_cd
 WHERE a.tags ? 'building'
   AND v.adr_cd NOT IN (
     SELECT CAST(tags -> 'ref:LV:addr' AS INT) adr_cd
@@ -376,6 +381,18 @@ WHERE a.tags ? 'building'
     );
 
 ALTER TABLE ways_addr_add ADD PRIMARY KEY (id);
+
+UPDATE ways_addr_add
+SET tags = tags - 'old_addr:housename'::TEXT
+WHERE tags -> 'addr:housename' = tags -> 'old_addr:housename';
+
+UPDATE ways_addr_add
+SET tags = tags - 'old_addr:housenumber'::TEXT
+WHERE tags -> 'addr:housenumber' = tags -> 'old_addr:housenumber';
+
+UPDATE ways_addr_add
+SET tags = tags - 'old_addr:street'::TEXT
+WHERE tags -> 'addr:street' = tags -> 'old_addr:street';
 
 UPDATE ways
 SET tags = s.tags
@@ -395,11 +412,12 @@ AS (
   HAVING COUNT(*) = 1
   )
 SELECT a.id
-  ,(a.tags || hstore('addr:country', 'LV') || hstore('addr:district', v.novads) || hstore('addr:city', v.pilseta) || hstore('addr:subdistrict', v.pagasts) || hstore('addr:place', v.ciems) || hstore('addr:street', v.iela) || hstore('addr:housename', v.nosaukums) || hstore('addr:housenumber', v.nr) || hstore('addr:postcode', v.atrib) || hstore('ref:LV:addr', v.adr_cd::TEXT)) - 'addr:district=>NULL, addr:city=>NULL, addr:subdistrict=>NULL, addr:place=>NULL, addr:street=>NULL, addr:housename=>NULL, addr:housenumber=>NULL, addr:postcode=>NULL'::hstore tags
+  ,(a.tags || hstore('addr:country', 'LV') || hstore('addr:district', v.novads) || hstore('addr:city', v.pilseta) || hstore('addr:subdistrict', v.pagasts) || hstore('addr:place', v.ciems) || hstore('addr:street', v.iela) || hstore('addr:housename', v.nosaukums) || hstore('addr:housenumber', v.nr) || hstore('addr:postcode', v.atrib) || hstore('ref:LV:addr', v.adr_cd::TEXT) || hstore('old_addr:housename', p.nosaukums) || hstore('old_addr:housenumber', p.nr) || hstore('old_addr:street', p.iela)) - 'addr:district=>NULL, addr:city=>NULL, addr:subdistrict=>NULL, addr:place=>NULL, addr:street=>NULL, addr:housename=>NULL, addr:housenumber=>NULL, addr:postcode=>NULL, old_addr:housename=>NULL, old_addr:housenumber=>NULL, old_addr:street=>NULL'::hstore tags
 FROM relations a
 INNER JOIN relations_geometry g ON a.id = g.id
 INNER JOIN vzd.adreses_ekas_sadalitas v ON ST_Within(v.geom, g.geom)
 INNER JOIN c ON a.id = c.id
+LEFT OUTER JOIN vzd.adreses_his_ekas_previous p ON v.adr_cd = p.adr_cd
 WHERE a.tags ? 'building'
   AND v.adr_cd NOT IN (
     SELECT CAST(tags -> 'ref:LV:addr' AS INT) adr_cd
@@ -408,6 +426,18 @@ WHERE a.tags ? 'building'
     );
 
 ALTER TABLE relations_addr_add ADD PRIMARY KEY (id);
+
+UPDATE relations_addr_add
+SET tags = tags - 'old_addr:housename'::TEXT
+WHERE tags -> 'addr:housename' = tags -> 'old_addr:housename';
+
+UPDATE relations_addr_add
+SET tags = tags - 'old_addr:housenumber'::TEXT
+WHERE tags -> 'addr:housenumber' = tags -> 'old_addr:housenumber';
+
+UPDATE relations_addr_add
+SET tags = tags - 'old_addr:street'::TEXT
+WHERE tags -> 'addr:street' = tags -> 'old_addr:street';
 
 UPDATE relations
 SET tags = s.tags
@@ -436,12 +466,13 @@ AS (
   HAVING COUNT(*) = 1
   )
 SELECT a.id
-  ,(a.tags || hstore('addr:country', 'LV') || hstore('addr:district', v.novads) || hstore('addr:city', v.pilseta) || hstore('addr:subdistrict', v.pagasts) || hstore('addr:place', v.ciems) || hstore('addr:street', v.iela) || hstore('addr:housename', v.nosaukums) || hstore('addr:housenumber', v.nr) || hstore('addr:postcode', v.atrib) || hstore('ref:LV:addr', v.adr_cd::TEXT)) - 'addr:district=>NULL, addr:city=>NULL, addr:subdistrict=>NULL, addr:place=>NULL, addr:street=>NULL, addr:housename=>NULL, addr:housenumber=>NULL, addr:postcode=>NULL'::hstore tags
+  ,(a.tags || hstore('addr:country', 'LV') || hstore('addr:district', v.novads) || hstore('addr:city', v.pilseta) || hstore('addr:subdistrict', v.pagasts) || hstore('addr:place', v.ciems) || hstore('addr:street', v.iela) || hstore('addr:housename', v.nosaukums) || hstore('addr:housenumber', v.nr) || hstore('addr:postcode', v.atrib) || hstore('ref:LV:addr', v.adr_cd::TEXT) || hstore('old_addr:housename', p.nosaukums) || hstore('old_addr:housenumber', p.nr) || hstore('old_addr:street', p.iela)) - 'addr:district=>NULL, addr:city=>NULL, addr:subdistrict=>NULL, addr:place=>NULL, addr:street=>NULL, addr:housename=>NULL, addr:housenumber=>NULL, addr:postcode=>NULL, old_addr:housename=>NULL, old_addr:housenumber=>NULL, old_addr:street=>NULL'::hstore tags
 FROM ways a
 INNER JOIN way_geometry g ON a.id = g.way_id
 INNER JOIN vzd.nivkis_buves n ON ST_Intersects(g.geom, n.geom)
 INNER JOIN vzd.adreses_ekas_sadalitas v ON ST_Within(v.geom, n.geom)
 INNER JOIN c ON a.id = c.id
+LEFT OUTER JOIN vzd.adreses_his_ekas_previous p ON v.adr_cd = p.adr_cd
 WHERE a.tags ? 'building'
   AND ST_Area(ST_Intersection(g.geom, n.geom)) / ST_Area(g.geom) > 0.5
   AND v.adr_cd NOT IN (
@@ -451,6 +482,18 @@ WHERE a.tags ? 'building'
     );
 
 ALTER TABLE ways_addr_add_2 ADD PRIMARY KEY (id);
+
+UPDATE ways_addr_add_2
+SET tags = tags - 'old_addr:housename'::TEXT
+WHERE tags -> 'addr:housename' = tags -> 'old_addr:housename';
+
+UPDATE ways_addr_add_2
+SET tags = tags - 'old_addr:housenumber'::TEXT
+WHERE tags -> 'addr:housenumber' = tags -> 'old_addr:housenumber';
+
+UPDATE ways_addr_add_2
+SET tags = tags - 'old_addr:street'::TEXT
+WHERE tags -> 'addr:street' = tags -> 'old_addr:street';
 
 UPDATE ways
 SET tags = s.tags
@@ -478,12 +521,13 @@ AS (
   HAVING COUNT(*) = 1
   )
 SELECT a.id
-  ,(a.tags || hstore('addr:country', 'LV') || hstore('addr:district', v.novads) || hstore('addr:city', v.pilseta) || hstore('addr:subdistrict', v.pagasts) || hstore('addr:place', v.ciems) || hstore('addr:street', v.iela) || hstore('addr:housename', v.nosaukums) || hstore('addr:housenumber', v.nr) || hstore('addr:postcode', v.atrib) || hstore('ref:LV:addr', v.adr_cd::TEXT)) - 'addr:district=>NULL, addr:city=>NULL, addr:subdistrict=>NULL, addr:place=>NULL, addr:street=>NULL, addr:housename=>NULL, addr:housenumber=>NULL, addr:postcode=>NULL'::hstore tags
+  ,(a.tags || hstore('addr:country', 'LV') || hstore('addr:district', v.novads) || hstore('addr:city', v.pilseta) || hstore('addr:subdistrict', v.pagasts) || hstore('addr:place', v.ciems) || hstore('addr:street', v.iela) || hstore('addr:housename', v.nosaukums) || hstore('addr:housenumber', v.nr) || hstore('addr:postcode', v.atrib) || hstore('ref:LV:addr', v.adr_cd::TEXT) || hstore('old_addr:housename', p.nosaukums) || hstore('old_addr:housenumber', p.nr) || hstore('old_addr:street', p.iela)) - 'addr:district=>NULL, addr:city=>NULL, addr:subdistrict=>NULL, addr:place=>NULL, addr:street=>NULL, addr:housename=>NULL, addr:housenumber=>NULL, addr:postcode=>NULL, old_addr:housename=>NULL, old_addr:housenumber=>NULL, old_addr:street=>NULL'::hstore tags
 FROM relations a
 INNER JOIN relations_geometry g ON a.id = g.id
 INNER JOIN vzd.nivkis_buves n ON ST_Intersects(g.geom, n.geom)
 INNER JOIN vzd.adreses_ekas_sadalitas v ON ST_Within(v.geom, n.geom)
 INNER JOIN c ON a.id = c.id
+LEFT OUTER JOIN vzd.adreses_his_ekas_previous p ON v.adr_cd = p.adr_cd
 WHERE a.tags ? 'building'
   AND ST_Area(ST_Intersection(g.geom, n.geom)) / ST_Area(g.geom) > 0.5
   AND v.adr_cd NOT IN (
@@ -493,6 +537,18 @@ WHERE a.tags ? 'building'
     );
 
 ALTER TABLE relations_addr_add_2 ADD PRIMARY KEY (id);
+
+UPDATE relations_addr_add_2
+SET tags = tags - 'old_addr:housename'::TEXT
+WHERE tags -> 'addr:housename' = tags -> 'old_addr:housename';
+
+UPDATE relations_addr_add_2
+SET tags = tags - 'old_addr:housenumber'::TEXT
+WHERE tags -> 'addr:housenumber' = tags -> 'old_addr:housenumber';
+
+UPDATE relations_addr_add_2
+SET tags = tags - 'old_addr:street'::TEXT
+WHERE tags -> 'addr:street' = tags -> 'old_addr:street';
 
 UPDATE relations
 SET tags = s.tags
@@ -525,11 +581,12 @@ WHERE tags = ''::hstore
 ---Address code matches (address points added previously).
 CREATE TEMPORARY TABLE nodes_addr_add_5 AS
 SELECT a.id
-  ,(hstore('addr:country', 'LV') || hstore('addr:district', v.novads) || hstore('addr:city', v.pilseta) || hstore('addr:subdistrict', v.pagasts) || hstore('addr:place', v.ciems) || hstore('addr:housename', v.nosaukums) || hstore('addr:street', v.iela) || hstore('addr:housenumber', v.nr) || hstore('addr:postcode', v.atrib) || hstore('ref:LV:addr', v.adr_cd::TEXT)) - 'addr:district=>NULL, addr:city=>NULL, addr:subdistrict=>NULL, addr:place=>NULL, addr:housename=>NULL, addr:street=>NULL, addr:housenumber=>NULL, addr:postcode=>NULL'::hstore tags
+  ,(hstore('addr:country', 'LV') || hstore('addr:district', v.novads) || hstore('addr:city', v.pilseta) || hstore('addr:subdistrict', v.pagasts) || hstore('addr:place', v.ciems) || hstore('addr:housename', v.nosaukums) || hstore('addr:street', v.iela) || hstore('addr:housenumber', v.nr) || hstore('addr:postcode', v.atrib) || hstore('ref:LV:addr', v.adr_cd::TEXT) || hstore('old_addr:housename', p.nosaukums) || hstore('old_addr:housenumber', p.nr) || hstore('old_addr:street', p.iela)) - 'addr:district=>NULL, addr:city=>NULL, addr:subdistrict=>NULL, addr:place=>NULL, addr:housename=>NULL, addr:street=>NULL, addr:housenumber=>NULL, addr:postcode=>NULL, old_addr:housename=>NULL, old_addr:housenumber=>NULL, old_addr:street=>NULL'::hstore tags
   ,v.geom
 FROM nodes a
 INNER JOIN nodes_old o ON a.id = o.id
 INNER JOIN vzd.adreses_ekas_sadalitas v ON o.tags -> 'ref:LV:addr' = v.adr_cd::TEXT
+LEFT JOIN vzd.adreses_his_ekas_previous p ON v.adr_cd = p.adr_cd
 LEFT OUTER JOIN nodes_unnest t ON a.id = t.id
   AND t.tag NOT LIKE 'addr:%'
   AND t.tag NOT LIKE 'ref:LV:addr'
@@ -552,6 +609,18 @@ WHERE t.id IS NULL
 
 ALTER TABLE nodes_addr_add_5 ADD PRIMARY KEY (id);
 
+UPDATE nodes_addr_add_5
+SET tags = tags - 'old_addr:housename'::TEXT
+WHERE tags -> 'addr:housename' = tags -> 'old_addr:housename';
+
+UPDATE nodes_addr_add_5
+SET tags = tags - 'old_addr:housenumber'::TEXT
+WHERE tags -> 'addr:housenumber' = tags -> 'old_addr:housenumber';
+
+UPDATE nodes_addr_add_5
+SET tags = tags - 'old_addr:street'::TEXT
+WHERE tags -> 'addr:street' = tags -> 'old_addr:street';
+
 UPDATE nodes
 SET tags = s.tags
   ,geom = s.geom
@@ -561,7 +630,7 @@ WHERE nodes.id = s.id;
 ---House names matches, distance up to 0.01 decimal degree (~1.1 km).
 CREATE TEMPORARY TABLE nodes_addr_add AS
 SELECT a.id
-  ,(a.tags || hstore('addr:country', 'LV') || hstore('addr:district', v.novads) || hstore('addr:city', v.pilseta) || hstore('addr:subdistrict', v.pagasts) || hstore('addr:place', v.ciems) || hstore('addr:housename', v.nosaukums) || hstore('addr:postcode', v.atrib) || hstore('ref:LV:addr', v.adr_cd::TEXT)) - 'addr:district=>NULL, addr:city=>NULL, addr:subdistrict=>NULL, addr:place=>NULL, addr:housename=>NULL, addr:postcode=>NULL'::hstore tags
+  ,(a.tags || hstore('addr:country', 'LV') || hstore('addr:district', v.novads) || hstore('addr:city', v.pilseta) || hstore('addr:subdistrict', v.pagasts) || hstore('addr:place', v.ciems) || hstore('addr:housename', v.nosaukums) || hstore('addr:postcode', v.atrib) || hstore('ref:LV:addr', v.adr_cd::TEXT) || hstore('old_addr:housename', p.nosaukums) || hstore('old_addr:housenumber', p.nr) || hstore('old_addr:street', p.iela)) - 'addr:district=>NULL, addr:city=>NULL, addr:subdistrict=>NULL, addr:place=>NULL, addr:housename=>NULL, addr:postcode=>NULL, old_addr:housename=>NULL, old_addr:housenumber=>NULL, old_addr:street=>NULL'::hstore tags
   ,v.geom
 FROM nodes a
 INNER JOIN nodes_old o ON a.id = o.id
@@ -570,6 +639,7 @@ LEFT OUTER JOIN nodes_unnest t ON a.id = t.id
   AND t.tag NOT LIKE 'addr:%'
   AND t.tag NOT LIKE 'ref:LV:addr'
 CROSS JOIN LATERAL(SELECT v.*, v.geom <-> a.geom AS dist FROM vzd.adreses_ekas_sadalitas v WHERE REPLACE(o.tags -> 'addr:housename'::TEXT, ' ', '') LIKE REPLACE(v.nosaukums, ' ', '') ORDER BY dist LIMIT 1) v
+LEFT JOIN vzd.adreses_his_ekas_previous p ON v.adr_cd = p.adr_cd
 WHERE t.id IS NULL
   AND v.dist < 0.01
   AND v.adr_cd NOT IN (
@@ -590,6 +660,18 @@ WHERE t.id IS NULL
 
 ALTER TABLE nodes_addr_add ADD PRIMARY KEY (id);
 
+UPDATE nodes_addr_add
+SET tags = tags - 'old_addr:housename'::TEXT
+WHERE tags -> 'addr:housename' = tags -> 'old_addr:housename';
+
+UPDATE nodes_addr_add
+SET tags = tags - 'old_addr:housenumber'::TEXT
+WHERE tags -> 'addr:housenumber' = tags -> 'old_addr:housenumber';
+
+UPDATE nodes_addr_add
+SET tags = tags - 'old_addr:street'::TEXT
+WHERE tags -> 'addr:street' = tags -> 'old_addr:street';
+
 UPDATE nodes
 SET tags = s.tags
   ,geom = s.geom
@@ -599,7 +681,7 @@ WHERE nodes.id = s.id;
 ---House number and street matches, distance up to 0.01 decimal degree (~1.1 km).
 CREATE TEMPORARY TABLE nodes_addr_add_2 AS
 SELECT a.id
-  ,(a.tags || hstore('addr:country', 'LV') || hstore('addr:district', v.novads) || hstore('addr:city', v.pilseta) || hstore('addr:subdistrict', v.pagasts) || hstore('addr:place', v.ciems) || hstore('addr:street', v.iela) || hstore('addr:housenumber', v.nr) || hstore('addr:postcode', v.atrib) || hstore('ref:LV:addr', v.adr_cd::TEXT)) - 'addr:district=>NULL, addr:city=>NULL, addr:subdistrict=>NULL, addr:place=>NULL, addr:street=>NULL, addr:housenumber=>NULL, addr:postcode=>NULL'::hstore tags
+  ,(a.tags || hstore('addr:country', 'LV') || hstore('addr:district', v.novads) || hstore('addr:city', v.pilseta) || hstore('addr:subdistrict', v.pagasts) || hstore('addr:place', v.ciems) || hstore('addr:street', v.iela) || hstore('addr:housenumber', v.nr) || hstore('addr:postcode', v.atrib) || hstore('ref:LV:addr', v.adr_cd::TEXT) || hstore('old_addr:housename', p.nosaukums) || hstore('old_addr:housenumber', p.nr) || hstore('old_addr:street', p.iela)) - 'addr:district=>NULL, addr:city=>NULL, addr:subdistrict=>NULL, addr:place=>NULL, addr:street=>NULL, addr:housenumber=>NULL, addr:postcode=>NULL, old_addr:housename=>NULL, old_addr:housenumber=>NULL, old_addr:street=>NULL'::hstore tags
   ,v.geom
 FROM nodes a
 INNER JOIN nodes_old o ON a.id = o.id
@@ -609,6 +691,7 @@ LEFT OUTER JOIN nodes_unnest t ON a.id = t.id
   AND t.tag NOT LIKE 'ref:LV:addr'
 CROSS JOIN LATERAL(SELECT v.*, v.geom <-> a.geom AS dist FROM vzd.adreses_ekas_sadalitas v WHERE REPLACE(o.tags -> 'addr:housenumber'::TEXT, ' ', '') LIKE REPLACE(v.nr, ' ', '')
     AND REPLACE(o.tags -> 'addr:street'::TEXT, ' ', '') LIKE REPLACE(v.iela, ' ', '') ORDER BY dist LIMIT 1) v
+LEFT JOIN vzd.adreses_his_ekas_previous p ON v.adr_cd = p.adr_cd
 WHERE t.id IS NULL
   AND v.dist < 0.01
   AND v.adr_cd NOT IN (
@@ -628,6 +711,18 @@ WHERE t.id IS NULL
     );
 
 ALTER TABLE nodes_addr_add_2 ADD PRIMARY KEY (id);
+
+UPDATE nodes_addr_add_2
+SET tags = tags - 'old_addr:housename'::TEXT
+WHERE tags -> 'addr:housename' = tags -> 'old_addr:housename';
+
+UPDATE nodes_addr_add_2
+SET tags = tags - 'old_addr:housenumber'::TEXT
+WHERE tags -> 'addr:housenumber' = tags -> 'old_addr:housenumber';
+
+UPDATE nodes_addr_add_2
+SET tags = tags - 'old_addr:street'::TEXT
+WHERE tags -> 'addr:street' = tags -> 'old_addr:street';
 
 UPDATE nodes
 SET tags = s.tags
@@ -661,6 +756,42 @@ WHERE id IN (
     );
 
 --Insert missing addresses.
+CREATE TEMPORARY TABLE nodes_addr_add_6 AS
+SELECT - ROW_NUMBER() OVER() id
+  ,(hstore('addr:country', 'LV') || hstore('addr:district', a.novads) || hstore('addr:city', a.pilseta) || hstore('addr:subdistrict', a.pagasts) || hstore('addr:place', a.ciems) || hstore('addr:street', a.iela) || hstore('addr:housename', a.nosaukums) || hstore('addr:housenumber', a.nr) || hstore('addr:postcode', a.atrib) || hstore('ref:LV:addr', a.adr_cd::TEXT) || hstore('old_addr:housename', p.nosaukums) || hstore('old_addr:housenumber', p.nr) || hstore('old_addr:street', p.iela)) - 'addr:district=>NULL, addr:city=>NULL, addr:subdistrict=>NULL, addr:place=>NULL, addr:street=>NULL, addr:housename=>NULL, addr:housenumber=>NULL, addr:postcode=>NULL, old_addr:housename=>NULL, old_addr:housenumber=>NULL, old_addr:street=>NULL'::hstore tags
+  ,geom
+FROM vzd.adreses_ekas_sadalitas a
+LEFT JOIN vzd.adreses_his_ekas_previous p ON a.adr_cd = p.adr_cd
+WHERE a.adr_cd NOT IN (
+    SELECT CAST(tags -> 'ref:LV:addr' AS INT) adr_cd
+    FROM ways
+    WHERE tags ? 'ref:LV:addr'
+    )
+AND a.adr_cd NOT IN (
+    SELECT CAST(tags -> 'ref:LV:addr' AS INT) adr_cd
+    FROM relations
+    WHERE tags ? 'ref:LV:addr'
+    )
+AND a.adr_cd NOT IN (
+    SELECT CAST(tags -> 'ref:LV:addr' AS INT) adr_cd
+    FROM nodes
+    WHERE tags ? 'ref:LV:addr'
+    );
+
+ALTER TABLE nodes_addr_add_6 ADD PRIMARY KEY (id);
+
+UPDATE nodes_addr_add_6
+SET tags = tags - 'old_addr:housename'::TEXT
+WHERE tags -> 'addr:housename' = tags -> 'old_addr:housename';
+
+UPDATE nodes_addr_add_6
+SET tags = tags - 'old_addr:housenumber'::TEXT
+WHERE tags -> 'addr:housenumber' = tags -> 'old_addr:housenumber';
+
+UPDATE nodes_addr_add_6
+SET tags = tags - 'old_addr:street'::TEXT
+WHERE tags -> 'addr:street' = tags -> 'old_addr:street';
+
 INSERT INTO nodes (
   id
   ,version
@@ -670,32 +801,17 @@ INSERT INTO nodes (
   ,tags
   ,geom
   )
-SELECT - ROW_NUMBER() OVER()
+SELECT id
   ,1
   ,15008076
   ,NOW()::TIMESTAMP
-  ,-1
-  ,(hstore('addr:country', 'LV') || hstore('addr:district', novads) || hstore('addr:city', pilseta) || hstore('addr:subdistrict', pagasts) || hstore('addr:place', ciems) || hstore('addr:street', iela) || hstore('addr:housename', nosaukums) || hstore('addr:housenumber', nr) || hstore('addr:postcode', atrib) || hstore('ref:LV:addr', adr_cd::TEXT)) - 'addr:district=>NULL, addr:city=>NULL, addr:subdistrict=>NULL, addr:place=>NULL, addr:street=>NULL, addr:housename=>NULL, addr:housenumber=>NULL, addr:postcode=>NULL'::hstore
+  ,- 1
+  ,tags
   ,geom
-FROM vzd.adreses_ekas_sadalitas
-WHERE adr_cd NOT IN (
-    SELECT CAST(tags -> 'ref:LV:addr' AS INT) adr_cd
-    FROM ways
-    WHERE tags ? 'ref:LV:addr'
-    )
-AND adr_cd NOT IN (
-    SELECT CAST(tags -> 'ref:LV:addr' AS INT) adr_cd
-    FROM relations
-    WHERE tags ? 'ref:LV:addr'
-    )
-AND adr_cd NOT IN (
-    SELECT CAST(tags -> 'ref:LV:addr' AS INT) adr_cd
-    FROM nodes
-    WHERE tags ? 'ref:LV:addr'
-    );
+FROM nodes_addr_add_6;
 
 --Add addresses for other objects beside buildings and address points.
---Relations containing polygons of other objects beside buildings that can have an address.
+---Relations containing polygons of other objects beside buildings that can have an address.
 CREATE TEMPORARY TABLE tags_4_addresses_relations AS
 WITH t
 AS (
@@ -884,8 +1000,8 @@ SET tags = s.tags
 FROM relations_addr_add_3 s
 WHERE relations.id = s.id;
 
---Nodes.
----Address taken from the OSM building polygon (way or relation) where node is located. Node contained by only one polygon.
+---Nodes.
+----Address taken from the OSM building polygon (way or relation) where node is located. Node contained by only one polygon.
 CREATE TEMPORARY TABLE tags_4_addresses_nodes AS
 WITH t
 AS (
@@ -958,7 +1074,7 @@ SET tags = s.tags
 FROM nodes_addr_add_3 s
 WHERE nodes.id = s.id;
 
----Address taken from the address of the land parcel from the State Immovable Property Cadastre Information System where node is located.
+----Address taken from the address of the land parcel from the State Immovable Property Cadastre Information System where node is located.
 CREATE TEMPORARY TABLE tags_4_addresses_nodes_2 AS
 WITH t
 AS (
