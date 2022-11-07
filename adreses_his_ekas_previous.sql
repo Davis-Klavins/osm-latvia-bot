@@ -36,18 +36,10 @@ AS (
   FROM vzd.adreses_ekas_sadalitas a
   INNER JOIN vzd.adreses_his b ON a.adr_cd = b.adr_cd
   INNER JOIN c ON b.id = c.id
-  WHERE LOWER(a.nosaukums) NOT LIKE LOWER(c.nosaukums)
-    OR LOWER(a.nr) NOT LIKE LOWER(c.nr)
-    OR LOWER(a.iela) NOT LIKE LOWER(c.iela)
-    OR (
-      a.iela IS NULL
-      AND c.iela IS NOT NULL
-      )
-    /*OR LOWER(a.ciems) NOT LIKE LOWER(c.ciems)
-    OR (
-      a.ciems IS NULL
-      AND c.ciems IS NOT NULL
-      )*/
+  WHERE COALESCE(LOWER(a.nosaukums), '') NOT LIKE COALESCE(LOWER(c.nosaukums), '')
+    OR COALESCE(LOWER(a.nr), '') NOT LIKE COALESCE(LOWER(c.nr), '')
+    OR COALESCE(LOWER(a.iela), '') NOT LIKE COALESCE(LOWER(c.iela), '')
+    --OR COALESCE(LOWER(a.ciems), '') NOT LIKE COALESCE(LOWER(c.ciems), '')
   )
   ,a
 AS (
