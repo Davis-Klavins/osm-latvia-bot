@@ -977,6 +977,31 @@ UPDATE vzd.adreses_his_ekas_split
 SET nosaukums = SUBSTRING(nosaukums, 2, LENGTH(nosaukums) - 2)
 WHERE nosaukums LIKE '"%"';
 
+--Trim and replace multiple consecutive whitespaces with single ones.
+UPDATE vzd.adreses_his_ekas_split
+SET nosaukums = TRIM(regexp_replace(nosaukums, '\s+', ' ', 'g'));
+
+UPDATE vzd.adreses_his_ekas_split
+SET nr = TRIM(regexp_replace(nr, '\s+', ' ', 'g'));
+
+UPDATE vzd.adreses_his_ekas_split
+SET iela = TRIM(regexp_replace(iela, '\s+', ' ', 'g'));
+
+UPDATE vzd.adreses_his_ekas_split
+SET ciems = TRIM(regexp_replace(ciems, '\s+', ' ', 'g'));
+
+UPDATE vzd.adreses_his_ekas_split
+SET pilseta = TRIM(regexp_replace(pilseta, '\s+', ' ', 'g'));
+
+UPDATE vzd.adreses_his_ekas_split
+SET pagasts = TRIM(regexp_replace(pagasts, '\s+', ' ', 'g'));
+
+UPDATE vzd.adreses_his_ekas_split
+SET novads = TRIM(regexp_replace(novads, '\s+', ' ', 'g'));
+
+UPDATE vzd.adreses_his_ekas_split
+SET rajons = TRIM(regexp_replace(rajons, '\s+', ' ', 'g'));
+
 /*
 --Check for remaining entries that haven't been splitted.
 SELECT *
