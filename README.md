@@ -1,5 +1,5 @@
 # osm-latvia-bot
-Collection of scripts to update and maintain OpenStreetMap data in Latvia (currently only addresses). See https://wiki.openstreetmap.org/wiki/Automated_edits/Latvia-bot. WORK IN PROGRESS!
+Collection of scripts to update and maintain OpenStreetMap data in Latvia (currently only addresses). See https://wiki.openstreetmap.org/wiki/Automated_edits/Latvia-bot.
 
 Prerequisites:
 * PostgreSQL with PostGIS,
