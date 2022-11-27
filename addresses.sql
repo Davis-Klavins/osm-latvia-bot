@@ -1136,16 +1136,16 @@ SET tags = s.tags
 FROM nodes_addr_add_4 s
 WHERE nodes.id = s.id;
 
---Remove tags that resemble addresses.
+--Remove tags that resemble addresses or indicate that there is no address.
 ---Nodes.
 CREATE TEMPORARY TABLE nodes_update AS
 SELECT a.id
 FROM nodes a
 INNER JOIN nodes_lv b ON a.id = b.id
-WHERE a.tags ?| ARRAY ['city', 'county', 'district', 'housename', 'housenumber', 'parish', 'postal_code', 'postcode', 'street', 'subdistrict'];
+WHERE a.tags ?| ARRAY ['city', 'county', 'district', 'housename', 'housenumber', 'parish', 'postal_code', 'postcode', 'street', 'subdistrict', 'noaddress', 'nohousenumber'];
 
 UPDATE nodes
-SET tags = tags - 'city'::TEXT - 'county'::TEXT - 'district'::TEXT - 'housename'::TEXT - 'housenumber'::TEXT - 'parish'::TEXT - 'postal_code'::TEXT - 'postcode'::TEXT - 'street'::TEXT - 'subdistrict'::TEXT
+SET tags = tags - 'city'::TEXT - 'county'::TEXT - 'district'::TEXT - 'housename'::TEXT - 'housenumber'::TEXT - 'parish'::TEXT - 'postal_code'::TEXT - 'postcode'::TEXT - 'street'::TEXT - 'subdistrict'::TEXT - 'noaddress'::TEXT - 'nohousenumber'::TEXT
 WHERE id IN (
     SELECT id
     FROM nodes_update
@@ -1171,10 +1171,10 @@ CREATE TEMPORARY TABLE ways_update AS
 SELECT a.id
 FROM ways a
 INNER JOIN ways_lv b ON a.id = b.id
-WHERE a.tags ?| ARRAY ['city', 'county', 'district', 'housename', 'housenumber', 'parish', 'postal_code', 'postcode', 'street', 'subdistrict'];
+WHERE a.tags ?| ARRAY ['city', 'county', 'district', 'housename', 'housenumber', 'parish', 'postal_code', 'postcode', 'street', 'subdistrict', 'noaddress', 'nohousenumber'];
 
 UPDATE ways
-SET tags = tags - 'city'::TEXT - 'county'::TEXT - 'district'::TEXT - 'housename'::TEXT - 'housenumber'::TEXT - 'parish'::TEXT - 'postal_code'::TEXT - 'postcode'::TEXT - 'street'::TEXT - 'subdistrict'::TEXT
+SET tags = tags - 'city'::TEXT - 'county'::TEXT - 'district'::TEXT - 'housename'::TEXT - 'housenumber'::TEXT - 'parish'::TEXT - 'postal_code'::TEXT - 'postcode'::TEXT - 'street'::TEXT - 'subdistrict'::TEXT - 'noaddress'::TEXT - 'nohousenumber'::TEXT
 WHERE id IN (
     SELECT id
     FROM ways_update
