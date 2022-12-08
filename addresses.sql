@@ -1195,67 +1195,76 @@ WHERE id IN (
     FROM ways_update_2
     );
 
---Remove name if it matches housenumber.
+--Remove building name if it matches housenumber.
 ---Nodes.
 UPDATE nodes AS u
 SET tags = tags - 'name'::TEXT
 FROM nodes_lv AS b
 WHERE u.id = b.id
-  AND LOWER(tags -> 'name') = LOWER(tags -> 'addr:housenumber');
+  AND LOWER(tags -> 'name') = LOWER(tags -> 'addr:housenumber')
+  AND tags ? 'building';
 
 ---Ways.
 UPDATE ways AS u
 SET tags = tags - 'name'::TEXT
 FROM ways_lv AS b
 WHERE u.id = b.id
-  AND LOWER(tags -> 'name') = LOWER(tags -> 'addr:housenumber');
+  AND LOWER(tags -> 'name') = LOWER(tags -> 'addr:housenumber')
+  AND tags ? 'building';
 
 ---Relations.
 UPDATE relations AS u
 SET tags = tags - 'name'::TEXT
 FROM relations_lv AS b
 WHERE u.id = b.id
-  AND LOWER(tags -> 'name') = LOWER(tags -> 'addr:housenumber');
+  AND LOWER(tags -> 'name') = LOWER(tags -> 'addr:housenumber')
+  AND tags ? 'building';
 
---Remove name if it matches street + housenumber.
+--Remove building name if it matches street + housenumber.
 ---Nodes.
 UPDATE nodes AS u
 SET tags = tags - 'name'::TEXT
 FROM nodes_lv AS b
 WHERE u.id = b.id
-  AND LOWER(tags -> 'name') LIKE LOWER(tags -> 'addr:street' || ' ' || (tags -> 'addr:housenumber')::TEXT);
+  AND LOWER(tags -> 'name') LIKE LOWER(tags -> 'addr:street' || ' ' || (tags -> 'addr:housenumber')::TEXT)
+  AND tags ? 'building';
 
 UPDATE nodes AS u
 SET tags = tags - 'name'::TEXT
 FROM nodes_lv AS b
 WHERE u.id = b.id
-  AND LOWER(tags -> 'name') LIKE REPLACE(LOWER(tags -> 'addr:street' || ' ' || (tags -> 'addr:housenumber')::TEXT), 'iela', 'street');
+  AND LOWER(tags -> 'name') LIKE REPLACE(LOWER(tags -> 'addr:street' || ' ' || (tags -> 'addr:housenumber')::TEXT), 'iela', 'street')
+  AND tags ? 'building';
 
 ---Ways.
 UPDATE ways AS u
 SET tags = tags - 'name'::TEXT
 FROM ways_lv AS b
 WHERE u.id = b.id
-  AND LOWER(tags -> 'name') LIKE LOWER(tags -> 'addr:street' || ' ' || (tags -> 'addr:housenumber')::TEXT);
+  AND LOWER(tags -> 'name') LIKE LOWER(tags -> 'addr:street' || ' ' || (tags -> 'addr:housenumber')::TEXT)
+  AND tags ? 'building';
 
 UPDATE ways AS u
 SET tags = tags - 'name'::TEXT
 FROM ways_lv AS b
 WHERE u.id = b.id
-  AND LOWER(tags -> 'name') LIKE REPLACE(LOWER(tags -> 'addr:street' || ' ' || (tags -> 'addr:housenumber')::TEXT), 'iela', 'street');
+  AND LOWER(tags -> 'name') LIKE REPLACE(LOWER(tags -> 'addr:street' || ' ' || (tags -> 'addr:housenumber')::TEXT), 'iela', 'street')
+  AND tags ? 'building';
 
 ---Relations.
 UPDATE relations AS u
 SET tags = tags - 'name'::TEXT
 FROM relations_lv AS b
 WHERE u.id = b.id
-  AND LOWER(tags -> 'name') LIKE LOWER(tags -> 'addr:street' || ' ' || (tags -> 'addr:housenumber')::TEXT);
+  AND LOWER(tags -> 'name') LIKE LOWER(tags -> 'addr:street' || ' ' || (tags -> 'addr:housenumber')::TEXT)
+  AND tags ? 'building';
 
 UPDATE relations AS u
 SET tags = tags - 'name'::TEXT
 FROM relations_lv AS b
 WHERE u.id = b.id
-  AND LOWER(tags -> 'name') LIKE REPLACE(LOWER(tags -> 'addr:street' || ' ' || (tags -> 'addr:housenumber')::TEXT), 'iela', 'street');
+  AND LOWER(tags -> 'name') LIKE REPLACE(LOWER(tags -> 'addr:street' || ' ' || (tags -> 'addr:housenumber')::TEXT), 'iela', 'street')
+  AND tags ? 'building';
 
 END;
 $BODY$;
