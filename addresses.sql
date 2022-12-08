@@ -1195,6 +1195,68 @@ WHERE id IN (
     FROM ways_update_2
     );
 
+--Remove name if it matches housenumber.
+---Nodes.
+UPDATE nodes AS u
+SET tags = tags - 'name'::TEXT
+FROM nodes_lv AS b
+WHERE u.id = b.id
+  AND LOWER(tags -> 'name') = LOWER(tags -> 'addr:housenumber');
+
+---Ways.
+UPDATE ways AS u
+SET tags = tags - 'name'::TEXT
+FROM ways_lv AS b
+WHERE u.id = b.id
+  AND LOWER(tags -> 'name') = LOWER(tags -> 'addr:housenumber');
+
+---Relations.
+UPDATE relations AS u
+SET tags = tags - 'name'::TEXT
+FROM relations_lv AS b
+WHERE u.id = b.id
+  AND LOWER(tags -> 'name') = LOWER(tags -> 'addr:housenumber');
+
+--Remove name if it matches street + housenumber.
+---Nodes.
+UPDATE nodes AS u
+SET tags = tags - 'name'::TEXT
+FROM nodes_lv AS b
+WHERE u.id = b.id
+  AND LOWER(tags -> 'name') LIKE LOWER(tags -> 'addr:street' || ' ' || (tags -> 'addr:housenumber')::TEXT);
+
+UPDATE nodes AS u
+SET tags = tags - 'name'::TEXT
+FROM nodes_lv AS b
+WHERE u.id = b.id
+  AND LOWER(tags -> 'name') LIKE REPLACE(LOWER(tags -> 'addr:street' || ' ' || (tags -> 'addr:housenumber')::TEXT), 'iela', 'street');
+
+---Ways.
+UPDATE ways AS u
+SET tags = tags - 'name'::TEXT
+FROM ways_lv AS b
+WHERE u.id = b.id
+  AND LOWER(tags -> 'name') LIKE LOWER(tags -> 'addr:street' || ' ' || (tags -> 'addr:housenumber')::TEXT);
+
+UPDATE ways AS u
+SET tags = tags - 'name'::TEXT
+FROM ways_lv AS b
+WHERE u.id = b.id
+  AND LOWER(tags -> 'name') LIKE REPLACE(LOWER(tags -> 'addr:street' || ' ' || (tags -> 'addr:housenumber')::TEXT), 'iela', 'street');
+
+---Relations.
+UPDATE relations AS u
+SET tags = tags - 'name'::TEXT
+FROM relations_lv AS b
+WHERE u.id = b.id
+  AND LOWER(tags -> 'name') LIKE LOWER(tags -> 'addr:street' || ' ' || (tags -> 'addr:housenumber')::TEXT);
+
+UPDATE relations AS u
+SET tags = tags - 'name'::TEXT
+FROM relations_lv AS b
+WHERE u.id = b.id
+  AND LOWER(tags -> 'name') LIKE REPLACE(LOWER(tags -> 'addr:street' || ' ' || (tags -> 'addr:housenumber')::TEXT), 'iela', 'street');
+
 END;
 $BODY$;
 
