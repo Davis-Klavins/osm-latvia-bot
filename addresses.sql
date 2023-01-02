@@ -247,7 +247,7 @@ WHERE relations.id = s.id;
 --Add address for the closest isolated dwelling whose name matches and is located no more than 25 m from the address point. While data quality of isolated dwellings is being improved, only for nodes that list the Place Names Database as source.
 CREATE TEMPORARY TABLE nodes_addr_add_iso_dw AS
 SELECT a.id
-  ,a.tags || hstore('name', v.nosaukums) || (hstore('addr:country', 'LV') || hstore('addr:district', v.novads) || hstore('addr:city', v.pilseta) || hstore('addr:subdistrict', v.pagasts) || hstore('addr:place', v.ciems) || hstore('addr:housename', v.nosaukums) || hstore('addr:postcode', v.atrib) || hstore('ref:LV:addr', v.adr_cd::TEXT) || hstore('old_addr:housename', p.nosaukums) || hstore('old_addr:housenumber', p.nr) || hstore('old_addr:street', p.iela)) - 'addr:district=>NULL, addr:city=>NULL, addr:subdistrict=>NULL, addr:place=>NULL, addr:housename=>NULL, addr:postcode=>NULL, old_addr:housename=>NULL, old_addr:housenumber=>NULL, old_addr:street=>NULL'::hstore tags
+  ,a.tags || hstore('name', v.nosaukums) || (hstore('addr:country', 'LV') || hstore('addr:district', v.novads) || hstore('addr:city', COALESCE(v.pilseta, v.ciems)) || hstore('addr:subdistrict', v.pagasts) || hstore('addr:housename', v.nosaukums) || hstore('addr:postcode', v.atrib) || hstore('ref:LV:addr', v.adr_cd::TEXT) || hstore('old_addr:housename', p.nosaukums) || hstore('old_addr:housenumber', p.nr) || hstore('old_addr:street', p.iela)) - 'addr:district=>NULL, addr:city=>NULL, addr:subdistrict=>NULL, addr:housename=>NULL, addr:postcode=>NULL, old_addr:housename=>NULL, old_addr:housenumber=>NULL, old_addr:street=>NULL'::hstore tags
 FROM nodes a
 INNER JOIN nodes_lv l ON a.id = l.id
 CROSS JOIN LATERAL(SELECT b.*, b.geom <-> a.geom AS dist FROM vzd.adreses_ekas_sadalitas b ORDER BY dist LIMIT 1) v
@@ -367,7 +367,7 @@ AS (
   HAVING COUNT(*) = 1
   )
 SELECT a.id
-  ,(a.tags || hstore('addr:country', 'LV') || hstore('addr:district', v.novads) || hstore('addr:city', v.pilseta) || hstore('addr:subdistrict', v.pagasts) || hstore('addr:place', v.ciems) || hstore('addr:street', v.iela) || hstore('addr:housename', v.nosaukums) || hstore('addr:housenumber', v.nr) || hstore('addr:postcode', v.atrib) || hstore('ref:LV:addr', v.adr_cd::TEXT) || hstore('old_addr:housename', p.nosaukums) || hstore('old_addr:housenumber', p.nr) || hstore('old_addr:street', p.iela)) - 'addr:district=>NULL, addr:city=>NULL, addr:subdistrict=>NULL, addr:place=>NULL, addr:street=>NULL, addr:housename=>NULL, addr:housenumber=>NULL, addr:postcode=>NULL, old_addr:housename=>NULL, old_addr:housenumber=>NULL, old_addr:street=>NULL'::hstore tags
+  ,(a.tags || hstore('addr:country', 'LV') || hstore('addr:district', v.novads) || hstore('addr:city', COALESCE(v.pilseta, v.ciems)) || hstore('addr:subdistrict', v.pagasts) || hstore('addr:street', v.iela) || hstore('addr:housename', v.nosaukums) || hstore('addr:housenumber', v.nr) || hstore('addr:postcode', v.atrib) || hstore('ref:LV:addr', v.adr_cd::TEXT) || hstore('old_addr:housename', p.nosaukums) || hstore('old_addr:housenumber', p.nr) || hstore('old_addr:street', p.iela)) - 'addr:district=>NULL, addr:city=>NULL, addr:subdistrict=>NULL, addr:street=>NULL, addr:housename=>NULL, addr:housenumber=>NULL, addr:postcode=>NULL, old_addr:housename=>NULL, old_addr:housenumber=>NULL, old_addr:street=>NULL'::hstore tags
 FROM ways a
 INNER JOIN way_geometry g ON a.id = g.way_id
 INNER JOIN vzd.adreses_ekas_sadalitas v ON ST_Within(v.geom, g.geom)
@@ -412,7 +412,7 @@ AS (
   HAVING COUNT(*) = 1
   )
 SELECT a.id
-  ,(a.tags || hstore('addr:country', 'LV') || hstore('addr:district', v.novads) || hstore('addr:city', v.pilseta) || hstore('addr:subdistrict', v.pagasts) || hstore('addr:place', v.ciems) || hstore('addr:street', v.iela) || hstore('addr:housename', v.nosaukums) || hstore('addr:housenumber', v.nr) || hstore('addr:postcode', v.atrib) || hstore('ref:LV:addr', v.adr_cd::TEXT) || hstore('old_addr:housename', p.nosaukums) || hstore('old_addr:housenumber', p.nr) || hstore('old_addr:street', p.iela)) - 'addr:district=>NULL, addr:city=>NULL, addr:subdistrict=>NULL, addr:place=>NULL, addr:street=>NULL, addr:housename=>NULL, addr:housenumber=>NULL, addr:postcode=>NULL, old_addr:housename=>NULL, old_addr:housenumber=>NULL, old_addr:street=>NULL'::hstore tags
+  ,(a.tags || hstore('addr:country', 'LV') || hstore('addr:district', v.novads) || hstore('addr:city', COALESCE(v.pilseta, v.ciems)) || hstore('addr:subdistrict', v.pagasts) || hstore('addr:street', v.iela) || hstore('addr:housename', v.nosaukums) || hstore('addr:housenumber', v.nr) || hstore('addr:postcode', v.atrib) || hstore('ref:LV:addr', v.adr_cd::TEXT) || hstore('old_addr:housename', p.nosaukums) || hstore('old_addr:housenumber', p.nr) || hstore('old_addr:street', p.iela)) - 'addr:district=>NULL, addr:city=>NULL, addr:subdistrict=>NULL, addr:street=>NULL, addr:housename=>NULL, addr:housenumber=>NULL, addr:postcode=>NULL, old_addr:housename=>NULL, old_addr:housenumber=>NULL, old_addr:street=>NULL'::hstore tags
 FROM relations a
 INNER JOIN relations_geometry g ON a.id = g.id
 INNER JOIN vzd.adreses_ekas_sadalitas v ON ST_Within(v.geom, g.geom)
@@ -466,7 +466,7 @@ AS (
   HAVING COUNT(*) = 1
   )
 SELECT a.id
-  ,(a.tags || hstore('addr:country', 'LV') || hstore('addr:district', v.novads) || hstore('addr:city', v.pilseta) || hstore('addr:subdistrict', v.pagasts) || hstore('addr:place', v.ciems) || hstore('addr:street', v.iela) || hstore('addr:housename', v.nosaukums) || hstore('addr:housenumber', v.nr) || hstore('addr:postcode', v.atrib) || hstore('ref:LV:addr', v.adr_cd::TEXT) || hstore('old_addr:housename', p.nosaukums) || hstore('old_addr:housenumber', p.nr) || hstore('old_addr:street', p.iela)) - 'addr:district=>NULL, addr:city=>NULL, addr:subdistrict=>NULL, addr:place=>NULL, addr:street=>NULL, addr:housename=>NULL, addr:housenumber=>NULL, addr:postcode=>NULL, old_addr:housename=>NULL, old_addr:housenumber=>NULL, old_addr:street=>NULL'::hstore tags
+  ,(a.tags || hstore('addr:country', 'LV') || hstore('addr:district', v.novads) || hstore('addr:city', COALESCE(v.pilseta, v.ciems)) || hstore('addr:subdistrict', v.pagasts) || hstore('addr:street', v.iela) || hstore('addr:housename', v.nosaukums) || hstore('addr:housenumber', v.nr) || hstore('addr:postcode', v.atrib) || hstore('ref:LV:addr', v.adr_cd::TEXT) || hstore('old_addr:housename', p.nosaukums) || hstore('old_addr:housenumber', p.nr) || hstore('old_addr:street', p.iela)) - 'addr:district=>NULL, addr:city=>NULL, addr:subdistrict=>NULL, addr:street=>NULL, addr:housename=>NULL, addr:housenumber=>NULL, addr:postcode=>NULL, old_addr:housename=>NULL, old_addr:housenumber=>NULL, old_addr:street=>NULL'::hstore tags
 FROM ways a
 INNER JOIN way_geometry g ON a.id = g.way_id
 INNER JOIN vzd.nivkis_buves n ON ST_Intersects(g.geom, n.geom)
@@ -521,7 +521,7 @@ AS (
   HAVING COUNT(*) = 1
   )
 SELECT a.id
-  ,(a.tags || hstore('addr:country', 'LV') || hstore('addr:district', v.novads) || hstore('addr:city', v.pilseta) || hstore('addr:subdistrict', v.pagasts) || hstore('addr:place', v.ciems) || hstore('addr:street', v.iela) || hstore('addr:housename', v.nosaukums) || hstore('addr:housenumber', v.nr) || hstore('addr:postcode', v.atrib) || hstore('ref:LV:addr', v.adr_cd::TEXT) || hstore('old_addr:housename', p.nosaukums) || hstore('old_addr:housenumber', p.nr) || hstore('old_addr:street', p.iela)) - 'addr:district=>NULL, addr:city=>NULL, addr:subdistrict=>NULL, addr:place=>NULL, addr:street=>NULL, addr:housename=>NULL, addr:housenumber=>NULL, addr:postcode=>NULL, old_addr:housename=>NULL, old_addr:housenumber=>NULL, old_addr:street=>NULL'::hstore tags
+  ,(a.tags || hstore('addr:country', 'LV') || hstore('addr:district', v.novads) || hstore('addr:city', COALESCE(v.pilseta, v.ciems)) || hstore('addr:subdistrict', v.pagasts) || hstore('addr:street', v.iela) || hstore('addr:housename', v.nosaukums) || hstore('addr:housenumber', v.nr) || hstore('addr:postcode', v.atrib) || hstore('ref:LV:addr', v.adr_cd::TEXT) || hstore('old_addr:housename', p.nosaukums) || hstore('old_addr:housenumber', p.nr) || hstore('old_addr:street', p.iela)) - 'addr:district=>NULL, addr:city=>NULL, addr:subdistrict=>NULL, addr:street=>NULL, addr:housename=>NULL, addr:housenumber=>NULL, addr:postcode=>NULL, old_addr:housename=>NULL, old_addr:housenumber=>NULL, old_addr:street=>NULL'::hstore tags
 FROM relations a
 INNER JOIN relations_geometry g ON a.id = g.id
 INNER JOIN vzd.nivkis_buves n ON ST_Intersects(g.geom, n.geom)
@@ -581,7 +581,7 @@ WHERE tags = ''::hstore
 ---Address code matches (address points added previously).
 CREATE TEMPORARY TABLE nodes_addr_add_5 AS
 SELECT a.id
-  ,(hstore('addr:country', 'LV') || hstore('addr:district', v.novads) || hstore('addr:city', v.pilseta) || hstore('addr:subdistrict', v.pagasts) || hstore('addr:place', v.ciems) || hstore('addr:housename', v.nosaukums) || hstore('addr:street', v.iela) || hstore('addr:housenumber', v.nr) || hstore('addr:postcode', v.atrib) || hstore('ref:LV:addr', v.adr_cd::TEXT) || hstore('old_addr:housename', p.nosaukums) || hstore('old_addr:housenumber', p.nr) || hstore('old_addr:street', p.iela)) - 'addr:district=>NULL, addr:city=>NULL, addr:subdistrict=>NULL, addr:place=>NULL, addr:housename=>NULL, addr:street=>NULL, addr:housenumber=>NULL, addr:postcode=>NULL, old_addr:housename=>NULL, old_addr:housenumber=>NULL, old_addr:street=>NULL'::hstore tags
+  ,(hstore('addr:country', 'LV') || hstore('addr:district', v.novads) || hstore('addr:city', COALESCE(v.pilseta, v.ciems)) || hstore('addr:subdistrict', v.pagasts) || hstore('addr:housename', v.nosaukums) || hstore('addr:street', v.iela) || hstore('addr:housenumber', v.nr) || hstore('addr:postcode', v.atrib) || hstore('ref:LV:addr', v.adr_cd::TEXT) || hstore('old_addr:housename', p.nosaukums) || hstore('old_addr:housenumber', p.nr) || hstore('old_addr:street', p.iela)) - 'addr:district=>NULL, addr:city=>NULL, addr:subdistrict=>NULL, addr:housename=>NULL, addr:street=>NULL, addr:housenumber=>NULL, addr:postcode=>NULL, old_addr:housename=>NULL, old_addr:housenumber=>NULL, old_addr:street=>NULL'::hstore tags
   ,v.geom
 FROM nodes a
 INNER JOIN nodes_old o ON a.id = o.id
@@ -631,7 +631,7 @@ WHERE nodes.id = s.id;
 ---House names matches, distance up to 0.01 decimal degree (~1.1 km).
 CREATE TEMPORARY TABLE nodes_addr_add AS
 SELECT a.id
-  ,(a.tags || hstore('addr:country', 'LV') || hstore('addr:district', v.novads) || hstore('addr:city', v.pilseta) || hstore('addr:subdistrict', v.pagasts) || hstore('addr:place', v.ciems) || hstore('addr:housename', v.nosaukums) || hstore('addr:postcode', v.atrib) || hstore('ref:LV:addr', v.adr_cd::TEXT) || hstore('old_addr:housename', p.nosaukums) || hstore('old_addr:housenumber', p.nr) || hstore('old_addr:street', p.iela)) - 'addr:district=>NULL, addr:city=>NULL, addr:subdistrict=>NULL, addr:place=>NULL, addr:housename=>NULL, addr:postcode=>NULL, old_addr:housename=>NULL, old_addr:housenumber=>NULL, old_addr:street=>NULL'::hstore tags
+  ,(a.tags || hstore('addr:country', 'LV') || hstore('addr:district', v.novads) || hstore('addr:city', COALESCE(v.pilseta, v.ciems)) || hstore('addr:subdistrict', v.pagasts) || hstore('addr:housename', v.nosaukums) || hstore('addr:postcode', v.atrib) || hstore('ref:LV:addr', v.adr_cd::TEXT) || hstore('old_addr:housename', p.nosaukums) || hstore('old_addr:housenumber', p.nr) || hstore('old_addr:street', p.iela)) - 'addr:district=>NULL, addr:city=>NULL, addr:subdistrict=>NULL, addr:housename=>NULL, addr:postcode=>NULL, old_addr:housename=>NULL, old_addr:housenumber=>NULL, old_addr:street=>NULL'::hstore tags
   ,v.geom
 FROM nodes a
 INNER JOIN nodes_old o ON a.id = o.id
@@ -683,7 +683,7 @@ WHERE nodes.id = s.id;
 ---House number and street matches, distance up to 0.01 decimal degree (~1.1 km).
 CREATE TEMPORARY TABLE nodes_addr_add_2 AS
 SELECT a.id
-  ,(a.tags || hstore('addr:country', 'LV') || hstore('addr:district', v.novads) || hstore('addr:city', v.pilseta) || hstore('addr:subdistrict', v.pagasts) || hstore('addr:place', v.ciems) || hstore('addr:street', v.iela) || hstore('addr:housenumber', v.nr) || hstore('addr:postcode', v.atrib) || hstore('ref:LV:addr', v.adr_cd::TEXT) || hstore('old_addr:housename', p.nosaukums) || hstore('old_addr:housenumber', p.nr) || hstore('old_addr:street', p.iela)) - 'addr:district=>NULL, addr:city=>NULL, addr:subdistrict=>NULL, addr:place=>NULL, addr:street=>NULL, addr:housenumber=>NULL, addr:postcode=>NULL, old_addr:housename=>NULL, old_addr:housenumber=>NULL, old_addr:street=>NULL'::hstore tags
+  ,(a.tags || hstore('addr:country', 'LV') || hstore('addr:district', v.novads) || hstore('addr:city', COALESCE(v.pilseta, v.ciems)) || hstore('addr:subdistrict', v.pagasts) || hstore('addr:street', v.iela) || hstore('addr:housenumber', v.nr) || hstore('addr:postcode', v.atrib) || hstore('ref:LV:addr', v.adr_cd::TEXT) || hstore('old_addr:housename', p.nosaukums) || hstore('old_addr:housenumber', p.nr) || hstore('old_addr:street', p.iela)) - 'addr:district=>NULL, addr:city=>NULL, addr:subdistrict=>NULL, addr:street=>NULL, addr:housenumber=>NULL, addr:postcode=>NULL, old_addr:housename=>NULL, old_addr:housenumber=>NULL, old_addr:street=>NULL'::hstore tags
   ,v.geom
 FROM nodes a
 INNER JOIN nodes_old o ON a.id = o.id
@@ -761,7 +761,7 @@ WHERE id IN (
 --Insert missing addresses.
 CREATE TEMPORARY TABLE nodes_addr_add_6 AS
 SELECT - ROW_NUMBER() OVER() id
-  ,(hstore('addr:country', 'LV') || hstore('addr:district', a.novads) || hstore('addr:city', a.pilseta) || hstore('addr:subdistrict', a.pagasts) || hstore('addr:place', a.ciems) || hstore('addr:street', a.iela) || hstore('addr:housename', a.nosaukums) || hstore('addr:housenumber', a.nr) || hstore('addr:postcode', a.atrib) || hstore('ref:LV:addr', a.adr_cd::TEXT) || hstore('old_addr:housename', p.nosaukums) || hstore('old_addr:housenumber', p.nr) || hstore('old_addr:street', p.iela)) - 'addr:district=>NULL, addr:city=>NULL, addr:subdistrict=>NULL, addr:place=>NULL, addr:street=>NULL, addr:housename=>NULL, addr:housenumber=>NULL, addr:postcode=>NULL, old_addr:housename=>NULL, old_addr:housenumber=>NULL, old_addr:street=>NULL'::hstore tags
+  ,(hstore('addr:country', 'LV') || hstore('addr:district', a.novads) || hstore('addr:city', COALESCE(a.pilseta, a.ciems)) || hstore('addr:subdistrict', a.pagasts) || hstore('addr:street', a.iela) || hstore('addr:housename', a.nosaukums) || hstore('addr:housenumber', a.nr) || hstore('addr:postcode', a.atrib) || hstore('ref:LV:addr', a.adr_cd::TEXT) || hstore('old_addr:housename', p.nosaukums) || hstore('old_addr:housenumber', p.nr) || hstore('old_addr:street', p.iela)) - 'addr:district=>NULL, addr:city=>NULL, addr:subdistrict=>NULL, addr:street=>NULL, addr:housename=>NULL, addr:housenumber=>NULL, addr:postcode=>NULL, old_addr:housename=>NULL, old_addr:housenumber=>NULL, old_addr:street=>NULL'::hstore tags
   ,geom
 FROM vzd.adreses_ekas_sadalitas a
 LEFT JOIN vzd.adreses_his_ekas_previous p ON a.adr_cd = p.adr_cd
@@ -964,7 +964,7 @@ AS (
   HAVING COUNT(*) = 1
   )
 SELECT a.id
-  ,(a.tags || hstore('addr:country', 'LV') || hstore('addr:district', v.novads) || hstore('addr:city', v.pilseta) || hstore('addr:subdistrict', v.pagasts) || hstore('addr:place', v.ciems) || hstore('addr:street', v.iela) || hstore('addr:housename', v.nosaukums) || hstore('addr:housenumber', v.nr) || hstore('addr:postcode', v.atrib) || hstore('ref:LV:addr', v.adr_cd::TEXT)) - 'addr:district=>NULL, addr:city=>NULL, addr:subdistrict=>NULL, addr:place=>NULL, addr:street=>NULL, addr:housename=>NULL, addr:housenumber=>NULL, addr:postcode=>NULL'::hstore tags
+  ,(a.tags || hstore('addr:country', 'LV') || hstore('addr:district', v.novads) || hstore('addr:city', COALESCE(v.pilseta, v.ciems)) || hstore('addr:subdistrict', v.pagasts) || hstore('addr:street', v.iela) || hstore('addr:housename', v.nosaukums) || hstore('addr:housenumber', v.nr) || hstore('addr:postcode', v.atrib) || hstore('ref:LV:addr', v.adr_cd::TEXT)) - 'addr:district=>NULL, addr:city=>NULL, addr:subdistrict=>NULL, addr:street=>NULL, addr:housename=>NULL, addr:housenumber=>NULL, addr:postcode=>NULL'::hstore tags
 FROM ways a
 INNER JOIN way_geometry g ON a.id = g.way_id
 INNER JOIN vzd.adreses_ekas_sadalitas v ON ST_Within(v.geom, g.geom)
@@ -990,7 +990,7 @@ AS (
   HAVING COUNT(*) = 1
   )
 SELECT a.id
-  ,(a.tags || hstore('addr:country', 'LV') || hstore('addr:district', v.novads) || hstore('addr:city', v.pilseta) || hstore('addr:subdistrict', v.pagasts) || hstore('addr:place', v.ciems) || hstore('addr:street', v.iela) || hstore('addr:housename', v.nosaukums) || hstore('addr:housenumber', v.nr) || hstore('addr:postcode', v.atrib) || hstore('ref:LV:addr', v.adr_cd::TEXT)) - 'addr:district=>NULL, addr:city=>NULL, addr:subdistrict=>NULL, addr:place=>NULL, addr:street=>NULL, addr:housename=>NULL, addr:housenumber=>NULL, addr:postcode=>NULL'::hstore tags
+  ,(a.tags || hstore('addr:country', 'LV') || hstore('addr:district', v.novads) || hstore('addr:city', COALESCE(v.pilseta, v.ciems)) || hstore('addr:subdistrict', v.pagasts) || hstore('addr:street', v.iela) || hstore('addr:housename', v.nosaukums) || hstore('addr:housenumber', v.nr) || hstore('addr:postcode', v.atrib) || hstore('ref:LV:addr', v.adr_cd::TEXT)) - 'addr:district=>NULL, addr:city=>NULL, addr:subdistrict=>NULL, addr:street=>NULL, addr:housename=>NULL, addr:housenumber=>NULL, addr:postcode=>NULL'::hstore tags
 FROM relations a
 INNER JOIN relations_geometry_2 g ON a.id = g.id
 INNER JOIN vzd.adreses_ekas_sadalitas v ON ST_Within(v.geom, g.geom)
@@ -1065,7 +1065,7 @@ AS (
   HAVING COUNT(*) = 1
   )
 SELECT a.id
-  ,(a.tags || hstore('addr:country', 'LV') || hstore('addr:district', v.tags -> 'addr:district') || hstore('addr:city', v.tags -> 'addr:city') || hstore('addr:subdistrict', v.tags -> 'addr:subdistrict') || hstore('addr:place', v.tags -> 'addr:place') || hstore('addr:street', v.tags -> 'addr:street') || hstore('addr:housename', v.tags -> 'addr:housename') || hstore('addr:housenumber', v.tags -> 'addr:housenumber') || hstore('addr:postcode', v.tags -> 'addr:postcode') || hstore('ref:LV:addr', v.tags -> 'ref:LV:addr')) - 'addr:district=>NULL, addr:city=>NULL, addr:subdistrict=>NULL, addr:place=>NULL, addr:street=>NULL, addr:housename=>NULL, addr:housenumber=>NULL, addr:postcode=>NULL'::hstore tags
+  ,(a.tags || hstore('addr:country', 'LV') || hstore('addr:district', v.tags -> 'addr:district') || hstore('addr:city', v.tags -> 'addr:city') || hstore('addr:subdistrict', v.tags -> 'addr:subdistrict') || hstore('addr:street', v.tags -> 'addr:street') || hstore('addr:housename', v.tags -> 'addr:housename') || hstore('addr:housenumber', v.tags -> 'addr:housenumber') || hstore('addr:postcode', v.tags -> 'addr:postcode') || hstore('ref:LV:addr', v.tags -> 'ref:LV:addr')) - 'addr:district=>NULL, addr:city=>NULL, addr:subdistrict=>NULL, addr:street=>NULL, addr:housename=>NULL, addr:housenumber=>NULL, addr:postcode=>NULL'::hstore tags
 FROM nodes a
 INNER JOIN building_addr_geom v ON ST_Contains(v.geom, a.geom)
 INNER JOIN c ON a.id = c.id;
@@ -1124,7 +1124,7 @@ AS (
   INNER JOIN vzd.adreses_ekas_sadalitas c ON b."ARCode" = c.adr_cd
   )
 SELECT a.id
-  ,(a.tags || hstore('addr:country', 'LV') || hstore('addr:district', v.novads) || hstore('addr:city', v.pilseta) || hstore('addr:subdistrict', v.pagasts) || hstore('addr:place', v.ciems) || hstore('addr:street', v.iela) || hstore('addr:housename', v.nosaukums) || hstore('addr:housenumber', v.nr) || hstore('addr:postcode', v.atrib) || hstore('ref:LV:addr', v.adr_cd::TEXT)) - 'addr:district=>NULL, addr:city=>NULL, addr:subdistrict=>NULL, addr:place=>NULL, addr:street=>NULL, addr:housename=>NULL, addr:housenumber=>NULL, addr:postcode=>NULL'::hstore tags
+  ,(a.tags || hstore('addr:country', 'LV') || hstore('addr:district', v.novads) || hstore('addr:city', COALESCE(v.pilseta, v.ciems)) || hstore('addr:subdistrict', v.pagasts) || hstore('addr:street', v.iela) || hstore('addr:housename', v.nosaukums) || hstore('addr:housenumber', v.nr) || hstore('addr:postcode', v.atrib) || hstore('ref:LV:addr', v.adr_cd::TEXT)) - 'addr:district=>NULL, addr:city=>NULL, addr:subdistrict=>NULL, addr:street=>NULL, addr:housename=>NULL, addr:housenumber=>NULL, addr:postcode=>NULL'::hstore tags
 FROM nodes a
 INNER JOIN tags_4_addresses_nodes_2 t ON a.id = t.id
 INNER JOIN v ON ST_Contains(v.geom, a.geom);
