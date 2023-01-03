@@ -286,6 +286,32 @@ SELECT kods
     END
 FROM vzd.aw_eka;
 
+---Correct typos.
+UPDATE vzd.adreses
+SET std = REPLACE(std, ' K-', ' k-')
+WHERE std LIKE '% K-%';
+
+UPDATE vzd.adreses
+SET nosaukums = REPLACE(nosaukums, ' K-', ' k-')
+WHERE nosaukums LIKE '% K-%';
+
+UPDATE vzd.adreses
+SET sort_nos = REPLACE(sort_nos, ' K-', ' k-')
+WHERE sort_nos LIKE '% K-%';
+
+----In numbers, remove space between number and letter.
+UPDATE vzd.adreses
+SET std = REPLACE(std, nosaukums, REPLACE(nosaukums, ' ', ''))
+WHERE (nosaukums ~ '^\d+\s[A-Z]$');
+
+UPDATE vzd.adreses
+SET nosaukums = REPLACE(nosaukums, ' ', '')
+WHERE (nosaukums ~ '^\d+\s[A-Z]$');
+
+UPDATE vzd.adreses
+SET sort_nos = REPLACE(sort_nos, ' ', '')
+WHERE (sort_nos ~ '^\d+\s[A-Z]$');
+
 ---Streets.
 INSERT INTO vzd.adreses (
   adr_cd
