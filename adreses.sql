@@ -7,21 +7,15 @@ AS $BODY$BEGIN
 /*
 --Types of addressation objects.
 DROP TABLE IF EXISTS vzd.adreses_tips;
-
 CREATE TABLE vzd.adreses_tips (
   id serial PRIMARY KEY
   ,tips_cd SMALLINT NOT NULL
   ,nosaukums TEXT
   );
-
 COMMENT ON TABLE vzd.adreses_tips IS 'Adresācijas objektu tipi.';
-
 COMMENT ON COLUMN vzd.adreses_tips.id IS 'ID.';
-
 COMMENT ON COLUMN vzd.adreses_tips.tips_cd IS 'Kods.';
-
 COMMENT ON COLUMN vzd.adreses_tips.nosaukums IS 'Adresācijas objekta tips.';
-
 INSERT INTO vzd.adreses_tips (
   tips_cd
   ,nosaukums
@@ -62,27 +56,19 @@ VALUES (
   113
   ,'Novads'
   );
-
 --Levels of approval of addressation objects.
 DROP TABLE IF EXISTS vzd.adreses_apst_pak;
-
 CREATE TABLE vzd.adreses_apst_pak (
   id serial PRIMARY KEY
   ,apst_pak SMALLINT NOT NULL
   ,nosaukums TEXT
   ,apraksts TEXT
   );
-
 COMMENT ON TABLE vzd.adreses_apst_pak IS 'Adresācijas objektu apstiprinājuma pakāpes.';
-
 COMMENT ON COLUMN vzd.adreses_apst_pak.id IS 'ID.';
-
 COMMENT ON COLUMN vzd.adreses_apst_pak.apst_pak IS 'Kods.';
-
 COMMENT ON COLUMN vzd.adreses_apst_pak.nosaukums IS 'Saīsinājums.';
-
 COMMENT ON COLUMN vzd.adreses_apst_pak.apraksts IS 'Apstiprinājuma pakāpe.';
-
 INSERT INTO vzd.adreses_apst_pak (
   apst_pak
   ,nosaukums
@@ -113,21 +99,15 @@ VALUES (
 --Table to accumulate coordinates of addressation objects of deleted buildings and land parcels intended for building.
 /*
 DROP TABLE IF EXISTS vzd.adreses_ekas_koord_del;
-
 CREATE TABLE vzd.adreses_ekas_koord_del (
   id serial PRIMARY KEY
   ,adr_cd INT NOT NULL
   ,geom geometry(Point, 3059)
   );
-
 COMMENT ON TABLE vzd.adreses_ekas_koord_del IS 'Dzēsto ēku un apbūvei paredzēto zemes vienību adresācijas objektu koordinātas.';
-
 COMMENT ON COLUMN vzd.adreses_ekas_koord_del.id IS 'ID.';
-
 COMMENT ON COLUMN vzd.adreses_ekas_koord_del.adr_cd IS 'Adresācijas objekta kods.';
-
 COMMENT ON COLUMN vzd.adreses_ekas_koord_del.geom IS 'Ģeometrija.';
-
 --Import historical data published by the State Land Service.
 INSERT INTO vzd.adreses_ekas_koord_del (
   adr_cd
@@ -633,11 +613,29 @@ AS
 SELECT a.adr_cd
   ,CASE 
     WHEN iela.nosaukums IS NOT NULL
+      AND a.nosaukums NOT LIKE '% k-%'
+      AND a.nosaukums NOT LIKE '%/%'
+      AND (a.nosaukums ~ '^-?[0-9]*.?[0-9]*$') = false
+      THEN a.nosaukums
+    WHEN iela.nosaukums IS NOT NULL
+      THEN NULL
+    WHEN iela.nosaukums IS NULL
+      AND a.nosaukums NOT LIKE '% %'
+      AND (a.nosaukums ~ '^-?[0-9]*.?[0-9]*$') = true
       THEN NULL
     ELSE a.nosaukums
     END nosaukums
   ,CASE 
     WHEN iela.nosaukums IS NOT NULL
+      AND a.nosaukums NOT LIKE '% k-%'
+      AND a.nosaukums NOT LIKE '%/%'
+      AND (a.nosaukums ~ '^-?[0-9]*.?[0-9]*$') = false
+      THEN NULL
+    WHEN iela.nosaukums IS NOT NULL
+      THEN a.nosaukums
+    WHEN iela.nosaukums IS NULL
+      AND a.nosaukums NOT LIKE '% %'
+      AND (a.nosaukums ~ '^-?[0-9]*.?[0-9]*$') = true
       THEN a.nosaukums
     ELSE NULL
     END nr
@@ -761,7 +759,6 @@ CREATE INDEX adreses_ekas_sadalitas_geom_idx ON vzd.adreses_ekas_sadalitas USING
 --Historical notations of addresses.
 /*
 DROP TABLE IF EXISTS vzd.adreses_his;
-
 CREATE TABLE vzd.adreses_his (
   id serial PRIMARY KEY
   ,adr_cd INT NOT NULL
@@ -772,23 +769,14 @@ CREATE TABLE vzd.adreses_his (
   ,dat_mod TIMESTAMP NOT NULL
   ,dat_beig DATE NULL
   );
-
 COMMENT ON TABLE vzd.adreses_his IS 'Adrešu vēsturiskie pieraksti.';
-
 COMMENT ON COLUMN vzd.adreses_his.id IS 'ID.';
-
 COMMENT ON COLUMN vzd.adreses_his.adr_cd IS 'Adresācijas objekta kods.';
-
 COMMENT ON COLUMN vzd.adreses_his.adr_cd_his IS 'Adresācijas objekta vēsturiskais kods (gadījumos, kad viena adrese bija lietota vairākiem objektiem).';
-
 COMMENT ON COLUMN vzd.adreses_his.tips_cd IS 'Adresācijas objekta tipa kods.';
-
 COMMENT ON COLUMN vzd.adreses_his.std IS 'Adresācijas objekta pilnais vēsturiskais adreses pieraksts.';
-
 COMMENT ON COLUMN vzd.adreses_his.dat_sak IS 'Adresācijas objekta izveidošanas vai pirmreizējās reģistrācijas datums, ja nav zināms precīzs adresācijas objekta izveides datums.';
-
 COMMENT ON COLUMN vzd.adreses_his.dat_mod IS 'Datums un laiks, kad pēdējo reizi informācijas sistēmā tehniski modificēts ieraksts/dati par adresācijas objektu (piemēram, aktualizēts statuss, apstiprinājuma pakāpe, pievienots atribūts u.c.) vai mainīts pilnais adreses pieraksts.';
-
 COMMENT ON COLUMN vzd.adreses_his.dat_beig IS 'Adresācijas objekta likvidācijas datums.';
 */
 
