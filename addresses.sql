@@ -247,14 +247,17 @@ WHERE relations.id = s.id;
 --Add address for the closest isolated dwelling whose name matches and is located no more than 25 m from the address point. While data quality of isolated dwellings is being improved, only for nodes that list the Place Names Database as source.
 CREATE TEMPORARY TABLE nodes_addr_add_iso_dw AS
 SELECT a.id
-  ,a.tags || hstore('name', v.nosaukums) || (hstore('addr:country', 'LV') || hstore('addr:district', v.novads) || hstore('addr:city', COALESCE(v.pilseta, v.ciems)) || hstore('addr:subdistrict', v.pagasts) || hstore('addr:housename', v.nosaukums) || hstore('addr:postcode', v.atrib) || hstore('ref:LV:addr', v.adr_cd::TEXT) || hstore('old_addr:housename', p.nosaukums) || hstore('old_addr:housenumber', p.nr) || hstore('old_addr:street', p.iela)) - 'addr:district=>NULL, addr:city=>NULL, addr:subdistrict=>NULL, addr:housename=>NULL, addr:postcode=>NULL, old_addr:housename=>NULL, old_addr:housenumber=>NULL, old_addr:street=>NULL'::hstore tags
+  ,a.tags || hstore('name', COALESCE(v.nosaukums, v.nr)) || (hstore('addr:country', 'LV') || hstore('addr:district', v.novads) || hstore('addr:city', COALESCE(v.pilseta, v.ciems)) || hstore('addr:subdistrict', v.pagasts) || hstore('addr:housename', v.nosaukums) || hstore('addr:housenumber', v.nr) || hstore('addr:postcode', v.atrib) || hstore('ref:LV:addr', v.adr_cd::TEXT) || hstore('old_addr:housename', p.nosaukums) || hstore('old_addr:housenumber', p.nr) || hstore('old_addr:street', p.iela)) - 'addr:district=>NULL, addr:city=>NULL, addr:subdistrict=>NULL, addr:housename=>NULL, addr:housenumber=>NULL, addr:postcode=>NULL, old_addr:housename=>NULL, old_addr:housenumber=>NULL, old_addr:street=>NULL'::hstore tags
 FROM nodes a
 INNER JOIN nodes_lv l ON a.id = l.id
 CROSS JOIN LATERAL(SELECT b.*, b.geom <-> a.geom AS dist FROM vzd.adreses_ekas_sadalitas b ORDER BY dist LIMIT 1) v
 LEFT OUTER JOIN vzd.adreses_his_ekas_previous p ON v.adr_cd = p.adr_cd
 WHERE a.tags -> 'place' LIKE 'isolated_dwelling'
   AND LOWER(a.tags -> 'source') LIKE 'lģia vietvārdu db'
-  AND LOWER(a.tags -> 'name') = LOWER(v.nosaukums)
+  AND (
+    LOWER(a.tags -> 'name') = LOWER(v.nosaukums)
+    OR LOWER(a.tags -> 'name') = LOWER(v.nr)
+    )
   AND ST_Transform(v.geom, 3059) <-> ST_Transform(a.geom, 3059) <= 25;
 
 ALTER TABLE nodes_addr_add_iso_dw ADD PRIMARY KEY (id);
