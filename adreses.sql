@@ -622,6 +622,7 @@ SELECT a.adr_cd
     WHEN iela.nosaukums IS NULL
       AND a.nosaukums NOT LIKE '% %'
       AND (a.nosaukums ~ '^-?[0-9]*.?[0-9]*$') = true
+      AND (a.nosaukums ~ '^[a-zA-Z]+$') = false
       THEN NULL
     ELSE a.nosaukums
     END nosaukums
@@ -636,6 +637,7 @@ SELECT a.adr_cd
     WHEN iela.nosaukums IS NULL
       AND a.nosaukums NOT LIKE '% %'
       AND (a.nosaukums ~ '^-?[0-9]*.?[0-9]*$') = true
+      AND (a.nosaukums ~ '^[a-zA-Z]+$') = false
       THEN a.nosaukums
     ELSE NULL
     END nr
