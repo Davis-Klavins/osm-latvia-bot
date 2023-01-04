@@ -1002,6 +1002,24 @@ SET novads = TRIM(regexp_replace(novads, '\s+', ' ', 'g'));
 UPDATE vzd.adreses_his_ekas_split
 SET rajons = TRIM(regexp_replace(rajons, '\s+', ' ', 'g'));
 
+--Correct typos.
+UPDATE vzd.adreses_his_ekas_split
+SET nr = REPLACE(nr, ' K-', ' k-')
+WHERE nr LIKE '% K-%';
+
+UPDATE vzd.adreses_his_ekas_split
+SET nosaukums = REPLACE(nosaukums, ' K-', ' k-')
+WHERE nosaukums LIKE '% K-%';
+
+---In numbers, remove space between number and letter.
+UPDATE vzd.adreses_his_ekas_split
+SET nr = REPLACE(nr, ' ', '')
+WHERE (nr ~ '^\d+\s[A-Z]$');
+
+UPDATE vzd.adreses_his_ekas_split
+SET nosaukums = REPLACE(nr, ' ', '')
+WHERE (nosaukums ~ '^\d+\s[A-Z]$');
+
 /*
 --Check for remaining entries that haven't been splitted.
 SELECT *
