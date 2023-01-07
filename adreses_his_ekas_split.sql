@@ -1020,6 +1020,62 @@ UPDATE vzd.adreses_his_ekas_split
 SET nosaukums = REPLACE(nr, ' ', '')
 WHERE (nosaukums ~ '^\d+\s[A-Z]$');
 
+--House name looks like a number, move it to "nr".
+UPDATE vzd.adreses_his_ekas_split
+SET nr = nosaukums
+  ,nosaukums = NULL
+WHERE iela IS NULL
+  AND nosaukums NOT LIKE '% %'
+  AND (nosaukums ~ '^-?[0-9]*.?[0-9]*$') = true
+  AND (nosaukums ~ '^[a-zA-Z]+$') = false;
+
+--Number contains street name, delete it from the number.
+UPDATE vzd.adreses_his_ekas_split
+SET nr = LTRIM(RIGHT(nr, LENGTH(nr) - LENGTH(iela)))
+WHERE LEFT(nr, LENGTH(iela)) LIKE iela;
+
+--Number starts with a letter, move it to "nosaukums".
+UPDATE vzd.adreses_his_ekas_split
+SET nosaukums = nr
+  ,nr = NULL
+WHERE iela IS NOT NULL
+  AND nr NOT LIKE '%hip.%'
+  AND (nr ~ '^[a-zA-Z]+') = true
+  AND (nr ~ '^[a-zA-Z]+-[0-9]+$') = false
+  AND (nr ~ '^[a-zA-Z]+[0-9]+$') = false;
+
+UPDATE vzd.adreses_his_ekas_split
+SET nosaukums = nr
+  ,nr = NULL
+WHERE iela IS NOT NULL
+  AND nr NOT LIKE '%hip.%'
+  AND (nr ~ '^[ā-žĀ-Ž]+') = true
+  AND (nr ~ '^[ā-žĀ-Ž]+-[0-9]+$') = false
+  AND (nr ~ '^[ā-žĀ-Ž]+[0-9]+$') = false;
+
+--Number contains "km" or "gada parks", move it to "nosaukums".
+UPDATE vzd.adreses_his_ekas_split
+SET nosaukums = nr
+  ,nr = NULL
+WHERE iela IS NOT NULL
+  AND (
+    nr LIKE '%km%'
+    OR nr LIKE '%gada parks%'
+    );
+
+/*
+--Select various non-standard erroneous cases left as "nr".
+SELECT *
+FROM vzd.adreses_his_ekas_split
+WHERE iela IS NOT NULL
+  AND nr NOT LIKE '% k-%'
+  AND nr NOT LIKE '%/%'
+  --AND nr NOT LIKE '%hip.%'
+  --AND nr NOT LIKE '%lit.%'
+  AND (nr ~ '^-?[0-9]*.?[0-9]*$') = false
+ORDER BY nr DESC;
+*/
+
 /*
 --Check for remaining entries that haven't been splitted.
 SELECT *
