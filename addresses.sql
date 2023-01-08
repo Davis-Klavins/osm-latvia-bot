@@ -250,7 +250,7 @@ SELECT a.id
   ,a.tags || hstore('name', COALESCE(v.nosaukums, v.nr)) || (hstore('addr:country', 'LV') || hstore('addr:district', v.novads) || hstore('addr:city', COALESCE(v.pilseta, v.ciems)) || hstore('addr:subdistrict', v.pagasts) || hstore('addr:housename', v.nosaukums) || hstore('addr:housenumber', v.nr) || hstore('addr:postcode', v.atrib) || hstore('ref:LV:addr', v.adr_cd::TEXT) || hstore('old_addr:housename', p.nosaukums) || hstore('old_addr:housenumber', p.nr) || hstore('old_addr:street', p.iela)) - 'addr:district=>NULL, addr:city=>NULL, addr:subdistrict=>NULL, addr:housename=>NULL, addr:housenumber=>NULL, addr:postcode=>NULL, old_addr:housename=>NULL, old_addr:housenumber=>NULL, old_addr:street=>NULL'::hstore tags
 FROM nodes a
 INNER JOIN nodes_lv l ON a.id = l.id
-CROSS JOIN LATERAL(SELECT b.*, b.geom <-> a.geom AS dist FROM vzd.adreses_ekas_sadalitas b ORDER BY dist LIMIT 1) v
+CROSS JOIN LATERAL(SELECT b.*, b.geom <-> a.geom AS dist FROM vzd.adreses_ekas_sadalitas b WHERE b.iela IS NULL ORDER BY dist LIMIT 1) v
 LEFT OUTER JOIN vzd.adreses_his_ekas_previous p ON v.adr_cd = p.adr_cd
 WHERE a.tags -> 'place' LIKE 'isolated_dwelling'
   AND LOWER(a.tags -> 'source') LIKE 'lģia vietvārdu db'
@@ -643,7 +643,7 @@ LEFT OUTER JOIN nodes_unnest t ON a.id = t.id
   AND t.tag NOT LIKE 'addr:%'
   AND t.tag NOT LIKE 'old_addr:%'
   AND t.tag NOT LIKE 'ref:LV:addr'
-CROSS JOIN LATERAL(SELECT v.*, v.geom <-> a.geom AS dist FROM vzd.adreses_ekas_sadalitas v WHERE REPLACE(o.tags -> 'addr:housename'::TEXT, ' ', '') LIKE REPLACE(v.nosaukums, ' ', '') ORDER BY dist LIMIT 1) v
+CROSS JOIN LATERAL(SELECT v.*, v.geom <-> a.geom AS dist FROM vzd.adreses_ekas_sadalitas v WHERE REPLACE(o.tags -> 'addr:housename'::TEXT, ' ', '') LIKE REPLACE(v.nosaukums, ' ', '') AND v.iela IS NULL ORDER BY dist LIMIT 1) v
 LEFT JOIN vzd.adreses_his_ekas_previous p ON v.adr_cd = p.adr_cd
 WHERE t.id IS NULL
   AND v.dist < 0.01
