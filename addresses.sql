@@ -631,7 +631,7 @@ SET tags = s.tags
 FROM nodes_addr_add_5 s
 WHERE nodes.id = s.id;
 
----House names matches, distance up to 0.01 decimal degree (~1.1 km).
+---House names matches, distance up to 0.01 decimal degree (~1.1 km). Can be commented after pre-bot OSM address data has been entirely replaced for the whole territory.
 CREATE TEMPORARY TABLE nodes_addr_add AS
 SELECT a.id
   ,(a.tags || hstore('addr:country', 'LV') || hstore('addr:district', v.novads) || hstore('addr:city', COALESCE(v.pilseta, v.ciems)) || hstore('addr:subdistrict', v.pagasts) || hstore('addr:housename', v.nosaukums) || hstore('addr:postcode', v.atrib) || hstore('ref:LV:addr', v.adr_cd::TEXT) || hstore('old_addr:housename', p.nosaukums) || hstore('old_addr:housenumber', p.nr) || hstore('old_addr:street', p.iela)) - 'addr:district=>NULL, addr:city=>NULL, addr:subdistrict=>NULL, addr:housename=>NULL, addr:postcode=>NULL, old_addr:housename=>NULL, old_addr:housenumber=>NULL, old_addr:street=>NULL'::hstore tags
@@ -687,7 +687,7 @@ SET tags = s.tags
 FROM nodes_addr_add s
 WHERE nodes.id = s.id;
 
----House number and street matches, distance up to 0.01 decimal degree (~1.1 km).
+---House number and street matches, distance up to 0.01 decimal degree (~1.1 km). Can be commented after pre-bot OSM address data has been entirely replaced for the whole territory.
 CREATE TEMPORARY TABLE nodes_addr_add_2 AS
 SELECT a.id
   ,(a.tags || hstore('addr:country', 'LV') || hstore('addr:district', v.novads) || hstore('addr:city', COALESCE(v.pilseta, v.ciems)) || hstore('addr:subdistrict', v.pagasts) || hstore('addr:street', v.iela) || hstore('addr:housenumber', v.nr) || hstore('addr:postcode', v.atrib) || hstore('ref:LV:addr', v.adr_cd::TEXT) || hstore('old_addr:housename', p.nosaukums) || hstore('old_addr:housenumber', p.nr) || hstore('old_addr:street', p.iela)) - 'addr:district=>NULL, addr:city=>NULL, addr:subdistrict=>NULL, addr:street=>NULL, addr:housenumber=>NULL, addr:postcode=>NULL, old_addr:housename=>NULL, old_addr:housenumber=>NULL, old_addr:street=>NULL'::hstore tags
