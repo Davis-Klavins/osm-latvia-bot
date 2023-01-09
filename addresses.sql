@@ -632,6 +632,57 @@ FROM nodes_addr_add_5 s
 WHERE nodes.id = s.id;
 
 ---House names matches, distance up to 0.01 decimal degree (~1.1 km). Can be commented after pre-bot OSM address data has been entirely replaced for the whole territory.
+----Since house names that look like numbers are treated as numbers and vice versa, direct usage of vzd.adreses_ekas_sadalitas takes too long to execute. Recreate as temporary table in previous structure.
+CREATE TEMPORARY TABLE adreses_ekas_sadalitas_tmp AS
+SELECT adr_cd
+  ,nosaukums
+  ,nr
+  ,iela
+  ,ciems
+  ,pilseta
+  ,pagasts
+  ,novads
+  ,atrib
+  ,std
+  ,geom
+FROM vzd.adreses_ekas_sadalitas
+WHERE (
+    iela IS NULL
+    AND nosaukums IS NOT NULL
+    )
+  OR (
+    iela IS NOT NULL
+    AND nr IS NOT NULL
+    )
+
+UNION
+
+SELECT adr_cd
+  ,nr nosaukums
+  ,nosaukums nr
+  ,iela
+  ,ciems
+  ,pilseta
+  ,pagasts
+  ,novads
+  ,atrib
+  ,std
+  ,geom
+FROM vzd.adreses_ekas_sadalitas
+WHERE (
+    iela IS NOT NULL
+    AND nosaukums IS NOT NULL
+    )
+  OR (
+    iela IS NULL
+    AND nr IS NOT NULL
+    );
+
+CREATE INDEX adreses_ekas_sadalitas_tmp_geom_idx
+    ON adreses_ekas_sadalitas_tmp USING gist
+    (geom)
+    TABLESPACE pg_default;
+
 CREATE TEMPORARY TABLE nodes_addr_add AS
 SELECT a.id
   ,(a.tags || hstore('addr:country', 'LV') || hstore('addr:district', v.novads) || hstore('addr:city', COALESCE(v.pilseta, v.ciems)) || hstore('addr:subdistrict', v.pagasts) || hstore('addr:housename', v.nosaukums) || hstore('addr:postcode', v.atrib) || hstore('ref:LV:addr', v.adr_cd::TEXT) || hstore('old_addr:housename', p.nosaukums) || hstore('old_addr:housenumber', p.nr) || hstore('old_addr:street', p.iela)) - 'addr:district=>NULL, addr:city=>NULL, addr:subdistrict=>NULL, addr:housename=>NULL, addr:postcode=>NULL, old_addr:housename=>NULL, old_addr:housenumber=>NULL, old_addr:street=>NULL'::hstore tags
@@ -643,11 +694,7 @@ LEFT OUTER JOIN nodes_unnest t ON a.id = t.id
   AND t.tag NOT LIKE 'addr:%'
   AND t.tag NOT LIKE 'old_addr:%'
   AND t.tag NOT LIKE 'ref:LV:addr'
-CROSS JOIN LATERAL(SELECT v.*, v.geom <-> a.geom AS dist FROM vzd.adreses_ekas_sadalitas v WHERE (
-      REPLACE(o.tags -> 'addr:housename'::TEXT, ' ', '') LIKE REPLACE(v.nosaukums, ' ', '')
-      OR REPLACE(o.tags -> 'addr:housenumber'::TEXT, ' ', '') LIKE REPLACE(v.nr, ' ', '')
-      )
-    AND v.iela IS NULL ORDER BY dist LIMIT 1) v
+CROSS JOIN LATERAL(SELECT v.*, v.geom <-> a.geom AS dist FROM adreses_ekas_sadalitas_tmp v WHERE REPLACE(o.tags -> 'addr:housename'::TEXT, ' ', '') LIKE REPLACE(v.nosaukums, ' ', '') ORDER BY dist LIMIT 1) v
 LEFT JOIN vzd.adreses_his_ekas_previous p ON v.adr_cd = p.adr_cd
 WHERE t.id IS NULL
   AND v.dist < 0.01
