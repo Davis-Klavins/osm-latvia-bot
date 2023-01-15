@@ -1131,6 +1131,47 @@ SET tags = s.tags
 FROM nodes_addr_add_3 s
 WHERE nodes.id = s.id;
 
+----Address taken from the address of the building from the State Immovable Property Cadastre Information System where node is located. Node contained by only one polygon.
+CREATE TEMPORARY TABLE nivkis_buves_addr_geom AS
+SELECT c.adr_cd
+  ,c.nr
+  ,c.nosaukums
+  ,c.iela
+  ,c.ciems
+  ,c.pagasts
+  ,c.pilseta
+  ,c.novads
+  ,c.atrib
+  ,a.geom
+FROM vzd.nivkis_buves a
+INNER JOIN vzd.nivkis_adreses b ON a.code = b."ObjectCadastreNr"
+INNER JOIN vzd.adreses_ekas_sadalitas c ON b."ARCode" = c.adr_cd;
+
+CREATE INDEX nivkis_buves_addr_geom_geom_idx ON nivkis_buves_addr_geom USING GIST (geom);
+
+CREATE TEMPORARY TABLE nodes_addr_add_7 AS
+WITH c
+AS (
+  SELECT a.id
+  FROM nodes a
+  INNER JOIN nivkis_buves_addr_geom v ON ST_Contains(v.geom, a.geom)
+  INNER JOIN tags_4_addresses_nodes t ON a.id = t.id
+  GROUP BY a.id
+  HAVING COUNT(*) = 1
+  )
+SELECT a.id
+  ,(a.tags || hstore('addr:country', 'LV') || hstore('addr:district', v.novads) || hstore('addr:city', COALESCE(v.pilseta, v.ciems)) || hstore('addr:subdistrict', v.pagasts) || hstore('addr:street', v.iela) || hstore('addr:housename', v.nosaukums) || hstore('addr:housenumber', v.nr) || hstore('addr:postcode', v.atrib) || hstore('ref:LV:addr', v.adr_cd::TEXT)) - 'addr:district=>NULL, addr:city=>NULL, addr:subdistrict=>NULL, addr:street=>NULL, addr:housename=>NULL, addr:housenumber=>NULL, addr:postcode=>NULL'::hstore tags
+FROM nodes a
+INNER JOIN nivkis_buves_addr_geom v ON ST_Contains(v.geom, a.geom)
+INNER JOIN c ON a.id = c.id;
+
+ALTER TABLE nodes_addr_add_7 ADD PRIMARY KEY (id);
+
+UPDATE nodes
+SET tags = s.tags
+FROM nodes_addr_add_7 s
+WHERE nodes.id = s.id;
+
 ----Address taken from the address of the land parcel from the State Immovable Property Cadastre Information System where node is located.
 CREATE TEMPORARY TABLE tags_4_addresses_nodes_2 AS
 WITH t
