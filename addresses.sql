@@ -119,6 +119,35 @@ SET tags = s.tags
 FROM s
 WHERE nodes.id = s.id;
 
+--Delete tags that resemble addresses or indicate that there is no address.
+CREATE TEMPORARY TABLE nodes_update AS
+SELECT a.id
+FROM nodes a
+INNER JOIN nodes_lv b ON a.id = b.id
+WHERE a.tags ?| ARRAY ['city', 'county', 'district', 'housename', 'housenumber', 'parish', 'postal_code', 'postcode', 'street', 'subdistrict', 'noaddress', 'nohousenumber'];
+
+UPDATE nodes
+SET tags = tags - 'city'::TEXT - 'county'::TEXT - 'district'::TEXT - 'housename'::TEXT - 'housenumber'::TEXT - 'parish'::TEXT - 'postal_code'::TEXT - 'postcode'::TEXT - 'street'::TEXT - 'subdistrict'::TEXT - 'noaddress'::TEXT - 'nohousenumber'::TEXT
+WHERE id IN (
+    SELECT id
+    FROM nodes_update
+    );
+
+CREATE TEMPORARY TABLE nodes_update_2 AS
+SELECT a.id
+FROM nodes a
+INNER JOIN nodes_lv b ON a.id = b.id
+WHERE a.tags ? 'country'
+  AND NOT (a.tags ? 'office')
+  AND NOT (a.tags ? 'man_made');
+
+UPDATE nodes
+SET tags = tags - 'country'::TEXT
+WHERE id IN (
+    SELECT id
+    FROM nodes_update_2
+    );
+
 --Table for old version of changed ways for comparison.
 DROP TABLE IF EXISTS ways_old;
 
@@ -182,6 +211,35 @@ UPDATE ways
 SET tags = s.tags
 FROM s
 WHERE ways.id = s.id;
+
+--Delete tags that resemble addresses or indicate that there is no address.
+CREATE TEMPORARY TABLE ways_update AS
+SELECT a.id
+FROM ways a
+INNER JOIN ways_lv b ON a.id = b.id
+WHERE a.tags ?| ARRAY ['city', 'county', 'district', 'housename', 'housenumber', 'parish', 'postal_code', 'postcode', 'street', 'subdistrict', 'noaddress', 'nohousenumber'];
+
+UPDATE ways
+SET tags = tags - 'city'::TEXT - 'county'::TEXT - 'district'::TEXT - 'housename'::TEXT - 'housenumber'::TEXT - 'parish'::TEXT - 'postal_code'::TEXT - 'postcode'::TEXT - 'street'::TEXT - 'subdistrict'::TEXT - 'noaddress'::TEXT - 'nohousenumber'::TEXT
+WHERE id IN (
+    SELECT id
+    FROM ways_update
+    );
+
+CREATE TEMPORARY TABLE ways_update_2 AS
+SELECT a.id
+FROM ways a
+INNER JOIN ways_lv b ON a.id = b.id
+WHERE a.tags ? 'country'
+  AND NOT (a.tags ? 'office')
+  AND NOT (a.tags ? 'man_made');
+
+UPDATE ways
+SET tags = tags - 'country'::TEXT
+WHERE id IN (
+    SELECT id
+    FROM ways_update_2
+    );
 
 --Table for old version of changed relations for comparison.
 DROP TABLE IF EXISTS relations_old;
@@ -1230,65 +1288,6 @@ UPDATE nodes
 SET tags = s.tags
 FROM nodes_addr_add_4 s
 WHERE nodes.id = s.id;
-
---Remove tags that resemble addresses or indicate that there is no address.
----Nodes.
-CREATE TEMPORARY TABLE nodes_update AS
-SELECT a.id
-FROM nodes a
-INNER JOIN nodes_lv b ON a.id = b.id
-WHERE a.tags ?| ARRAY ['city', 'county', 'district', 'housename', 'housenumber', 'parish', 'postal_code', 'postcode', 'street', 'subdistrict', 'noaddress', 'nohousenumber'];
-
-UPDATE nodes
-SET tags = tags - 'city'::TEXT - 'county'::TEXT - 'district'::TEXT - 'housename'::TEXT - 'housenumber'::TEXT - 'parish'::TEXT - 'postal_code'::TEXT - 'postcode'::TEXT - 'street'::TEXT - 'subdistrict'::TEXT - 'noaddress'::TEXT - 'nohousenumber'::TEXT
-WHERE id IN (
-    SELECT id
-    FROM nodes_update
-    );
-
-CREATE TEMPORARY TABLE nodes_update_2 AS
-SELECT a.id
-FROM nodes a
-INNER JOIN nodes_lv b ON a.id = b.id
-WHERE a.tags ? 'country'
-  AND NOT (a.tags ? 'office')
-  AND NOT (a.tags ? 'man_made');
-
-UPDATE nodes
-SET tags = tags - 'country'::TEXT
-WHERE id IN (
-    SELECT id
-    FROM nodes_update_2
-    );
-
----Ways.
-CREATE TEMPORARY TABLE ways_update AS
-SELECT a.id
-FROM ways a
-INNER JOIN ways_lv b ON a.id = b.id
-WHERE a.tags ?| ARRAY ['city', 'county', 'district', 'housename', 'housenumber', 'parish', 'postal_code', 'postcode', 'street', 'subdistrict', 'noaddress', 'nohousenumber'];
-
-UPDATE ways
-SET tags = tags - 'city'::TEXT - 'county'::TEXT - 'district'::TEXT - 'housename'::TEXT - 'housenumber'::TEXT - 'parish'::TEXT - 'postal_code'::TEXT - 'postcode'::TEXT - 'street'::TEXT - 'subdistrict'::TEXT - 'noaddress'::TEXT - 'nohousenumber'::TEXT
-WHERE id IN (
-    SELECT id
-    FROM ways_update
-    );
-
-CREATE TEMPORARY TABLE ways_update_2 AS
-SELECT a.id
-FROM ways a
-INNER JOIN ways_lv b ON a.id = b.id
-WHERE a.tags ? 'country'
-  AND NOT (a.tags ? 'office')
-  AND NOT (a.tags ? 'man_made');
-
-UPDATE ways
-SET tags = tags - 'country'::TEXT
-WHERE id IN (
-    SELECT id
-    FROM ways_update_2
-    );
 
 --Remove building name if it matches housenumber.
 ---Nodes.
