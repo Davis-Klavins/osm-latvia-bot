@@ -128,7 +128,11 @@ SELECT a.adr_cd
 FROM vzd.adreses_ekas a
 INNER JOIN vzd.aw_eka b ON a.adr_cd = b.kods
 WHERE a.geom IS NOT NULL
-  AND b.koord_x IS NULL;
+  AND b.koord_x IS NULL
+  AND a.adr_cd NOT IN (
+    SELECT adr_cd
+    FROM vzd.adreses_ekas_koord_del
+    );
 
 --Current, erroneous and deleted addresses.
 ---Main table with objects of addressation.
