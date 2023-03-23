@@ -66,16 +66,20 @@ rm -r kk_shp
 psql -h $IP_ADDRESS -p $PORT -U osm -d osm -w -c "CALL vzd.nivkis()"
 
 ## Attributes of buildings.
-# wget -q https://data.gov.lv/dati/dataset/be841486-4af9-4d38-aa14-6502a2ddb517/resource/9fe29b57-07cd-4458-b22c-b0b9f2bc8915/download/building.zip
-# rm -r building
-# mkdir building
-# unzip -o -q building.zip -d building
-# rm *.zip
-# psql -h $IP_ADDRESS -p $PORT -U osm -d osm -w -c "CREATE TABLE IF NOT EXISTS vzd.nivkis_buves_attr_tmp (data XML);"
-# cd building
+#mkdir building
+#cd building
+#wget -q https://data.gov.lv/dati/dataset/be841486-4af9-4d38-aa14-6502a2ddb517/resource/9fe29b57-07cd-4458-b22c-b0b9f2bc8915/download/building.zip
+#unzip -q building.zip
+#rm building.zip
+#psql -h $IP_ADDRESS -p $PORT -U osm -d osm -w -c "CREATE TABLE IF NOT EXISTS vzd.nivkis_buves_attr_tmp (data XML);"
 
-# for i in $(find . -name "*.xml" -type f); do
-  # cat $i | psql.exe -h $IP_ADDRESS -p $PORT -U osm -d osm -w -c '\COPY vzd.nivkis_buves_attr_tmp FROM stdin'
-# done
+#for file in */*.xml; do
+#  sed -i -e 's/\r//g' -e 's/\t/ /g' -e 's/\\/\//g' "${file}"
+#  echo "\COPY vzd.nivkis_buves_attr_tmp FROM" "${file}" >> script.sql
+#done
 
-# psql -h $IP_ADDRESS -p $PORT -U osm -d osm -w -c "CALL vzd.nivkis_buves_attr()"
+#psql -h $IP_ADDRESS -p $PORT -U osm -d osm -w -f script.sql
+#rm script.sql
+#cd ..
+#rm -r building
+#psql -h $IP_ADDRESS -p $PORT -U osm -d osm -w -c "CALL vzd.nivkis_buves_attr()"
