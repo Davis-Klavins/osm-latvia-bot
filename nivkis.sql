@@ -8,7 +8,7 @@ DO $$
 BEGIN
 
 --Buildings.
-DROP TABLE IF EXISTS vzd.nivkis_buves;
+DROP TABLE IF EXISTS vzd.nivkis_buves CASCADE;
 
 CREATE TABLE vzd.nivkis_buves (
   id SERIAL PRIMARY KEY
