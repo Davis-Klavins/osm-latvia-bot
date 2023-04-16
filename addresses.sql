@@ -699,6 +699,14 @@ UPDATE nodes_addr_add_5
 SET tags = tags - 'old_addr:street'::TEXT
 WHERE tags -> 'addr:street' = tags -> 'old_addr:street';
 
+--Delete tags of nodes that have become a part of ways or relations by manual user edits.
+UPDATE nodes_addr_add_5
+SET tags = ''
+WHERE id IN (
+    SELECT node_id
+    FROM way_nodes
+    );
+
 UPDATE nodes
 SET tags = s.tags
   ,geom = s.geom
