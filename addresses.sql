@@ -699,9 +699,10 @@ UPDATE nodes_addr_add_5
 SET tags = tags - 'old_addr:street'::TEXT
 WHERE tags -> 'addr:street' = tags -> 'old_addr:street';
 
---Delete tags of nodes that have become a part of ways or relations by manual user edits.
-UPDATE nodes_addr_add_5
-SET tags = ''
+----Tags of nodes that have become a part of ways or relations by manual user edits.
+CREATE TEMPORARY TABLE nodes_altered AS
+SELECT id
+FROM nodes_addr_add_5
 WHERE id IN (
     SELECT node_id
     FROM way_nodes
@@ -904,6 +905,14 @@ FROM nodes
 WHERE id IN (
     SELECT id
     FROM nodes_del
+    );
+
+--Delete tags of nodes that have become a part of ways or relations by manual user edits.
+UPDATE nodes
+SET tags = ''
+WHERE id IN (
+    SELECT id
+    FROM nodes_altered
     );
 
 --Insert missing addresses.
