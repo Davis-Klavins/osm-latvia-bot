@@ -617,7 +617,8 @@ FROM relations_addr_add_2 s
 WHERE relations.id = s.id;
 
 --Delete ways that are not part of relations, have no tags, but previously had only address tags.
-DELETE
+CREATE TEMPORARY TABLE ways_del AS
+SELECT id
 FROM ways
 WHERE tags = ''::hstore
   AND id NOT IN (
@@ -629,13 +630,28 @@ WHERE tags = ''::hstore
         FROM ways_old
         );
 
---Delete relations that have no tags, but previously had only address tags.
 DELETE
+FROM ways
+WHERE id IN (
+    SELECT id
+    FROM ways_del
+    );
+
+--Delete relations that have no tags, but previously had only address tags.
+CREATE TEMPORARY TABLE relations_del AS
+SELECT id
 FROM relations
 WHERE tags = ''::hstore
   AND id IN (
     SELECT id
     FROM relations_old
+    );
+
+DELETE
+FROM relations
+WHERE id IN (
+    SELECT id
+    FROM relations_del
     );
 
 --Add addresses for address points (nodes containing only addr:* tags) from the State Address Register. Only address codes not already assigned to isolated dwellings, ways and relations (buildings).
@@ -845,7 +861,7 @@ SET tags = s.tags
 FROM nodes_addr_add_2 s
 WHERE nodes.id = s.id;
 
---Delete nodes that are not part of ways or relations, have no tags, but previously had only address tags.
+--Delete nodes that are not part of ways or relations (except previously deleted ones), have no tags, but previously had only address tags.
 CREATE TEMPORARY TABLE nodes_del AS
 SELECT a.id
 FROM nodes a
@@ -860,8 +876,20 @@ LEFT OUTER JOIN (
   FROM way_nodes
   ) d ON a.id = d.node_id
 WHERE a.tags = ''::hstore
-  AND c.member_id IS NULL
-  AND d.node_id IS NULL;
+  AND (
+    c.member_id IS NULL
+    OR a.id IN (
+      SELECT id
+      FROM relations_del
+      )
+    )
+  AND (
+    d.node_id IS NULL
+    OR a.id IN (
+      SELECT id
+      FROM ways_del
+      )
+    );
 
 DELETE
 FROM nodes
