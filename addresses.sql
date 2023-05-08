@@ -712,7 +712,11 @@ UPDATE nodes
 SET tags = s.tags
   ,geom = s.geom
 FROM nodes_addr_add_5 s
-WHERE nodes.id = s.id;
+WHERE nodes.id = s.id
+  AND nodes.id NOT IN (
+    SELECT id
+    FROM nodes_altered
+    );
 
 ---House names matches, distance up to 0.01 decimal degree (~1.1 km). Can be commented after pre-bot OSM address data has been entirely replaced for the whole territory.
 ----Since house names that look like numbers are treated as numbers and vice versa, direct usage of vzd.adreses_ekas_sadalitas takes too long to execute. Recreate as temporary table in previous structure.
