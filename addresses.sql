@@ -781,6 +781,7 @@ LEFT OUTER JOIN nodes_unnest t ON a.id = t.id
   AND t.tag NOT LIKE 'addr:%'
   AND t.tag NOT LIKE 'old_addr:%'
   AND t.tag NOT LIKE 'ref:LV:addr'
+  AND t.tag NOT LIKE 'source:addr'
 CROSS JOIN LATERAL(SELECT v.*, v.geom <-> a.geom AS dist FROM adreses_ekas_sadalitas_tmp v WHERE REPLACE(o.tags -> 'addr:housename'::TEXT, ' ', '') LIKE REPLACE(v.nosaukums, ' ', '') ORDER BY dist LIMIT 1) v
 LEFT JOIN vzd.adreses_his_ekas_previous p ON v.adr_cd = p.adr_cd
 WHERE t.id IS NULL
@@ -833,6 +834,7 @@ LEFT OUTER JOIN nodes_unnest t ON a.id = t.id
   AND t.tag NOT LIKE 'addr:%'
   AND t.tag NOT LIKE 'old_addr:%'
   AND t.tag NOT LIKE 'ref:LV:addr'
+  AND t.tag NOT LIKE 'source:addr'
 CROSS JOIN LATERAL(SELECT v.*, v.geom <-> a.geom AS dist FROM vzd.adreses_ekas_sadalitas v WHERE REPLACE(o.tags -> 'addr:housenumber'::TEXT, ' ', '') LIKE REPLACE(v.nr, ' ', '')
     AND REPLACE(o.tags -> 'addr:street'::TEXT, ' ', '') LIKE REPLACE(v.iela, ' ', '') ORDER BY dist LIMIT 1) v
 LEFT JOIN vzd.adreses_his_ekas_previous p ON v.adr_cd = p.adr_cd
