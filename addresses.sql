@@ -820,7 +820,11 @@ UPDATE nodes
 SET tags = s.tags
   ,geom = s.geom
 FROM nodes_addr_add s
-WHERE nodes.id = s.id;
+WHERE nodes.id = s.id
+  AND nodes.id NOT IN (
+    SELECT id
+    FROM nodes_altered
+    );
 
 ---House number and street matches, distance up to 0.01 decimal degree (~1.1 km). Can be commented after pre-bot OSM address data has been entirely replaced for the whole territory.
 CREATE TEMPORARY TABLE nodes_addr_add_2 AS
@@ -874,7 +878,11 @@ UPDATE nodes
 SET tags = s.tags
   ,geom = s.geom
 FROM nodes_addr_add_2 s
-WHERE nodes.id = s.id;
+WHERE nodes.id = s.id
+  AND nodes.id NOT IN (
+    SELECT id
+    FROM nodes_altered
+    );
 
 --Delete nodes that are not part of ways or relations (except previously deleted ones), have no tags, but previously had only address tags.
 CREATE TEMPORARY TABLE nodes_del AS
