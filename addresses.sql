@@ -699,13 +699,43 @@ UPDATE nodes_addr_add_5
 SET tags = tags - 'old_addr:street'::TEXT
 WHERE tags -> 'addr:street' = tags -> 'old_addr:street';
 
-----Tags of nodes that have become a part of ways or relations by manual user edits.
+----IDs of nodes that have become a part of ways or relations by manual user edits.
 CREATE TEMPORARY TABLE nodes_altered AS
 SELECT id
 FROM nodes_addr_add_5
 WHERE id IN (
     SELECT node_id
     FROM way_nodes
+    );
+
+--IDs of nodes containing duplicate address codes (in case address codes have been added manually, keep only the oldest node).
+CREATE TEMPORARY TABLE nodes_dup AS
+WITH c
+AS (
+  SELECT t2.val
+    ,MIN(a.id) id_keep
+  FROM nodes a
+  INNER JOIN nodes_unnest t2 ON a.id = t2.id
+  LEFT OUTER JOIN nodes_unnest t ON a.id = t.id
+    AND t.tag NOT LIKE 'addr:%'
+    AND t.tag NOT LIKE 'old_addr:%'
+    AND t.tag NOT LIKE 'ref:LV:addr'
+  WHERE t.id IS NULL
+    AND t2.tag LIKE 'ref:LV:addr'
+  GROUP BY t2.val
+  HAVING COUNT(*) > 1
+  )
+SELECT a.id
+FROM nodes a
+INNER JOIN nodes_unnest t ON a.id = t.id
+WHERE t.tag LIKE 'ref:LV:addr'
+  AND t.val IN (
+    SELECT val
+    FROM c
+    )
+  AND a.id NOT IN (
+    SELECT id_keep
+    FROM c
     );
 
 UPDATE nodes
@@ -716,6 +746,11 @@ WHERE nodes.id = s.id
   AND nodes.id NOT IN (
     SELECT id
     FROM nodes_altered
+    
+    UNION
+    
+    SELECT id
+    FROM nodes_dup
     );
 
 ---House names matches, distance up to 0.01 decimal degree (~1.1 km). Can be commented after pre-bot OSM address data has been entirely replaced for the whole territory.
@@ -824,6 +859,11 @@ WHERE nodes.id = s.id
   AND nodes.id NOT IN (
     SELECT id
     FROM nodes_altered
+    
+    UNION
+    
+    SELECT id
+    FROM nodes_dup
     );
 
 ---House number and street matches, distance up to 0.01 decimal degree (~1.1 km). Can be commented after pre-bot OSM address data has been entirely replaced for the whole territory.
@@ -882,6 +922,11 @@ WHERE nodes.id = s.id
   AND nodes.id NOT IN (
     SELECT id
     FROM nodes_altered
+    
+    UNION
+    
+    SELECT id
+    FROM nodes_dup
     );
 
 --Delete nodes that are not part of ways or relations (except previously deleted ones), have no tags, but previously had only address tags.
@@ -921,12 +966,17 @@ WHERE id IN (
     FROM nodes_del
     );
 
---Delete tags of nodes that have become a part of ways or relations by manual user edits.
+--Delete tags of nodes that have become a part of ways or relations by manual user edits or contain duplicate manually added address codes.
 UPDATE nodes
 SET tags = ''
 WHERE id IN (
     SELECT id
     FROM nodes_altered
+    
+    UNION
+    
+    SELECT id
+    FROM nodes_dup
     );
 
 --Insert missing addresses.
