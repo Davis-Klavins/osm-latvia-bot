@@ -521,6 +521,7 @@ AS (
     WHERE tags ? 'ref:LV:addr'
     ) f ON a.id = f.id
   WHERE a.tags ? 'building'
+    AND ST_Area(g.geom) > 0
     AND ST_Area(ST_Intersection(g.geom, n.geom)) / ST_Area(g.geom) > 0.5
     AND f.id IS NULL
   GROUP BY a.id
@@ -535,6 +536,7 @@ INNER JOIN vzd.adreses_ekas_sadalitas v ON ST_Within(v.geom, n.geom)
 INNER JOIN c ON a.id = c.id
 LEFT OUTER JOIN vzd.adreses_his_ekas_previous p ON v.adr_cd = p.adr_cd
 WHERE a.tags ? 'building'
+  AND ST_Area(g.geom) > 0
   AND ST_Area(ST_Intersection(g.geom, n.geom)) / ST_Area(g.geom) > 0.5
   AND v.adr_cd NOT IN (
     SELECT CAST(tags -> 'ref:LV:addr' AS INT) adr_cd
@@ -576,6 +578,7 @@ AS (
     WHERE tags ? 'ref:LV:addr'
     ) f ON a.id = f.id
   WHERE a.tags ? 'building'
+    AND ST_Area(g.geom) > 0
     AND ST_Area(ST_Intersection(g.geom, n.geom)) / ST_Area(g.geom) > 0.5
     AND f.id IS NULL
   GROUP BY a.id
@@ -590,6 +593,7 @@ INNER JOIN vzd.adreses_ekas_sadalitas v ON ST_Within(v.geom, n.geom)
 INNER JOIN c ON a.id = c.id
 LEFT OUTER JOIN vzd.adreses_his_ekas_previous p ON v.adr_cd = p.adr_cd
 WHERE a.tags ? 'building'
+  AND ST_Area(g.geom) > 0
   AND ST_Area(ST_Intersection(g.geom, n.geom)) / ST_Area(g.geom) > 0.5
   AND v.adr_cd NOT IN (
     SELECT CAST(tags -> 'ref:LV:addr' AS INT) adr_cd
