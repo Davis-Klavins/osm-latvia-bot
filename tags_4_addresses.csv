@@ -81,6 +81,7 @@ amenity,veterinary_pharmacy,TRUE,TRUE,TRUE
 amenity,waste_transfer_station,TRUE,TRUE,TRUE
 craft,,TRUE,TRUE,TRUE
 emergency,ambulance_station,TRUE,TRUE,TRUE
+healthcare,,TRUE,TRUE,TRUE
 information,office,TRUE,TRUE,TRUE
 information,visitor_centre,TRUE,TRUE,TRUE
 leisure,adult_gaming_centre,TRUE,TRUE,TRUE
