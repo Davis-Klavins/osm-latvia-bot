@@ -27,5 +27,8 @@ psql -h %IP_ADDRESS% -p %PORT% -U osm -d osm -w -c "CALL in_latvia()"
 REM Execute PostgreSQL data processing procedure of addresses.
 psql -h %IP_ADDRESS% -p %PORT% -U osm -d osm -w -c "CALL addresses()"
 
+REM Export table ways_relations_del.
+psql -h %IP_ADDRESS% -p %PORT% -U osm -d osm -w -c "\COPY (SELECT * FROM ways_relations_del) to '%DIRECTORY%\ways_relations_del.csv' WITH (FORMAT CSV)"
+
 REM Get OsmChange file.
 CALL osmosis --read-pgsql host="%IP_ADDRESS%:%PORT%" database="osm" user="osm" password="%PGPASSWORD%" --dataset-dump --sort type="TypeThenId" --read-pbf %DIRECTORY%\latvia-latest-internal.osm.pbf --sort type="TypeThenId" --derive-change --write-xml-change file="%DIRECTORY%\latvia-diff.osc"
