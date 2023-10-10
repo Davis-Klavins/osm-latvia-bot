@@ -620,6 +620,15 @@ SET tags = s.tags
 FROM relations_addr_add_2 s
 WHERE relations.id = s.id;
 
+--Table for deleted ways and relations to facilitate object identification as in some cases such objects are buildings that miss building tags and have only address tags added by other users.
+DROP TABLE IF EXISTS ways_relations_del;
+
+CREATE TABLE ways_relations_del (
+  fid BIGINT NOT NULL PRIMARY KEY
+  ,type CHAR NOT NULL
+  ,id BIGINT NOT NULL
+  );
+
 --Delete ways that are not part of relations, have no tags, but previously had only address tags.
 CREATE TEMPORARY TABLE ways_del AS
 SELECT id
@@ -633,6 +642,14 @@ WHERE tags = ''::hstore
         SELECT id
         FROM ways_old
         );
+
+INSERT INTO ways_relations_del (
+  type
+  ,id
+  )
+SELECT 'W'
+  ,id
+FROM ways_del;
 
 DELETE
 FROM ways
@@ -650,6 +667,14 @@ WHERE tags = ''::hstore
     SELECT id
     FROM relations_old
     );
+
+INSERT INTO ways_relations_del (
+  type
+  ,id
+  )
+SELECT 'R'
+  ,id
+FROM relations_del;
 
 DELETE
 FROM relations
