@@ -624,10 +624,45 @@ WHERE relations.id = s.id;
 DROP TABLE IF EXISTS ways_relations_del;
 
 CREATE TABLE ways_relations_del (
-  fid BIGINT NOT NULL PRIMARY KEY
-  ,type CHAR NOT NULL
-  ,id BIGINT NOT NULL
+  id SERIAL PRIMARY KEY
+  ,link TEXT NOT NULL
   );
+
+--Delete relations that have no tags except type, but previously besides type had only address tags.
+CREATE TEMPORARY TABLE relations_del AS
+SELECT id
+FROM relations
+WHERE tags - 'type'::text = ''::hstore
+  AND id IN (
+    SELECT id
+    FROM relations_old
+    );
+
+INSERT INTO ways_relations_del (link)
+SELECT 'https://www.openstreetmap.org/relation/' || id || '/history'
+FROM relations_del;
+
+DELETE
+FROM relations
+WHERE id IN (
+    SELECT id
+    FROM relations_del
+    );
+
+CREATE TEMPORARY TABLE relation_members_del AS
+SELECT *
+FROM relation_members
+WHERE relation_id IN (
+    SELECT id
+    FROM relations_del
+    );
+
+DELETE
+FROM relation_members
+WHERE relation_id IN (
+    SELECT id
+    FROM relations_del
+    );
 
 --Delete ways that are not part of relations, have no tags, but previously had only address tags.
 CREATE TEMPORARY TABLE ways_del AS
@@ -643,13 +678,26 @@ WHERE tags = ''::hstore
         FROM ways_old
         );
 
-INSERT INTO ways_relations_del (
-  type
-  ,id
-  )
-SELECT 'W'
-  ,id
+INSERT INTO ways_relations_del (link)
+SELECT 'https://www.openstreetmap.org/way/' || id || '/history'
 FROM ways_del;
+
+--Delete ways that were only part of previously deleted relations and have no tags.
+INSERT INTO ways_del
+SELECT a.id
+FROM ways a
+LEFT OUTER JOIN (
+  SELECT DISTINCT member_id
+  FROM relation_members
+  WHERE member_type = 'W'
+  ) c ON a.id = c.member_id
+WHERE a.tags = ''::hstore
+  AND c.member_id IS NULL
+  AND a.id IN (
+    SELECT member_id
+    FROM relation_members_del
+    WHERE member_type = 'W'
+    );
 
 DELETE
 FROM ways
@@ -658,29 +706,19 @@ WHERE id IN (
     FROM ways_del
     );
 
---Delete relations that have no tags, but previously had only address tags.
-CREATE TEMPORARY TABLE relations_del AS
-SELECT id
-FROM relations
-WHERE tags = ''::hstore
-  AND id IN (
+CREATE TEMPORARY TABLE way_nodes_del AS
+SELECT *
+FROM way_nodes
+WHERE way_id IN (
     SELECT id
-    FROM relations_old
+    FROM ways_del
     );
 
-INSERT INTO ways_relations_del (
-  type
-  ,id
-  )
-SELECT 'R'
-  ,id
-FROM relations_del;
-
 DELETE
-FROM relations
-WHERE id IN (
+FROM way_nodes
+WHERE way_id IN (
     SELECT id
-    FROM relations_del
+    FROM ways_del
     );
 
 --Add addresses for address points (nodes containing only addr:* tags) from the State Address Register. Only address codes not already assigned to isolated dwellings, ways and relations (buildings).
@@ -958,7 +996,7 @@ WHERE nodes.id = s.id
     FROM nodes_dup
     );
 
---Delete nodes that are not part of ways or relations (except previously deleted ones), have no tags, but previously had only address tags.
+--Delete nodes that are not part of ways or relations, have no tags, but previously had only address tags.
 CREATE TEMPORARY TABLE nodes_del AS
 SELECT a.id
 FROM nodes a
@@ -973,18 +1011,34 @@ LEFT OUTER JOIN (
   FROM way_nodes
   ) d ON a.id = d.node_id
 WHERE a.tags = ''::hstore
+  AND c.member_id IS NULL
+  AND d.node_id IS NULL;
+
+--Delete nodes that were only part of previously deleted ways or relations and have no tags.
+INSERT INTO nodes_del
+SELECT a.id
+FROM nodes a
+LEFT OUTER JOIN (
+  SELECT DISTINCT member_id
+  FROM relation_members
+  WHERE member_type = 'N'
+  ) c ON a.id = c.member_id
+LEFT OUTER JOIN (
+  SELECT DISTINCT node_id
+  FROM way_nodes
+  ) d ON a.id = d.node_id
+WHERE a.tags = ''::hstore
+  AND c.member_id IS NULL
+  AND d.node_id IS NULL
   AND (
-    c.member_id IS NULL
-    OR a.id IN (
-      SELECT id
-      FROM relations_del
+    a.id IN (
+      SELECT member_id
+      FROM relation_members_del
+      WHERE member_type = 'N'
       )
-    )
-  AND (
-    d.node_id IS NULL
     OR a.id IN (
-      SELECT id
-      FROM ways_del
+      SELECT node_id
+      FROM way_nodes_del
       )
     );
 
