@@ -6,6 +6,12 @@ export DIRECTORY=
 input=latvia-diff
 # OSM user name and password.
 ident="-u latvia-bot -p "
+# Zulip bot e-mail address and API key.
+zulip="latvia-bot@osmlatvija.zulipchat.com:"
+# Zulip message text.
+text="content="
+# Path to ways_relations_del.csv.
+file_path="ways_relations_del.csv"
 
 cd $DIRECTORY
 
@@ -32,7 +38,24 @@ for num in `seq 1 $parts`; do
         done
 done
 
-# Delete OsmChange and comment files.
+# Concatenate Zulip message text and ways_relations_del.csv contents into a variable.
+message="${text} $(cat ${file_path})"
+
+# Post message to Zulip.
+if ! [ -s $file_path ];then
+    echo -e "No deleted ways and relations."
+    exit
+fi
+
+curl -X POST https://osmlatvija.zulipchat.com/api/v1/messages \
+    -u $zulip \
+    --data-urlencode type=stream \
+    --data-urlencode 'to="adreses"' \
+    --data-urlencode topic="Deleted ways and relations by latvia-bot to be reviewed" \
+    --data-urlencode "${message}"
+
+# Delete OsmChange and comment files and ways_relations_del.csv.
 #rm *.osc
 #rm *.comment
 #rm *.diff.xml
+#rm ways_relations_del.csv
