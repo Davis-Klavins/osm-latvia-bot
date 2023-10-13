@@ -682,6 +682,8 @@ INSERT INTO ways_relations_del (link)
 SELECT 'https://www.openstreetmap.org/way/' || id || '/history'
 FROM ways_del;
 
+--Commented due to bug in smarter-sort.py. Should be fixed manually by inspecting ways_relations_del.
+/*
 --Delete ways that were only part of previously deleted relations and have no tags.
 INSERT INTO ways_del
 SELECT a.id
@@ -698,6 +700,7 @@ WHERE a.tags = ''::hstore
     FROM relation_members_del
     WHERE member_type = 'W'
     );
+*/
 
 DELETE
 FROM ways
@@ -1014,6 +1017,8 @@ WHERE a.tags = ''::hstore
   AND c.member_id IS NULL
   AND d.node_id IS NULL;
 
+--Commented due to bug in smarter-sort.py. Should be fixed manually by inspecting ways_relations_del.
+/*
 --Delete nodes that were only part of previously deleted ways or relations and have no tags.
 INSERT INTO nodes_del
 SELECT a.id
@@ -1048,6 +1053,7 @@ WHERE id IN (
     SELECT id
     FROM nodes_del
     );
+*/
 
 --Delete tags of nodes that have become a part of ways or relations by manual user edits or contain duplicate manually added address codes.
 UPDATE nodes
