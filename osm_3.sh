@@ -15,13 +15,17 @@ file_path="ways_relations_del.csv"
 
 cd $DIRECTORY
 
+# Reorder OsmChange file. Commented due to bug in smarter-sort.py.
+#py osm-latvia-bot/upload.py/smarter-sort.py "$input.osc" || exit -1
+#mv $input-sorted.osc $input.osc
+
 # Create comment file.
 echo "Updated addresses in Latvia." > latvia-diff.comment
 
 # Split OsmChange file in pieces no larger than 10 000 elements (changeset limit).
 py osm-latvia-bot/upload.py/split.py "$input.osc" 10000 || exit -1
 
-# Delete bounds element from the 1st OsmChange file.
+# Delete bounds element from the 1st OsmChange file. Comment if smarter-sort.py will be fixed and lines 19-20 uncommented.
 xml ed -d '//osmChange/modify/bounds' latvia-diff-part1.osc > latvia-diff-part1-edited.osc
 mv latvia-diff-part1-edited.osc latvia-diff-part1.osc
 
