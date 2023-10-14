@@ -1046,6 +1046,7 @@ WHERE a.tags = ''::hstore
       FROM way_nodes_del
       )
     );
+*/
 
 DELETE
 FROM nodes
@@ -1053,7 +1054,6 @@ WHERE id IN (
     SELECT id
     FROM nodes_del
     );
-*/
 
 --Delete tags of nodes that have become a part of ways or relations by manual user edits or contain duplicate manually added address codes.
 UPDATE nodes
