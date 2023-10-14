@@ -55,7 +55,7 @@ curl -X POST https://osmlatvija.zulipchat.com/api/v1/messages \
     -u $zulip \
     --data-urlencode type=stream \
     --data-urlencode 'to="adreses"' \
-    --data-urlencode topic="Ways and relations without tags for review" \
+    --data-urlencode topic="Ways and relations with missing tags for review" \
 `    --data-urlencode topic="Deleted ways and relations by latvia-bot for review" `\
     --data-urlencode "${message}"
 
