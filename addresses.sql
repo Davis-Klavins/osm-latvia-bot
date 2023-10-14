@@ -1,8 +1,12 @@
-CREATE OR REPLACE PROCEDURE addresses(
+-- PROCEDURE: public.addresses()
+
+-- DROP PROCEDURE IF EXISTS public.addresses();
+
+CREATE OR REPLACE PROCEDURE public.addresses(
 	)
 LANGUAGE 'plpgsql'
-
-AS $BODY$BEGIN
+AS $BODY$
+BEGIN
 
 /*
 --In case materialized view vzd.state is used and smaller territory than state is selected in it, create temporary table to contain data from table vzd.adreses_ekas_sadalitas only within selected territory. Replace vzd.adreses_ekas_sadalitas with adreses_ekas_sadalitas elsewhere in the procedure.
@@ -642,6 +646,8 @@ INSERT INTO ways_relations_del (link)
 SELECT 'https://www.openstreetmap.org/relation/' || id || '/history'
 FROM relations_del;
 
+--Commented according to suggestion at https://osmlatvija.github.io/zulip-archive/stream/360959-adreses/topic/Bots.20nodz.C4.93sa.20.22m.C4.81ju.22.html#396575119. As such cases are not common and mostly relations with only address tags are buildings missing building tags, it makes more sense not to delete them but forward to Zulip for manual review.
+/*
 DELETE
 FROM relations
 WHERE id IN (
@@ -663,6 +669,7 @@ WHERE relation_id IN (
     SELECT id
     FROM relations_del
     );
+*/
 
 --Delete ways that are not part of relations, have no tags, but previously had only address tags.
 CREATE TEMPORARY TABLE ways_del AS
@@ -702,6 +709,8 @@ WHERE a.tags = ''::hstore
     );
 */
 
+--Commented according to suggestion at https://osmlatvija.github.io/zulip-archive/stream/360959-adreses/topic/Bots.20nodz.C4.93sa.20.22m.C4.81ju.22.html#396575119. As such cases are not common and mostly ways with only address tags are buildings missing building tags, it makes more sense not to delete them but forward to Zulip for manual review.
+/*
 DELETE
 FROM ways
 WHERE id IN (
@@ -723,6 +732,7 @@ WHERE way_id IN (
     SELECT id
     FROM ways_del
     );
+*/
 
 --Add addresses for address points (nodes containing only addr:* tags) from the State Address Register. Only address codes not already assigned to isolated dwellings, ways and relations (buildings).
 ---Address code matches (address points added previously).
@@ -1561,4 +1571,9 @@ WHERE u.id = b.id
 END;
 $BODY$;
 
-REVOKE ALL ON PROCEDURE addresses() FROM PUBLIC;
+ALTER PROCEDURE public.addresses()
+    OWNER TO osm;
+
+GRANT EXECUTE ON PROCEDURE public.addresses() TO osm;
+
+REVOKE ALL ON PROCEDURE public.addresses() FROM PUBLIC;
