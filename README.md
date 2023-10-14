@@ -136,7 +136,7 @@ To be run daily.
 
 1. [osm_1.sh](osm_1.sh) - import [tags_4_addresses.csv](tags_4_addresses.csv) in the local PostgreSQL database replacing existing data and download OSM data of Latvia (combine most recent data from Geofabrik and changes made afterwards) (set `DIRECTORY`, `PGPASSWORD`, `IP_ADDRESS` and `PORT` variables, uncomment [line 14](https://github.com/Davis-Klavins/osm-latvia-bot/blob/main/osm_1.sh#L14) in production to use [tags_4_addresses.csv](tags_4_addresses.csv) from GitHub).
 2. [osm_2.bat](osm_2.bat) - update OSM data in the local PostgreSQL database and derive osmChange file (set `DIRECTORY`, `PGPASSWORD`, `IP_ADDRESS` and `PORT` variables). Large amount of changes lead to an error. Must be rewritten and merged with [osm_1.sh](osm_1.sh) and [osm_3.sh](osm_3.sh) to run under Linux.
-4. [osm_3.sh](osm_3.sh) - split osmChange file and upload changes (set `DIRECTORY` variable and [OSM user password](osm_3.sh#L8)). Separate changeset is created for every 10 000 elements and closed.
+4. [osm_3.sh](osm_3.sh) - split osmChange file and upload changes (set `DIRECTORY` variable and [OSM user password](osm_3.sh#L8)). Separate changeset is created for every 10 000 elements and closed. Post ways and relations with missing tags that previously had only address tags for manual review to [OSM Latvija Zulip chat](https://osmlatvija.zulipchat.com/).
 
 ## OSM historical data update
 
