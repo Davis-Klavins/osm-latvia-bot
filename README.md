@@ -122,6 +122,7 @@ Set up PostgreSQL database:
    * [in_latvia()](in_latvia.sql) - creates tables with IDs and summary of tags that are located in Latvia;
    * [history.history()](history_proc.sql) - maintains historical OSM data;
    * [addresses()](addresses.sql) - data processing procedure of addresses.
+   * [tags()](tags.sql) - data processing procedure of tags.
 
 ## Source data update
 
