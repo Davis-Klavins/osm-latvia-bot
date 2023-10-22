@@ -20,7 +20,7 @@ cd $DIRECTORY
 #mv $input-sorted.osc $input.osc
 
 # Create comment file.
-echo "Updated addresses in Latvia." > latvia-diff.comment
+echo "Updated addresses and tags in Latvia." > latvia-diff.comment
 
 # Split OsmChange file in pieces no larger than 10 000 elements (changeset limit).
 py osm-latvia-bot/upload.py/split.py "$input.osc" 10000 || exit -1
