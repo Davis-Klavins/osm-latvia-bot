@@ -27,6 +27,9 @@ psql -h %IP_ADDRESS% -p %PORT% -U osm -d osm -w -c "CALL in_latvia()"
 REM Execute PostgreSQL data processing procedure of addresses.
 psql -h %IP_ADDRESS% -p %PORT% -U osm -d osm -w -c "CALL addresses()"
 
+REM Execute PostgreSQL data processing procedure of tags.
+psql -h %IP_ADDRESS% -p %PORT% -U osm -d osm -w -c "CALL tags()"
+
 REM Export table ways_relations_del.
 psql -h %IP_ADDRESS% -p %PORT% -U osm -d osm -w -c "\COPY (SELECT link FROM ways_relations_del) to '%DIRECTORY%\ways_relations_del.csv' WITH (FORMAT CSV)"
 
