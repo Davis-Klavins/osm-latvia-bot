@@ -18,6 +18,14 @@ for f in dpa_2019_public.*; do
   mv  -- "$f" "dpa${f#dpa_2019_public}"
 done
 
+## Historical lands.
+cd ..
+mkdir hl
+cd hl
+wget -q https://data.gov.lv/dati/dataset/c615b96a-4ae2-4a0b-bf22-7b67f7e9bbf4/resource/ae8ce5f6-2120-430e-a2fb-1fd7df1e7b85/download/vesturiskas_zemes.zip
+unzip -o -q vesturiskas_zemes.zip
+rm *.zip
+
 # Download the Place Names Database of the Latvian Geospatial Information Agency.
 cd ../..
 cd lgia
