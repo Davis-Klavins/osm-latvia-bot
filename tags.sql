@@ -1478,13 +1478,12 @@ WHERE relations.id = s.id;
 WITH s
 AS (
   SELECT a.id
-    ,a.tags
     ,a.tags - (
       SELECT array_agg(tag)
       FROM tags
       WHERE tag LIKE 'name:%'
         AND tag NOT LIKE 'name'
-      ) tags_new
+      ) tags
   FROM nodes a
   INNER JOIN nodes_name_cnt b ON a.id = b.id
   LEFT OUTER JOIN (
@@ -1504,13 +1503,12 @@ WHERE nodes.id = s.id;
 WITH s
 AS (
   SELECT a.id
-    ,a.tags
     ,a.tags - (
       SELECT array_agg(tag)
       FROM tags
       WHERE tag LIKE 'name:%'
         AND tag NOT LIKE 'name'
-      ) tags_new
+      ) tags
   FROM ways a
   INNER JOIN ways_name_cnt b ON a.id = b.id
   INNER JOIN way_geometry g ON a.id = g.way_id
@@ -1531,13 +1529,12 @@ WHERE ways.id = s.id;
 WITH s
 AS (
   SELECT a.id
-    ,a.tags
     ,a.tags - (
       SELECT array_agg(tag)
       FROM tags
       WHERE tag LIKE 'name:%'
         AND tag NOT LIKE 'name'
-      ) tags_new
+      ) tags
   FROM relations a
   INNER JOIN relations_name_cnt b ON a.id = b.id
   INNER JOIN relations_geometry g ON a.id = g.relation_id
@@ -1559,7 +1556,6 @@ WHERE relations.id = s.id;
 WITH s
 AS (
   SELECT a.id
-    ,a.tags
     ,a.tags - (
       SELECT array_agg(tag)
       FROM tags
@@ -1567,7 +1563,7 @@ AS (
         AND tag NOT LIKE 'name'
         AND tag NOT LIKE 'name:lv'
         AND tag NOT LIKE 'name:ltg'
-      ) tags_new
+      ) tags
   FROM nodes a
   INNER JOIN nodes_name_cnt b ON a.id = b.id
   INNER JOIN (
@@ -1586,7 +1582,6 @@ WHERE nodes.id = s.id;
 WITH s
 AS (
   SELECT a.id
-    ,a.tags
     ,a.tags - (
       SELECT array_agg(tag)
       FROM tags
@@ -1594,7 +1589,7 @@ AS (
         AND tag NOT LIKE 'name'
         AND tag NOT LIKE 'name:lv'
         AND tag NOT LIKE 'name:ltg'
-      ) tags_new
+      ) tags
   FROM ways a
   INNER JOIN ways_name_cnt b ON a.id = b.id
   INNER JOIN way_geometry g ON a.id = g.way_id
@@ -1614,7 +1609,6 @@ WHERE ways.id = s.id;
 WITH s
 AS (
   SELECT a.id
-    ,a.tags
     ,a.tags - (
       SELECT array_agg(tag)
       FROM tags
@@ -1622,7 +1616,7 @@ AS (
         AND tag NOT LIKE 'name'
         AND tag NOT LIKE 'name:lv'
         AND tag NOT LIKE 'name:ltg'
-      ) tags_new
+      ) tags
   FROM relations a
   INNER JOIN relations_name_cnt b ON a.id = b.id
   INNER JOIN relations_geometry g ON a.id = g.relation_id
