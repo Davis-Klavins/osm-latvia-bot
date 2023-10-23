@@ -1633,6 +1633,75 @@ FROM s
 WHERE relations.id = s.id;
 
 --9. If missing, add name:lv that equals default name if multilingual names that differ from the default name exist.
+---Recalculate nodes/ways/relations_unnest and nodes/ways/relations_name temporary tables because tags from isolated dwellings have been removed in previous step.
+DROP TABLE nodes_unnest;
+
+CREATE TEMPORARY TABLE nodes_unnest AS
+SELECT a.id
+  ,UNNEST((%# a.tags) [1:999] [1]) tag
+  ,UNNEST((%# a.tags) [1:999] [2:2]) val
+FROM nodes a
+INNER JOIN nodes_lv b ON a.id = b.id
+LEFT OUTER JOIN lv_border x ON ST_Intersects(a.geom, x.geom)
+WHERE x.id IS NULL;
+
+DROP TABLE ways_unnest;
+
+CREATE TEMPORARY TABLE ways_unnest AS
+SELECT a.id
+  ,UNNEST((%# a.tags) [1:999] [1]) tag
+  ,UNNEST((%# a.tags) [1:999] [2:2]) val
+FROM ways a
+INNER JOIN ways_lv b ON a.id = b.id
+INNER JOIN way_geometry g ON a.id = g.way_id
+LEFT OUTER JOIN lv_border x ON ST_Intersects(g.geom, x.geom)
+WHERE x.id IS NULL;
+
+DROP TABLE relations_unnest;
+
+CREATE TEMPORARY TABLE relations_unnest AS
+SELECT a.id
+  ,UNNEST((%# a.tags) [1:999] [1]) tag
+  ,UNNEST((%# a.tags) [1:999] [2:2]) val
+FROM relations a
+INNER JOIN relations_lv b ON a.id = b.id
+INNER JOIN relations_geometry g ON a.id = g.relation_id
+LEFT OUTER JOIN lv_border x ON ST_Intersects(g.geom, x.geom)
+WHERE x.id IS NULL;
+
+DROP TABLE nodes_name;
+
+CREATE TEMPORARY TABLE nodes_name AS
+SELECT a.id
+  ,t.tag
+  ,t.val
+FROM nodes a
+INNER JOIN nodes_unnest t ON a.id = t.id
+WHERE t.tag = 'name'
+  OR t.tag LIKE 'name:%';
+
+DROP TABLE ways_name;
+
+CREATE TEMPORARY TABLE ways_name AS
+SELECT a.id
+  ,t.tag
+  ,t.val
+FROM ways a
+INNER JOIN ways_unnest t ON a.id = t.id
+WHERE t.tag = 'name'
+  OR t.tag LIKE 'name:%';
+
+DROP TABLE relations_name;
+
+CREATE TEMPORARY TABLE relations_name AS
+SELECT a.id
+  ,t.tag
+  ,t.val
+FROM relations a
+INNER JOIN relations_unnest t ON a.id = t.id
+WHERE t.tag = 'name'
+  OR t.tag LIKE 'name:%';
+
 ---Exclude Latgale.
 ----Nodes.
 CREATE TEMPORARY TABLE nodes_name_cnt_lv AS
