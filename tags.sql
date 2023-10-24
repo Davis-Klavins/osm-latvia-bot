@@ -8,6 +8,7 @@ LANGUAGE 'plpgsql'
 AS $BODY$
 BEGIN
 
+--State border in OSM.
 CREATE TEMPORARY TABLE lv_border AS
 SELECT a.id
   ,ST_Union(c.geom) geom
@@ -48,34 +49,50 @@ GROUP BY id;
 
 CREATE INDEX relations_geometry_geom_idx ON relations_geometry USING GIST (geom);
 
-CREATE TEMPORARY TABLE nodes_unnest AS
+--Use only nodes/ways/relations not intersecting state border.
+CREATE TEMPORARY TABLE nodes_lv AS
 SELECT a.id
-  ,UNNEST((%# a.tags) [1:999] [1]) tag
-  ,UNNEST((%# a.tags) [1:999] [2:2]) val
 FROM nodes a
 INNER JOIN nodes_lv b ON a.id = b.id
 LEFT OUTER JOIN lv_border x ON ST_Intersects(a.geom, x.geom)
 WHERE x.id IS NULL;
 
-CREATE TEMPORARY TABLE ways_unnest AS
+CREATE TEMPORARY TABLE ways_lv AS
 SELECT a.id
-  ,UNNEST((%# a.tags) [1:999] [1]) tag
-  ,UNNEST((%# a.tags) [1:999] [2:2]) val
 FROM ways a
 INNER JOIN ways_lv b ON a.id = b.id
 INNER JOIN way_geometry g ON a.id = g.way_id
 LEFT OUTER JOIN lv_border x ON ST_Intersects(g.geom, x.geom)
 WHERE x.id IS NULL;
 
-CREATE TEMPORARY TABLE relations_unnest AS
+CREATE TEMPORARY TABLE relations_lv AS
 SELECT a.id
-  ,UNNEST((%# a.tags) [1:999] [1]) tag
-  ,UNNEST((%# a.tags) [1:999] [2:2]) val
 FROM relations a
 INNER JOIN relations_lv b ON a.id = b.id
 INNER JOIN relations_geometry g ON a.id = g.relation_id
 LEFT OUTER JOIN lv_border x ON ST_Intersects(g.geom, x.geom)
 WHERE x.id IS NULL;
+
+CREATE TEMPORARY TABLE nodes_unnest AS
+SELECT a.id
+  ,UNNEST((%# a.tags) [1:999] [1]) tag
+  ,UNNEST((%# a.tags) [1:999] [2:2]) val
+FROM nodes a
+INNER JOIN nodes_lv b ON a.id = b.id;
+
+CREATE TEMPORARY TABLE ways_unnest AS
+SELECT a.id
+  ,UNNEST((%# a.tags) [1:999] [1]) tag
+  ,UNNEST((%# a.tags) [1:999] [2:2]) val
+FROM ways a
+INNER JOIN ways_lv b ON a.id = b.id;
+
+CREATE TEMPORARY TABLE relations_unnest AS
+SELECT a.id
+  ,UNNEST((%# a.tags) [1:999] [1]) tag
+  ,UNNEST((%# a.tags) [1:999] [2:2]) val
+FROM relations a
+INNER JOIN relations_lv b ON a.id = b.id;
 
 CREATE TEMPORARY TABLE nodes_unnest_his AS
 SELECT a.id
@@ -1641,9 +1658,7 @@ SELECT a.id
   ,UNNEST((%# a.tags) [1:999] [1]) tag
   ,UNNEST((%# a.tags) [1:999] [2:2]) val
 FROM nodes a
-INNER JOIN nodes_lv b ON a.id = b.id
-LEFT OUTER JOIN lv_border x ON ST_Intersects(a.geom, x.geom)
-WHERE x.id IS NULL;
+INNER JOIN nodes_lv b ON a.id = b.id;
 
 DROP TABLE ways_unnest;
 
@@ -1652,10 +1667,7 @@ SELECT a.id
   ,UNNEST((%# a.tags) [1:999] [1]) tag
   ,UNNEST((%# a.tags) [1:999] [2:2]) val
 FROM ways a
-INNER JOIN ways_lv b ON a.id = b.id
-INNER JOIN way_geometry g ON a.id = g.way_id
-LEFT OUTER JOIN lv_border x ON ST_Intersects(g.geom, x.geom)
-WHERE x.id IS NULL;
+INNER JOIN ways_lv b ON a.id = b.id;
 
 DROP TABLE relations_unnest;
 
@@ -1664,10 +1676,7 @@ SELECT a.id
   ,UNNEST((%# a.tags) [1:999] [1]) tag
   ,UNNEST((%# a.tags) [1:999] [2:2]) val
 FROM relations a
-INNER JOIN relations_lv b ON a.id = b.id
-INNER JOIN relations_geometry g ON a.id = g.relation_id
-LEFT OUTER JOIN lv_border x ON ST_Intersects(g.geom, x.geom)
-WHERE x.id IS NULL;
+INNER JOIN relations_lv b ON a.id = b.id;
 
 DROP TABLE nodes_name;
 
