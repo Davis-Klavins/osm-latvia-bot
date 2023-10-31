@@ -46,6 +46,7 @@ amenity,kindergarten,TRUE,TRUE,TRUE
 amenity,library,TRUE,TRUE,TRUE
 amenity,luggage_locker,,,TRUE
 amenity,marketplace,,,TRUE
+amenity,monastery,TRUE,TRUE,TRUE
 amenity,money_transfer,TRUE,TRUE,TRUE
 amenity,music_school,TRUE,TRUE,TRUE
 amenity,nightclub,TRUE,TRUE,TRUE
