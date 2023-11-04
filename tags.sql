@@ -8,6 +8,16 @@ LANGUAGE 'plpgsql'
 AS $BODY$
 BEGIN
 
+--Temporary table containing multilingual name tags.
+CREATE TEMPORARY TABLE name_multilingual AS
+SELECT tag
+FROM tags
+WHERE tag LIKE 'name:%'
+  AND tag NOT LIKE 'name:etymology%'
+  AND tag NOT LIKE 'name:left%'
+  AND tag NOT LIKE 'name:right%'
+  AND tag NOT LIKE 'name:signed%';
+
 --State border in OSM.
 CREATE TEMPORARY TABLE lv_border AS
 SELECT a.id
@@ -464,7 +474,10 @@ SELECT a.id
 FROM nodes a
 INNER JOIN nodes_unnest t ON a.id = t.id
 WHERE t.tag = 'name'
-  OR t.tag LIKE 'name:%';
+  OR t.tag IN (
+    SELECT tag
+    FROM name_multilingual
+    );
 
 CREATE TEMPORARY TABLE nodes_name_cnt AS
 SELECT id
@@ -485,9 +498,7 @@ AS (
   SELECT a.id
     ,a.tags - (
       SELECT array_agg(tag)
-      FROM tags
-      WHERE tag LIKE 'name:%'
-        AND tag NOT LIKE 'name'
+      FROM name_multilingual
       ) tags
   FROM nodes a
   INNER JOIN nodes_name_cnt b ON a.id = b.id
@@ -513,7 +524,10 @@ SELECT a.id
 FROM ways a
 INNER JOIN ways_unnest t ON a.id = t.id
 WHERE t.tag = 'name'
-  OR t.tag LIKE 'name:%';
+  OR t.tag IN (
+    SELECT tag
+    FROM name_multilingual
+    );
 
 CREATE TEMPORARY TABLE ways_name_cnt AS
 SELECT id
@@ -534,9 +548,7 @@ AS (
   SELECT a.id
     ,a.tags - (
       SELECT array_agg(tag)
-      FROM tags
-      WHERE tag LIKE 'name:%'
-        AND tag NOT LIKE 'name'
+      FROM name_multilingual
       ) tags
   FROM ways a
   INNER JOIN ways_name_cnt b ON a.id = b.id
@@ -563,7 +575,10 @@ SELECT a.id
 FROM relations a
 INNER JOIN relations_unnest t ON a.id = t.id
 WHERE t.tag = 'name'
-  OR t.tag LIKE 'name:%';
+  OR t.tag IN (
+    SELECT tag
+    FROM name_multilingual
+    );
 
 CREATE TEMPORARY TABLE relations_name_cnt AS
 SELECT id
@@ -584,9 +599,7 @@ AS (
   SELECT a.id
     ,a.tags - (
       SELECT array_agg(tag)
-      FROM tags
-      WHERE tag LIKE 'name:%'
-        AND tag NOT LIKE 'name'
+      FROM name_multilingual
       ) tags
   FROM relations a
   INNER JOIN relations_name_cnt b ON a.id = b.id
@@ -612,10 +625,8 @@ AS (
   SELECT a.id
     ,a.tags - (
       SELECT array_agg(tag)
-      FROM tags
-      WHERE tag LIKE 'name:%'
-        AND tag NOT LIKE 'name'
-        AND tag NOT LIKE 'name:lv'
+      FROM name_multilingual
+      WHERE tag NOT LIKE 'name:lv'
         AND tag NOT LIKE 'name:ltg'
       ) tags
   FROM nodes a
@@ -639,10 +650,8 @@ AS (
   SELECT a.id
     ,a.tags - (
       SELECT array_agg(tag)
-      FROM tags
-      WHERE tag LIKE 'name:%'
-        AND tag NOT LIKE 'name'
-        AND tag NOT LIKE 'name:lv'
+      FROM name_multilingual
+      WHERE tag NOT LIKE 'name:lv'
         AND tag NOT LIKE 'name:ltg'
       ) tags
   FROM ways a
@@ -667,9 +676,9 @@ AS (
   SELECT a.id
     ,a.tags - (
       SELECT array_agg(tag)
-      FROM tags
-      WHERE tag LIKE 'name:%'
-        AND tag NOT LIKE 'name'
+      FROM name_multilingual
+      WHERE tag NOT LIKE 'name:lv'
+        AND tag NOT LIKE 'name:ltg'
       ) tags
   FROM relations a
   INNER JOIN relations_name_cnt b ON a.id = b.id
@@ -1181,6 +1190,10 @@ AS (
     ,COUNT(*) cnt
   FROM nodes_unnest_his
   WHERE tag NOT LIKE 'name:%'
+    OR tag LIKE 'name:etymology%'
+    OR tag LIKE 'name:left%'
+    OR tag LIKE 'name:right%'
+    OR tag LIKE 'name:signed%'
   GROUP BY id
     ,version
   )
@@ -1206,7 +1219,11 @@ SELECT DISTINCT id
   ,tag
   ,version
 FROM nodes_unnest_his
-WHERE tag LIKE 'name:%';
+WHERE tag LIKE 'name:%'
+  AND tag NOT LIKE 'name:etymology%'
+  AND tag NOT LIKE 'name:left%'
+  AND tag NOT LIKE 'name:right%'
+  AND tag NOT LIKE 'name:signed%';
 
 -----id and version of nodes having the latest multilingual names all matching default name deleted by the bot.
 CREATE TEMPORARY TABLE nodes_name_del AS
@@ -1269,6 +1286,10 @@ AS (
     ,COUNT(*) cnt
   FROM ways_unnest_his
   WHERE tag NOT LIKE 'name:%'
+    OR tag LIKE 'name:etymology%'
+    OR tag LIKE 'name:left%'
+    OR tag LIKE 'name:right%'
+    OR tag LIKE 'name:signed%'
   GROUP BY id
     ,version
   )
@@ -1294,7 +1315,11 @@ SELECT DISTINCT id
   ,tag
   ,version
 FROM ways_unnest_his
-WHERE tag LIKE 'name:%';
+WHERE tag LIKE 'name:%'
+  AND tag NOT LIKE 'name:etymology%'
+  AND tag NOT LIKE 'name:left%'
+  AND tag NOT LIKE 'name:right%'
+  AND tag NOT LIKE 'name:signed%';
 
 -----id and version of ways having the latest multilingual names all matching default name deleted by the bot.
 CREATE TEMPORARY TABLE ways_name_del AS
@@ -1357,6 +1382,10 @@ AS (
     ,COUNT(*) cnt
   FROM relations_unnest_his
   WHERE tag NOT LIKE 'name:%'
+    OR tag LIKE 'name:etymology%'
+    OR tag LIKE 'name:left%'
+    OR tag LIKE 'name:right%'
+    OR tag LIKE 'name:signed%'
   GROUP BY id
     ,version
   )
@@ -1382,7 +1411,11 @@ SELECT DISTINCT id
   ,tag
   ,version
 FROM relations_unnest_his
-WHERE tag LIKE 'name:%';
+WHERE tag LIKE 'name:%'
+  AND tag NOT LIKE 'name:etymology%'
+  AND tag NOT LIKE 'name:left%'
+  AND tag NOT LIKE 'name:right%'
+  AND tag NOT LIKE 'name:signed%';
 
 -----id and version of relations having the latest multilingual names all matching default name deleted by the bot.
 CREATE TEMPORARY TABLE relations_name_del AS
@@ -1497,9 +1530,7 @@ AS (
   SELECT a.id
     ,a.tags - (
       SELECT array_agg(tag)
-      FROM tags
-      WHERE tag LIKE 'name:%'
-        AND tag NOT LIKE 'name'
+      FROM name_multilingual
       ) tags
   FROM nodes a
   INNER JOIN nodes_name_cnt b ON a.id = b.id
@@ -1522,9 +1553,7 @@ AS (
   SELECT a.id
     ,a.tags - (
       SELECT array_agg(tag)
-      FROM tags
-      WHERE tag LIKE 'name:%'
-        AND tag NOT LIKE 'name'
+      FROM name_multilingual
       ) tags
   FROM ways a
   INNER JOIN ways_name_cnt b ON a.id = b.id
@@ -1548,9 +1577,7 @@ AS (
   SELECT a.id
     ,a.tags - (
       SELECT array_agg(tag)
-      FROM tags
-      WHERE tag LIKE 'name:%'
-        AND tag NOT LIKE 'name'
+      FROM name_multilingual
       ) tags
   FROM relations a
   INNER JOIN relations_name_cnt b ON a.id = b.id
@@ -1575,10 +1602,8 @@ AS (
   SELECT a.id
     ,a.tags - (
       SELECT array_agg(tag)
-      FROM tags
-      WHERE tag LIKE 'name:%'
-        AND tag NOT LIKE 'name'
-        AND tag NOT LIKE 'name:lv'
+      FROM name_multilingual
+      WHERE tag NOT LIKE 'name:lv'
         AND tag NOT LIKE 'name:ltg'
       ) tags
   FROM nodes a
@@ -1601,10 +1626,8 @@ AS (
   SELECT a.id
     ,a.tags - (
       SELECT array_agg(tag)
-      FROM tags
-      WHERE tag LIKE 'name:%'
-        AND tag NOT LIKE 'name'
-        AND tag NOT LIKE 'name:lv'
+      FROM name_multilingual
+      WHERE tag NOT LIKE 'name:lv'
         AND tag NOT LIKE 'name:ltg'
       ) tags
   FROM ways a
@@ -1628,10 +1651,8 @@ AS (
   SELECT a.id
     ,a.tags - (
       SELECT array_agg(tag)
-      FROM tags
-      WHERE tag LIKE 'name:%'
-        AND tag NOT LIKE 'name'
-        AND tag NOT LIKE 'name:lv'
+      FROM name_multilingual
+      WHERE tag NOT LIKE 'name:lv'
         AND tag NOT LIKE 'name:ltg'
       ) tags
   FROM relations a
@@ -1687,7 +1708,10 @@ SELECT a.id
 FROM nodes a
 INNER JOIN nodes_unnest t ON a.id = t.id
 WHERE t.tag = 'name'
-  OR t.tag LIKE 'name:%';
+  OR t.tag IN (
+    SELECT tag
+    FROM name_multilingual
+    );
 
 DROP TABLE ways_name;
 
@@ -1698,7 +1722,10 @@ SELECT a.id
 FROM ways a
 INNER JOIN ways_unnest t ON a.id = t.id
 WHERE t.tag = 'name'
-  OR t.tag LIKE 'name:%';
+  OR t.tag IN (
+    SELECT tag
+    FROM name_multilingual
+    );
 
 DROP TABLE relations_name;
 
@@ -1709,7 +1736,10 @@ SELECT a.id
 FROM relations a
 INNER JOIN relations_unnest t ON a.id = t.id
 WHERE t.tag = 'name'
-  OR t.tag LIKE 'name:%';
+  OR t.tag IN (
+    SELECT tag
+    FROM name_multilingual
+    );
 
 ---Exclude Latgale.
 ----Nodes.
