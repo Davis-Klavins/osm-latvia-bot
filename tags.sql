@@ -1780,6 +1780,7 @@ AS (
     WHERE code = 'LVL'
     ) h ON ST_Intersects(a.geom, h.geom)
   WHERE h.id IS NULL
+    AND a.tags ? 'name'
   )
 UPDATE nodes
 SET tags = s.tags
@@ -1825,6 +1826,7 @@ AS (
     WHERE code = 'LVL'
     ) h ON ST_Intersects(g.geom, h.geom)
   WHERE h.id IS NULL
+    AND a.tags ? 'name'
   )
 UPDATE ways
 SET tags = s.tags
@@ -1870,6 +1872,7 @@ AS (
     WHERE code = 'LVL'
     ) h ON ST_Intersects(g.geom, h.geom)
   WHERE h.id IS NULL
+    AND a.tags ? 'name'
   )
 UPDATE relations
 SET tags = s.tags
@@ -1890,7 +1893,8 @@ AS (
     FROM csp.hl
     WHERE code = 'LVL'
     ) h ON ST_Intersects(a.geom, h.geom)
-  WHERE NOT a.tags ? 'name:ltg'
+  WHERE a.tags ? 'name'
+    AND NOT a.tags ? 'name:ltg'
   )
 UPDATE nodes
 SET tags = s.tags
@@ -1910,6 +1914,7 @@ AS (
     WHERE code = 'LVL'
     ) h ON ST_Intersects(a.geom, h.geom)
   WHERE a.tags -> 'name' != a.tags -> 'name:ltg'
+    AND a.tags ? 'name'
   )
 UPDATE nodes
 SET tags = s.tags
@@ -1930,7 +1935,8 @@ AS (
     FROM csp.hl
     WHERE code = 'LVL'
     ) h ON ST_Intersects(g.geom, h.geom)
-  WHERE NOT a.tags ? 'name:ltg'
+  WHERE a.tags ? 'name'
+    AND NOT a.tags ? 'name:ltg'
   )
 UPDATE ways
 SET tags = s.tags
@@ -1951,6 +1957,7 @@ AS (
     WHERE code = 'LVL'
     ) h ON ST_Intersects(g.geom, h.geom)
   WHERE a.tags -> 'name' != a.tags -> 'name:ltg'
+    AND a.tags ? 'name'
   )
 UPDATE ways
 SET tags = s.tags
@@ -1971,7 +1978,8 @@ AS (
     FROM csp.hl
     WHERE code = 'LVL'
     ) h ON ST_Intersects(g.geom, h.geom)
-  WHERE NOT a.tags ? 'name:ltg'
+  WHERE a.tags ? 'name'
+    AND NOT a.tags ? 'name:ltg'
   )
 UPDATE relations
 SET tags = s.tags
@@ -1992,6 +2000,7 @@ AS (
     WHERE code = 'LVL'
     ) h ON ST_Intersects(g.geom, h.geom)
   WHERE a.tags -> 'name' != a.tags -> 'name:ltg'
+    AND a.tags ? 'name'
   )
 UPDATE relations
 SET tags = s.tags
