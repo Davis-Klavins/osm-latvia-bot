@@ -144,6 +144,11 @@ SET tags = s.tags
 FROM s
 WHERE nodes.id = s.id;
 
+UPDATE nodes_unnest
+SET val = TRIM(val)
+WHERE val LIKE ' %'
+  OR val LIKE '% ';
+
 ---Ways.
 WITH s
 AS (
@@ -159,6 +164,11 @@ SET tags = s.tags
 FROM s
 WHERE ways.id = s.id;
 
+UPDATE ways_unnest
+SET val = TRIM(val)
+WHERE val LIKE ' %'
+  OR val LIKE '% ';
+
 ---Relations.
 WITH s
 AS (
@@ -173,6 +183,11 @@ UPDATE relations
 SET tags = s.tags
 FROM s
 WHERE relations.id = s.id;
+
+UPDATE relations_unnest
+SET val = TRIM(val)
+WHERE val LIKE ' %'
+  OR val LIKE '% ';
 
 --2. Remove semicolons at the end of values.
 ---Nodes.
@@ -189,6 +204,10 @@ SET tags = s.tags
 FROM s
 WHERE nodes.id = s.id;
 
+UPDATE nodes_unnest
+SET val = LEFT(val, LENGTH(val) - 1)
+WHERE val LIKE '%;';
+
 ---Ways.
 WITH s
 AS (
@@ -203,6 +222,10 @@ SET tags = s.tags
 FROM s
 WHERE ways.id = s.id;
 
+UPDATE ways_unnest
+SET val = LEFT(val, LENGTH(val) - 1)
+WHERE val LIKE '%;';
+
 ---Relations.
 WITH s
 AS (
@@ -216,6 +239,10 @@ UPDATE relations
 SET tags = s.tags
 FROM s
 WHERE relations.id = s.id;
+
+UPDATE relations_unnest
+SET val = LEFT(val, LENGTH(val) - 1)
+WHERE val LIKE '%;';
 
 --3. Trim and sort multiple semicolon separated values in alt_name* and old_name* keys.
 ---Nodes.
@@ -465,6 +492,34 @@ FROM s
 WHERE relations.id = s.id;
 
 --5. Remove multilingual names if all match default name.
+---Recalculate nodes/ways/relations_unnest temporary tables.
+DROP TABLE nodes_unnest;
+
+CREATE TEMPORARY TABLE nodes_unnest AS
+SELECT a.id
+  ,UNNEST((%# a.tags) [1:999] [1]) tag
+  ,UNNEST((%# a.tags) [1:999] [2:2]) val
+FROM nodes a
+INNER JOIN nodes_lv b ON a.id = b.id;
+
+DROP TABLE ways_unnest;
+
+CREATE TEMPORARY TABLE ways_unnest AS
+SELECT a.id
+  ,UNNEST((%# a.tags) [1:999] [1]) tag
+  ,UNNEST((%# a.tags) [1:999] [2:2]) val
+FROM ways a
+INNER JOIN ways_lv b ON a.id = b.id;
+
+DROP TABLE relations_unnest;
+
+CREATE TEMPORARY TABLE relations_unnest AS
+SELECT a.id
+  ,UNNEST((%# a.tags) [1:999] [1]) tag
+  ,UNNEST((%# a.tags) [1:999] [2:2]) val
+FROM relations a
+INNER JOIN relations_lv b ON a.id = b.id;
+
 ---Exclude some keys in Latgale.
 ----Nodes. In Latgale, exclude key "place".
 CREATE TEMPORARY TABLE nodes_name AS
