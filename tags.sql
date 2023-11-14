@@ -261,14 +261,25 @@ AS (
     ,2
     ,3
   )
-  ,s2
+  ,s3
 AS (
   SELECT id
     ,hstore(tag, string_agg(val, ';')) tags
   FROM c
   GROUP BY id
     ,tag
-  )--multiple ids, concatenate!
+  ) --multiple ids, concatenate!
+  ,s2
+AS (
+  SELECT id
+    ,hstore(array_agg(x)) tags
+  FROM (
+    SELECT id
+      ,UNNEST(hstore_to_array(tags)) AS x
+    FROM s3
+    ) q
+  GROUP BY id
+  )
   ,s
 AS (
   SELECT s2.id
@@ -297,13 +308,24 @@ AS (
     ,2
     ,3
   )
-  ,s2
+  ,s3
 AS (
   SELECT id
     ,hstore(tag, string_agg(val, ';')) tags
   FROM c
   GROUP BY id
     ,tag
+  )
+  ,s2
+AS (
+  SELECT id
+    ,hstore(array_agg(x)) tags
+  FROM (
+    SELECT id
+      ,UNNEST(hstore_to_array(tags)) AS x
+    FROM s3
+    ) q
+  GROUP BY id
   )
   ,s
 AS (
@@ -333,13 +355,24 @@ AS (
     ,2
     ,3
   )
-  ,s2
+  ,s3
 AS (
   SELECT id
     ,hstore(tag, string_agg(val, ';')) tags
   FROM c
   GROUP BY id
     ,tag
+  )
+  ,s2
+AS (
+  SELECT id
+    ,hstore(array_agg(x)) tags
+  FROM (
+    SELECT id
+      ,UNNEST(hstore_to_array(tags)) AS x
+    FROM s3
+    ) q
+  GROUP BY id
   )
   ,s
 AS (
