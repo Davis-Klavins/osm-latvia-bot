@@ -4,6 +4,26 @@ LANGUAGE 'plpgsql'
 
 AS $BODY$BEGIN
 
+--State border in OSM.
+DROP TABLE IF EXISTS lv_border;
+
+CREATE TABLE lv_border (
+  id BIGINT PRIMARY KEY
+  ,geom geometry(Polygon, 4326) NOT NULL
+  );
+
+INSERT INTO lv_border
+SELECT a.id
+  ,ST_BuildArea(ST_Union(c.geom)) geom
+FROM relations a
+INNER JOIN relation_members b ON a.id = b.relation_id
+INNER JOIN way_geometry c ON b.member_id = c.way_id
+WHERE id = 72594
+  AND b.member_role LIKE 'outer'
+GROUP BY a.id;
+
+CREATE INDEX lv_border_geom_idx ON lv_border USING GIST (geom);
+
 --Table containing node IDs that have tags and are located in Latvia.
 DROP TABLE IF EXISTS nodes_lv;
 
@@ -20,7 +40,7 @@ CREATE INDEX nodes_tmp_geom_idx ON nodes_tmp USING GIST (geom);
 INSERT INTO nodes_lv
 SELECT a.id
 FROM nodes_tmp a
-INNER JOIN vzd.nivkis_zemes_vienibas b ON ST_Intersects(a.geom, b.geom);
+INNER JOIN lv_border b ON ST_Intersects(a.geom, b.geom);
 
 ALTER TABLE nodes_lv ADD PRIMARY KEY (id);
 
@@ -33,7 +53,7 @@ INSERT INTO ways_lv
 SELECT DISTINCT a.id
 FROM ways a
 INNER JOIN way_geometry b ON a.id = b.way_id
-INNER JOIN vzd.nivkis_zemes_vienibas c ON ST_Intersects(b.geom, c.geom);
+INNER JOIN lv_border c ON ST_Intersects(b.geom, c.geom);
 
 ALTER TABLE ways_lv ADD PRIMARY KEY (id);
 
