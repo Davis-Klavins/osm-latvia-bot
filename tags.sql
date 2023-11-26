@@ -18,18 +18,12 @@ WHERE tag LIKE 'name:%'
   AND tag NOT LIKE 'name:right%'
   AND tag NOT LIKE 'name:signed%';
 
---State border in OSM.
-CREATE TEMPORARY TABLE lv_border AS
-SELECT a.id
-  ,ST_Union(c.geom) geom
-FROM relations a
-INNER JOIN relation_members b ON a.id = b.relation_id
-INNER JOIN way_geometry c ON b.member_id = c.way_id
-WHERE id = 72594
-  AND b.member_role LIKE 'outer'
-GROUP BY a.id;
+--State border in OSM as line.
+CREATE TEMPORARY TABLE lv_border_line AS
+SELECT ST_ExteriorRing(geom) geom
+FROM lv_border;
 
-CREATE INDEX lv_border_geom_idx ON lv_border USING GIST (geom);
+CREATE INDEX lv_border_line_geom_idx ON lv_border_line USING GIST (geom);
 
 CREATE TEMPORARY TABLE relations_geometry AS
 WITH c
@@ -64,24 +58,24 @@ CREATE TEMPORARY TABLE nodes_lv AS
 SELECT a.id
 FROM nodes a
 INNER JOIN nodes_lv b ON a.id = b.id
-LEFT OUTER JOIN lv_border x ON ST_Intersects(a.geom, x.geom)
-WHERE x.id IS NULL;
+LEFT OUTER JOIN lv_border_line x ON ST_Intersects(a.geom, x.geom)
+WHERE x.geom IS NULL;
 
 CREATE TEMPORARY TABLE ways_lv AS
 SELECT a.id
 FROM ways a
 INNER JOIN ways_lv b ON a.id = b.id
 INNER JOIN way_geometry g ON a.id = g.way_id
-LEFT OUTER JOIN lv_border x ON ST_Intersects(g.geom, x.geom)
-WHERE x.id IS NULL;
+LEFT OUTER JOIN lv_border_line x ON ST_Intersects(g.geom, x.geom)
+WHERE x.geom IS NULL;
 
 CREATE TEMPORARY TABLE relations_lv AS
 SELECT a.id
 FROM relations a
 INNER JOIN relations_lv b ON a.id = b.id
 INNER JOIN relations_geometry g ON a.id = g.relation_id
-LEFT OUTER JOIN lv_border x ON ST_Intersects(g.geom, x.geom)
-WHERE x.id IS NULL;
+LEFT OUTER JOIN lv_border_line x ON ST_Intersects(g.geom, x.geom)
+WHERE x.geom IS NULL;
 
 CREATE TEMPORARY TABLE nodes_unnest AS
 SELECT a.id
