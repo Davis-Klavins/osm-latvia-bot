@@ -1241,7 +1241,7 @@ WHERE b.member_role LIKE 'outer'
   AND ST_GeometryType(c.geom) = 'ST_Polygon'
   AND bi.relation_id IS NULL;
 
----Ways. Polygon contains only one address point.
+---Ways.
 CREATE TEMPORARY TABLE tags_4_addresses_ways AS
 WITH t
 AS (
@@ -1272,6 +1272,7 @@ LEFT OUTER JOIN (
 WHERE a.value IS NOT NULL
   OR b.key IS NOT NULL;
 
+----Polygon contains only one address point.
 CREATE TEMPORARY TABLE ways_addr_add_3 AS
 WITH c
 AS (
@@ -1297,7 +1298,88 @@ SET tags = s.tags
 FROM ways_addr_add_3 s
 WHERE ways.id = s.id;
 
----Relations containing ways. Polygon contains only one address point.
+----More than half of the polygon is covered with a building polygon in OSM having an address. Polygon doesn't contain any address points.
+-----Building polygon is a way.
+CREATE TEMPORARY TABLE ways_addr_add_4 AS
+WITH c
+AS (
+  SELECT a.id
+  FROM ways a
+  INNER JOIN way_geometry g ON a.id = g.way_id
+  INNER JOIN way_geometry g2 ON ST_Intersects(g.geom, g2.geom)
+  INNER JOIN ways a2 ON g2.way_id = a2.id
+  LEFT OUTER JOIN vzd.adreses_ekas_sadalitas v ON ST_Within(v.geom, g.geom)
+  INNER JOIN tags_4_addresses_ways t ON a.id = t.id
+  WHERE a.id != a2.id
+    AND a2.tags ? 'building'
+    AND a2.tags ? 'ref:LV:addr'
+    AND ST_Area(g.geom) > 0
+    AND ST_Area(ST_Intersection(g.geom, g2.geom)) / ST_Area(g.geom) > 0.5
+    AND v.adr_cd IS NULL
+  GROUP BY a.id
+  HAVING COUNT(*) = 1
+  )
+SELECT a.id
+  ,(a.tags || hstore('addr:country', 'LV') || hstore('addr:district', a2.tags -> 'addr:district') || hstore('addr:city', a2.tags -> 'addr:city') || hstore('addr:subdistrict', a2.tags -> 'addr:subdistrict') || hstore('addr:street', a2.tags -> 'addr:street') || hstore('addr:housename', a2.tags -> 'addr:housename') || hstore('addr:housenumber', a2.tags -> 'addr:housenumber') || hstore('addr:postcode', a2.tags -> 'addr:postcode') || hstore('ref:LV:addr', a2.tags -> 'ref:LV:addr')) - 'addr:district=>NULL, addr:city=>NULL, addr:subdistrict=>NULL, addr:street=>NULL, addr:housename=>NULL, addr:housenumber=>NULL, addr:postcode=>NULL'::hstore tags
+FROM ways a
+INNER JOIN way_geometry g ON a.id = g.way_id
+INNER JOIN way_geometry g2 ON ST_Intersects(g.geom, g2.geom)
+INNER JOIN ways a2 ON g2.way_id = a2.id
+INNER JOIN c ON a.id = c.id
+WHERE a.id != a2.id
+  AND a2.tags ? 'building'
+  AND a2.tags ? 'ref:LV:addr'
+  AND ST_Area(g.geom) > 0
+  AND ST_Area(ST_Intersection(g.geom, g2.geom)) / ST_Area(g.geom) > 0.5;
+
+ALTER TABLE ways_addr_add_4 ADD PRIMARY KEY (id);
+
+UPDATE ways
+SET tags = s.tags
+FROM ways_addr_add_4 s
+WHERE ways.id = s.id;
+
+-----Building polygon is a relation.
+CREATE TEMPORARY TABLE ways_addr_add_5 AS
+WITH c
+AS (
+  SELECT a.id
+  FROM ways a
+  INNER JOIN way_geometry g ON a.id = g.way_id
+  INNER JOIN relations_geometry g2 ON ST_Intersects(g.geom, g2.geom)
+  INNER JOIN relations a2 ON g2.id = a2.id
+  LEFT OUTER JOIN vzd.adreses_ekas_sadalitas v ON ST_Within(v.geom, g.geom)
+  INNER JOIN tags_4_addresses_ways t ON a.id = t.id
+  WHERE a2.tags ? 'building'
+    AND a2.tags ? 'ref:LV:addr'
+    AND ST_Area(g.geom) > 0
+    AND ST_Area(ST_Intersection(g.geom, g2.geom)) / ST_Area(g.geom) > 0.5
+    AND v.adr_cd IS NULL
+  GROUP BY a.id
+  HAVING COUNT(*) = 1
+  )
+SELECT a.id
+  ,(a.tags || hstore('addr:country', 'LV') || hstore('addr:district', a2.tags -> 'addr:district') || hstore('addr:city', a2.tags -> 'addr:city') || hstore('addr:subdistrict', a2.tags -> 'addr:subdistrict') || hstore('addr:street', a2.tags -> 'addr:street') || hstore('addr:housename', a2.tags -> 'addr:housename') || hstore('addr:housenumber', a2.tags -> 'addr:housenumber') || hstore('addr:postcode', a2.tags -> 'addr:postcode') || hstore('ref:LV:addr', a2.tags -> 'ref:LV:addr')) - 'addr:district=>NULL, addr:city=>NULL, addr:subdistrict=>NULL, addr:street=>NULL, addr:housename=>NULL, addr:housenumber=>NULL, addr:postcode=>NULL'::hstore tags
+FROM ways a
+INNER JOIN way_geometry g ON a.id = g.way_id
+INNER JOIN relations_geometry g2 ON ST_Intersects(g.geom, g2.geom)
+INNER JOIN relations a2 ON g2.id = a2.id
+INNER JOIN c ON a.id = c.id
+WHERE a.id != a2.id
+  AND a2.tags ? 'building'
+  AND a2.tags ? 'ref:LV:addr'
+  AND ST_Area(g.geom) > 0
+  AND ST_Area(ST_Intersection(g.geom, g2.geom)) / ST_Area(g.geom) > 0.5;
+
+ALTER TABLE ways_addr_add_5 ADD PRIMARY KEY (id);
+
+UPDATE ways
+SET tags = s.tags
+FROM ways_addr_add_5 s
+WHERE ways.id = s.id;
+
+---Relations containing ways.
+----Polygon contains only one address point.
 CREATE TEMPORARY TABLE relations_addr_add_3 AS
 WITH c
 AS (
@@ -1321,6 +1403,86 @@ ALTER TABLE relations_addr_add_3 ADD PRIMARY KEY (id);
 UPDATE relations
 SET tags = s.tags
 FROM relations_addr_add_3 s
+WHERE relations.id = s.id;
+
+----More than half of the polygon is covered with a building polygon in OSM having an address. Polygon doesn't contain any address points.
+-----Building polygon is a way.
+CREATE TEMPORARY TABLE relations_addr_add_4 AS
+WITH c
+AS (
+  SELECT a.id
+  FROM relations a
+  INNER JOIN relations_geometry g ON a.id = g.id
+  INNER JOIN way_geometry g2 ON ST_Intersects(g.geom, g2.geom)
+  INNER JOIN ways a2 ON g2.way_id = a2.id
+  LEFT OUTER JOIN vzd.adreses_ekas_sadalitas v ON ST_Within(v.geom, g.geom)
+  INNER JOIN tags_4_addresses_relations t ON a.id = t.id
+  WHERE a2.tags ? 'building'
+    AND a2.tags ? 'ref:LV:addr'
+    AND ST_Area(g.geom) > 0
+    AND ST_Area(ST_Intersection(g.geom, g2.geom)) / ST_Area(g.geom) > 0.5
+    AND v.adr_cd IS NULL
+  GROUP BY a.id
+  HAVING COUNT(*) = 1
+  )
+SELECT a.id
+  ,(a.tags || hstore('addr:country', 'LV') || hstore('addr:district', a2.tags -> 'addr:district') || hstore('addr:city', a2.tags -> 'addr:city') || hstore('addr:subdistrict', a2.tags -> 'addr:subdistrict') || hstore('addr:street', a2.tags -> 'addr:street') || hstore('addr:housename', a2.tags -> 'addr:housename') || hstore('addr:housenumber', a2.tags -> 'addr:housenumber') || hstore('addr:postcode', a2.tags -> 'addr:postcode') || hstore('ref:LV:addr', a2.tags -> 'ref:LV:addr')) - 'addr:district=>NULL, addr:city=>NULL, addr:subdistrict=>NULL, addr:street=>NULL, addr:housename=>NULL, addr:housenumber=>NULL, addr:postcode=>NULL'::hstore tags
+FROM relations a
+INNER JOIN relations_geometry g ON a.id = g.id
+INNER JOIN way_geometry g2 ON ST_Intersects(g.geom, g2.geom)
+INNER JOIN ways a2 ON g2.way_id = a2.id
+INNER JOIN c ON a.id = c.id
+WHERE a.id != a2.id
+  AND a2.tags ? 'building'
+  AND a2.tags ? 'ref:LV:addr'
+  AND ST_Area(g.geom) > 0
+  AND ST_Area(ST_Intersection(g.geom, g2.geom)) / ST_Area(g.geom) > 0.5;
+
+ALTER TABLE relations_addr_add_4 ADD PRIMARY KEY (id);
+
+UPDATE relations
+SET tags = s.tags
+FROM relations_addr_add_4 s
+WHERE relations.id = s.id;
+
+-----Building polygon is a relation.
+CREATE TEMPORARY TABLE relations_addr_add_5 AS
+WITH c
+AS (
+  SELECT a.id
+  FROM relations a
+  INNER JOIN relations_geometry g ON a.id = g.id
+  INNER JOIN relations_geometry g2 ON ST_Intersects(g.geom, g2.geom)
+  INNER JOIN relations a2 ON g2.id = a2.id
+  LEFT OUTER JOIN vzd.adreses_ekas_sadalitas v ON ST_Within(v.geom, g.geom)
+  INNER JOIN tags_4_addresses_relations t ON a.id = t.id
+  WHERE a.id != a2.id
+    AND a2.tags ? 'building'
+    AND a2.tags ? 'ref:LV:addr'
+    AND ST_Area(g.geom) > 0
+    AND ST_Area(ST_Intersection(g.geom, g2.geom)) / ST_Area(g.geom) > 0.5
+    AND v.adr_cd IS NULL
+  GROUP BY a.id
+  HAVING COUNT(*) = 1
+  )
+SELECT a.id
+  ,(a.tags || hstore('addr:country', 'LV') || hstore('addr:district', a2.tags -> 'addr:district') || hstore('addr:city', a2.tags -> 'addr:city') || hstore('addr:subdistrict', a2.tags -> 'addr:subdistrict') || hstore('addr:street', a2.tags -> 'addr:street') || hstore('addr:housename', a2.tags -> 'addr:housename') || hstore('addr:housenumber', a2.tags -> 'addr:housenumber') || hstore('addr:postcode', a2.tags -> 'addr:postcode') || hstore('ref:LV:addr', a2.tags -> 'ref:LV:addr')) - 'addr:district=>NULL, addr:city=>NULL, addr:subdistrict=>NULL, addr:street=>NULL, addr:housename=>NULL, addr:housenumber=>NULL, addr:postcode=>NULL'::hstore tags
+FROM relations a
+INNER JOIN relations_geometry g ON a.id = g.id
+INNER JOIN relations_geometry g2 ON ST_Intersects(g.geom, g2.geom)
+INNER JOIN relations a2 ON g2.id = a2.id
+INNER JOIN c ON a.id = c.id
+WHERE a.id != a2.id
+  AND a2.tags ? 'building'
+  AND a2.tags ? 'ref:LV:addr'
+  AND ST_Area(g.geom) > 0
+  AND ST_Area(ST_Intersection(g.geom, g2.geom)) / ST_Area(g.geom) > 0.5;
+
+ALTER TABLE relations_addr_add_5 ADD PRIMARY KEY (id);
+
+UPDATE relations
+SET tags = s.tags
+FROM relations_addr_add_5 s
 WHERE relations.id = s.id;
 
 ---Nodes.
