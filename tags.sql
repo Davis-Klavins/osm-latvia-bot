@@ -18,6 +18,14 @@ WHERE tag LIKE 'name:%'
   AND tag NOT LIKE 'name:right%'
   AND tag NOT LIKE 'name:signed%';
 
+--Temporary table containing multilingual old name tags.
+CREATE TEMPORARY TABLE old_name_multilingual AS
+SELECT tag
+FROM tags
+WHERE tag LIKE 'old_name:%'
+  AND tag !~ '[0-9]+'
+  AND tag NOT LIKE 'old_name:etymology%';
+
 --State border in OSM as line.
 CREATE TEMPORARY TABLE lv_border_line AS
 SELECT ST_ExteriorRing(geom) geom
@@ -1029,7 +1037,10 @@ SELECT a.id
 FROM nodes a
 INNER JOIN nodes_unnest t ON a.id = t.id
 WHERE t.tag = 'old_name'
-  OR t.tag LIKE 'old_name:%';
+  OR t.tag IN (
+    SELECT tag
+    FROM old_name_multilingual
+    );
 
 CREATE TEMPORARY TABLE nodes_old_name_cnt AS
 SELECT id
@@ -1050,9 +1061,7 @@ AS (
   SELECT a.id
     ,a.tags - (
       SELECT array_agg(tag)
-      FROM tags
-      WHERE tag LIKE 'old_name:%'
-        AND tag NOT LIKE 'old_name'
+      FROM old_name_multilingual
       ) tags
   FROM nodes a
   INNER JOIN nodes_old_name_cnt b ON a.id = b.id
@@ -1078,7 +1087,10 @@ SELECT a.id
 FROM ways a
 INNER JOIN ways_unnest t ON a.id = t.id
 WHERE t.tag = 'old_name'
-  OR t.tag LIKE 'old_name:%';
+  OR t.tag IN (
+    SELECT tag
+    FROM old_name_multilingual
+    );
 
 CREATE TEMPORARY TABLE ways_old_name_cnt AS
 SELECT id
@@ -1099,9 +1111,7 @@ AS (
   SELECT a.id
     ,a.tags - (
       SELECT array_agg(tag)
-      FROM tags
-      WHERE tag LIKE 'old_name:%'
-        AND tag NOT LIKE 'old_name'
+      FROM old_name_multilingual
       ) tags
   FROM ways a
   INNER JOIN ways_old_name_cnt b ON a.id = b.id
@@ -1131,7 +1141,10 @@ SELECT a.id
 FROM relations a
 INNER JOIN relations_unnest t ON a.id = t.id
 WHERE t.tag = 'old_name'
-  OR t.tag LIKE 'old_name:%';
+  OR t.tag IN (
+    SELECT tag
+    FROM old_name_multilingual
+    );
 
 CREATE TEMPORARY TABLE relations_old_name_cnt AS
 SELECT id
@@ -1152,9 +1165,7 @@ AS (
   SELECT a.id
     ,a.tags - (
       SELECT array_agg(tag)
-      FROM tags
-      WHERE tag LIKE 'old_name:%'
-        AND tag NOT LIKE 'old_name'
+      FROM old_name_multilingual
       ) tags
   FROM relations a
   INNER JOIN relations_old_name_cnt b ON a.id = b.id
@@ -1183,10 +1194,8 @@ AS (
   SELECT a.id
     ,a.tags - (
       SELECT array_agg(tag)
-      FROM tags
-      WHERE tag LIKE 'old_name:%'
-        AND tag NOT LIKE 'old_name'
-        AND tag NOT LIKE 'old_name:lv'
+      FROM old_name_multilingual
+      WHERE tag NOT LIKE 'old_name:lv'
         AND tag NOT LIKE 'old_name:ltg'
       ) tags
   FROM nodes a
@@ -1210,10 +1219,8 @@ AS (
   SELECT a.id
     ,a.tags - (
       SELECT array_agg(tag)
-      FROM tags
-      WHERE tag LIKE 'old_name:%'
-        AND tag NOT LIKE 'old_name'
-        AND tag NOT LIKE 'old_name:lv'
+      FROM old_name_multilingual
+      WHERE tag NOT LIKE 'old_name:lv'
         AND tag NOT LIKE 'old_name:ltg'
       ) tags
   FROM ways a
@@ -1239,9 +1246,9 @@ AS (
   SELECT a.id
     ,a.tags - (
       SELECT array_agg(tag)
-      FROM tags
-      WHERE tag LIKE 'old_name:%'
-        AND tag NOT LIKE 'old_name'
+      FROM old_name_multilingual
+      WHERE tag NOT LIKE 'old_name:lv'
+        AND tag NOT LIKE 'old_name:ltg'
       ) tags
   FROM relations a
   INNER JOIN relations_old_name_cnt b ON a.id = b.id
