@@ -63,7 +63,7 @@ CREATE TABLE nodes_old (
   ,geom geometry(Point, 4326)
   );
 
----Insert all nodes in Latvia that have at least one tag containing "addr", except "addr:unit", "addr:door", "addr:flats" and "addr:floor".
+---Insert all nodes in Latvia that have at least one tag containing "addr", except "addr:unit", "addr:door", "addr:flats", "addr:floor" and "operator:addr*".
 INSERT INTO nodes_old (
   id
   ,version
@@ -90,10 +90,11 @@ WHERE a.tags ?| (
       AND tag NOT LIKE 'addr:door'
       AND tag NOT LIKE 'addr:flats'
       AND tag NOT LIKE 'addr:floor'
+      AND tag NOT LIKE 'operator:addr%'
     )
 ORDER BY id;
 
---Delete all tags in Latvia from nodes containing "addr", except "addr:unit", "addr:door", "addr:flats" and "addr:floor".
+--Delete all tags in Latvia from nodes containing "addr", except "addr:unit", "addr:door", "addr:flats", "addr:floor" and "operator:addr*".
 WITH s
 AS (
   SELECT a.id
@@ -105,6 +106,7 @@ AS (
         AND tag NOT LIKE 'addr:door'
         AND tag NOT LIKE 'addr:flats'
         AND tag NOT LIKE 'addr:floor'
+        AND tag NOT LIKE 'operator:addr%'
       ) tags
   FROM nodes a
   INNER JOIN nodes_lv b ON a.id = b.id
@@ -116,6 +118,7 @@ AS (
         AND tag NOT LIKE 'addr:door'
         AND tag NOT LIKE 'addr:flats'
         AND tag NOT LIKE 'addr:floor'
+        AND tag NOT LIKE 'operator:addr%'
       )
   )
 UPDATE nodes
@@ -165,7 +168,7 @@ CREATE TABLE ways_old (
   ,nodes BIGINT []
   );
 
----Insert all ways in Latvia that have at least one tag containing "addr", except "addr:unit".
+---Insert all ways in Latvia that have at least one tag containing "addr", except "addr:unit" and "operator:addr*".
 INSERT INTO ways_old (
   id
   ,version
@@ -189,10 +192,11 @@ WHERE a.tags ?| (
     FROM tags
     WHERE tag LIKE '%addr%'
       AND tag NOT LIKE 'addr:unit'
+      AND tag NOT LIKE 'operator:addr%'
     )
 ORDER BY id;
 
---Delete all tags in Latvia from ways containing "addr", except "addr:unit".
+--Delete all tags in Latvia from ways containing "addr", except "addr:unit" and "operator:addr*".
 WITH s
 AS (
   SELECT a.id
@@ -201,6 +205,7 @@ AS (
       FROM tags
       WHERE tag LIKE '%addr%'
         AND tag NOT LIKE 'addr:unit'
+        AND tag NOT LIKE 'operator:addr%'
       ) tags
   FROM ways a
   INNER JOIN ways_lv b ON a.id = b.id
@@ -209,6 +214,7 @@ AS (
       FROM tags
       WHERE tag LIKE '%addr%'
         AND tag NOT LIKE 'addr:unit'
+        AND tag NOT LIKE 'operator:addr%'
       )
   )
 UPDATE ways
@@ -257,7 +263,7 @@ CREATE TABLE relations_old (
   ,tags hstore
   );
 
----Insert all relations in Latvia that have at least one tag containing "addr", except "addr:region".
+---Insert all relations in Latvia that have at least one tag containing "addr", except "addr:region" and "operator:addr*".
 INSERT INTO relations_old (
   id
   ,version
@@ -279,10 +285,11 @@ WHERE a.tags ?| (
     FROM tags
     WHERE tag LIKE '%addr%'
       AND tag NOT LIKE 'addr:region'
+      AND tag NOT LIKE 'operator:addr%'
     )
 ORDER BY id;
 
---Delete all tags in Latvia from relations containing "addr", except "addr:region".
+--Delete all tags in Latvia from relations containing "addr", except "addr:region" and "operator:addr*".
 WITH s
 AS (
   SELECT a.id
@@ -291,6 +298,7 @@ AS (
       FROM tags
       WHERE tag LIKE '%addr%'
         AND tag NOT LIKE 'addr:region'
+        AND tag NOT LIKE 'operator:addr%'
       ) tags
   FROM relations a
   INNER JOIN relations_lv b ON a.id = b.id
@@ -299,6 +307,7 @@ AS (
       FROM tags
       WHERE tag LIKE '%addr%'
         AND tag NOT LIKE 'addr:region'
+        AND tag NOT LIKE 'operator:addr%'
       )
   )
 UPDATE relations
