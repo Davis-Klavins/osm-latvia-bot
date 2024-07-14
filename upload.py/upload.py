@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
-# vim: fileencoding=utf-8 encoding=utf-8 et sw=4
 
-# Modified by Dāvis Kļaviņš (https://github.com/Davis-Klavins) on July 7, 2022. Included ssl lib.
+# Modified by Dāvis Kļaviņš (https://github.com/Davis-Klavins) on July 14, 2024.
 
 # Copyright (C) 2009 Jacek Konieczny <jajcus@jajcus.net>
 # Copyright (C) 2009 Andrzej Zaborowski <balrogg@gmail.com>
@@ -27,187 +26,14 @@ Uploads complete osmChange 0.3 files.  Use your login (not email) as username.
 __version__ = "$Revision: 21 $"
 
 import os
-import subprocess
 import sys
 import traceback
-import base64
 import codecs
-
-import http.client as httplib
 import xml.etree.cElementTree as ElementTree
-import urllib.parse as urlparse
-
-import ssl
-ssl._create_default_https_context = ssl._create_unverified_context
-
-class HTTPError(Exception):
-    pass
-
-class OSM_API(object):
-    url = 'https://api.openstreetmap.org/'
-    def __init__(self, username = None, password = None):
-        if username and password:
-            self.username = username
-            self.password = password
-        else:
-            self.username = ""
-            self.password = ""
-        self.changeset = None
-        self.progress_msg = None
-
-    def __del__(self):
-        #if self.changeset is not None:
-        #    self.close_changeset()
-        pass
-
-    def msg(self, mesg):
-        sys.stderr.write("\r%s…                        " % (self.progress_msg))
-        sys.stderr.write("\r%s… %s" % (self.progress_msg, mesg))
-        sys.stderr.flush()
-
-    def request(self, conn, method, url, body, headers, progress):
-        if progress:
-            self.msg("making request")
-            conn.putrequest(method, url)
-            self.msg("sending headers")
-            if body:
-                conn.putheader('Content-Length', str(len(body)))
-            for hdr, value in headers.items():
-                conn.putheader(hdr, value)
-            self.msg("end of headers")
-            conn.endheaders()
-            self.msg(" 0%")
-            if body:
-                start = 0
-                size = len(body)
-                chunk = size / 100
-                if chunk < 16384:
-                    chunk = 16384
-                while start < size:
-                    end = min(size, int(start + chunk))
-                    conn.send(body[start:end])
-                    start = end
-                    self.msg("%2i%%" % (int(start * 100 / size),))
-        else:
-            self.msg(" ")
-            conn.request(method, url, body, headers)
-
-    def _run_request(self, method, url, body = None, progress = 0, content_type = "text/xml"):
-        url = urlparse.urljoin(self.url, url)
-        purl = urlparse.urlparse(url)
-        if purl.scheme != "https":
-            raise ValueError("Unsupported url scheme: %r" % (purl.scheme,))
-        if ":" in purl.netloc:
-            host, port = purl.netloc.split(":", 1)
-            port = int(port)
-        else:
-            host = purl.netloc
-            port = None
-        url = purl.path
-        if purl.query:
-            url += "?" + query
-        headers = {}
-        if body:
-            headers["Content-Type"] = content_type
-
-        try_no_auth = 0
-
-        if not try_no_auth and not self.username:
-            raise HTTPError(0, "Need a username")
-
-        try:
-            self.msg("connecting")
-            conn = httplib.HTTPSConnection(host, port)
-#            conn.set_debuglevel(10)
-
-            if try_no_auth:
-                self.request(conn, method, url, body, headers, progress)
-                self.msg("waiting for status")
-                response = conn.getresponse()
-
-            if not try_no_auth or (response.status == httplib.UNAUTHORIZED and
-                    self.username):
-                if try_no_auth:
-                    conn.close()
-                    self.msg("re-connecting")
-                    conn = httplib.HTTPSConnection(host, port)
-#                    conn.set_debuglevel(10)
-
-                creds = self.username + ":" + self.password
-                headers["Authorization"] = "Basic " + \
-                        base64.b64encode(bytes(creds, "utf8")).decode("utf8")
-                        # ^ Seems to be broken in python3 (even the raw
-                        # documentation examples don't run for base64)
-                self.request(conn, method, url, body, headers, progress)
-                self.msg("waiting for status")
-                response = conn.getresponse()
-
-            if response.status == httplib.OK:
-                self.msg("reading response")
-                sys.stderr.flush()
-                response_body = response.read()
-            else:
-                err = response.read()
-                raise HTTPError(response.status, "%03i: %s (%s)" % (
-                    response.status, response.reason, err), err)
-        finally:
-            conn.close()
-        return response_body
-
-    def create_changeset(self, created_by, comment, source, url):
-        if self.changeset is not None:
-            raise RuntimeError("Changeset already opened")
-        self.progress_msg = "I'm creating the changeset"
-        self.msg("")
-        root = ElementTree.Element("osm")
-        tree = ElementTree.ElementTree(root)
-        element = ElementTree.SubElement(root, "changeset")
-        ElementTree.SubElement(element, "tag", {"k": "url", "v": url})
-        ElementTree.SubElement(element, "tag", {"k": "import", "v": "yes"})
-        ElementTree.SubElement(element, "tag", {"k": "created_by", "v": created_by})
-        ElementTree.SubElement(element, "tag", {"k": "comment", "v": comment})
-        ElementTree.SubElement(element, "tag", {"k": "source", "v": source})
-        body = ElementTree.tostring(root, "utf-8")
-        reply = self._run_request("PUT", "/api/0.6/changeset/create", body)
-        changeset = int(reply.strip())
-        self.msg("done.\nChangeset ID: %i" % (changeset))
-        sys.stderr.write("\n")
-        self.changeset = changeset
-
-    def upload(self, change):
-        if self.changeset is None:
-            raise RuntimeError("Changeset not opened")
-        self.progress_msg = "Now I'm sending changes"
-        self.msg("")
-        for operation in change:
-            if operation.tag not in ("create", "modify", "delete"):
-                continue
-            for element in operation:
-                element.attrib["changeset"] = str(self.changeset)
-        body = ElementTree.tostring(change, "utf-8")
-        reply = self._run_request("POST", "/api/0.6/changeset/%i/upload"
-                                                % (self.changeset,), body, 1)
-        self.msg("done.")
-        sys.stderr.write("\n")
-        return reply
-
-    def close_changeset(self):
-        if self.changeset is None:
-            raise RuntimeError("Changeset not opened")
-        self.progress_msg = "Closing"
-        self.msg("")
-        reply = self._run_request("PUT", "/api/0.6/changeset/%i/close"
-                                                    % (self.changeset,))
-        self.changeset = None
-        self.msg("done, too.")
-        sys.stderr.write("\n")
+from osmapi import HTTPError, OSM_API
 
 try:
-    this_dir = os.path.dirname(__file__)
-    try:
-        version = int(subprocess.Popen(["svnversion", this_dir], stdout = subprocess.PIPE).communicate()[0].strip())
-    except:
-        version = 1
+    version = 2
     if len(sys.argv) < 2:
         sys.stderr.write("Synopsis:\n")
         sys.stderr.write("    %s <file-name.osc> [<file-name.osc>...]\n" % (sys.argv[0],))
@@ -256,20 +82,7 @@ try:
         else:
             filenames.append(arg)
 
-    if 'user' in param:
-        login = param['user']
-    else:
-        login = input("OSM login: ")
-    if not login:
-        sys.exit(1)
-    if 'pass' in param:
-        password = param['pass']
-    else:
-        password = input("OSM password: ")
-    if not password:
-        sys.exit(1)
-
-    api = OSM_API(login, password)
+    api = OSM_API()
 
     changes = []
     for filename in filenames:
@@ -312,10 +125,6 @@ try:
                 comment = input("Your comment to %r: " % (filename,))
             if not comment:
                 sys.exit(1)
-            #try:
-            #    comment = comment.decode(locale.getlocale()[1])
-            #except TypeError:
-            #    comment = comment.decode("UTF-8")
 
         sys.stderr.write("     File: %r\n" % (filename,))
         sys.stderr.write("  Comment: %s\n" % (comment,))
@@ -341,18 +150,18 @@ try:
                 sys.exit(0)
         while 1:
             try:
-                diff_file = codecs.open(diff_fn, "w", "utf-8")
                 diff = api.upload(root)
-                diff_file.write(diff.decode("utf8"))
-                diff_file.close()
+                with open(diff_fn, 'w') as diff_file:
+                    diff_file.write(diff)
             except HTTPError as e:
                 sys.stderr.write("\n" + e.args[1] + "\n")
-                if e.args[0] in [ 404, 409, 412 ]: # Merge conflict
+                if e.args[0] in [404, 409, 412]:  # Merge conflict
                     # TODO: also unlink when not the whole file has been uploaded
                     # because then likely the server will not be able to parse
                     # it and nothing gets committed
-                    os.unlink(diff_fn)
-                errstr = e.args[2].decode("utf8")
+                    if os.path.exists(diff_fn):
+                        os.unlink(diff_fn)
+                errstr = e.args[2]
                 if 'try' in param and e.args[0] == 409 and \
                         errstr.find("Version mismatch") > -1:
                     id = errstr.split(" ")[-1]
@@ -424,7 +233,7 @@ try:
                             str(delids) + "\n")
                     continue
                 if 'changeset' not in param:
-                   api.close_changeset()
+                    api.close_changeset()
                 sys.exit(1)
             break
         if 'changeset' not in param:

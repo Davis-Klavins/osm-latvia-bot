@@ -3,7 +3,7 @@ Collection of scripts to update and maintain OpenStreetMap data in Latvia (curre
 
 Prerequisites:
 * PostgreSQL with PostGIS,
-* Python 2 and 3 (incl. pip and requests package),
+* Python 2 and 3 (incl. pip, requests and cli-oauth2 package),
 * wget,
 * [oauth_cookie_client.py](https://github.com/geofabrik/sendfile_osm_oauth_protector/blob/master/oauth_cookie_client.py),
 * [osmupdate](https://wiki.openstreetmap.org/wiki/Osmupdate),
@@ -12,7 +12,7 @@ Prerequisites:
 * [XMLStarlet](http://xmlstar.sourceforge.net/),
 * [osmosis](https://github.com/openstreetmap/osmosis) (set path to Java in bin\osmosis.bat on Windows),
 * [Osmium Tool](https://osmcode.org/osmium-tool/),
-* [upload.py](https://wiki.openstreetmap.org/wiki/Upload.py) (files used have been modified and placed in [upload.py directory](upload.py)),
+* [upload.py](https://wiki.openstreetmap.org/wiki/Upload.py) (files used have been modified and placed in [upload.py directory](upload.py), except [osmapi.py](https://github.com/Zverik/osm-bulk-upload/blob/master/osmapi.py)),
 * If used on Windows, Git to run files with .sh extension.
 
 [tags_4_addresses.csv](tags_4_addresses.csv) - tags that allow object to have address tags.
