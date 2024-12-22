@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Pārtrauc izpildi kļūdas gadījumā.
+# Stops the execution of the script in case of an error.
 set -e
 
 # Directory where data are stored locally.
