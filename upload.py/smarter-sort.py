@@ -37,8 +37,7 @@ import subprocess
 import xml.etree.cElementTree as ElementTree
 
 import locale, codecs
-# Changed en_US.UTF-8 to eng_usa on Windows.
-locale.setlocale(locale.LC_ALL, "eng_usa")
+locale.setlocale(locale.LC_ALL, "en_US.UTF-8")
 encoding = locale.getlocale()[1]
 sys.stdout = codecs.getwriter(encoding)(sys.stdout, errors = "replace")
 sys.stderr = codecs.getwriter(encoding)(sys.stderr, errors = "replace")
