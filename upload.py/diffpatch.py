@@ -1,7 +1,7 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 # vim: fileencoding=utf-8 encoding=utf-8 et sw=4
 
-# Modified by Dāvis Kļaviņš (https://github.com/Davis-Klavins) on July 7, 2022. Fixed change of attribute ref to id.
+# Modified by Dāvis Kļaviņš (https://github.com/Davis-Klavins) on December 20, 2024. Fixed change of attribute ref to id, converted to Python 3.
 
 # Copyright (C) 2009 Jacek Konieczny <jajcus@jajcus.net>
 # Copyright (C) 2009 Andrzej Zaborowski <balrogg@gmail.com>
@@ -42,8 +42,8 @@ sys.stdout = codecs.getwriter(encoding)(sys.stdout, errors = "replace")
 sys.stderr = codecs.getwriter(encoding)(sys.stderr, errors = "replace")
 
 if len(sys.argv) < 2 or sys.argv[1] == "--help":
-    print >>sys.stderr, u"Synopsis:"
-    print >>sys.stderr, u"    %s <file.diff.xml> [osm-files-to-patch...]"
+    print("Synopsis:", file=sys.stderr)
+    print("    %s <file.diff.xml> [osm-files-to-patch...]", file=sys.stderr)
     sys.exit(1)
 
 dd = {}

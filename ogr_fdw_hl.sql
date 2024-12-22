@@ -1,7 +1,7 @@
 DROP SERVER IF EXISTS hl CASCADE;
 
 CREATE SERVER hl FOREIGN DATA WRAPPER ogr_fdw OPTIONS (
-  datasource 'D:\osm\csp\hl', 
+  datasource '/data/osm/csp/hl', 
   format 'ESRI Shapefile'
 );
 

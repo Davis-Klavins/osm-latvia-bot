@@ -1,19 +1,17 @@
 # osm-latvia-bot
 Collection of scripts to update and maintain OpenStreetMap data in Latvia (currently only addresses and tags). See https://wiki.openstreetmap.org/wiki/Automated_edits/Latvia-bot.
 
-Prerequisites:
-* PostgreSQL with PostGIS,
-* Python 2 and 3 (incl. pip, requests and cli-oauth2 package),
-* wget,
-* [oauth_cookie_client.py](https://github.com/geofabrik/sendfile_osm_oauth_protector/blob/master/oauth_cookie_client.py),
-* [osmupdate](https://wiki.openstreetmap.org/wiki/Osmupdate),
-* [osmconvert](https://wiki.openstreetmap.org/wiki/Osmconvert),
-* [jq](https://stedolan.github.io/jq/),
+Written for Ubuntu Server 24.04. Prerequisites that need to be additionally installed:
+* PostgreSQL with PostGIS and [PostgreSQL OGR Foreign Data Wrapper](https://github.com/pramsey/pgsql-ogr-fdw),
+* GDAL,
+* p7zip,
 * [XMLStarlet](http://xmlstar.sourceforge.net/),
-* [osmosis](https://github.com/openstreetmap/osmosis) (set path to Java in bin\osmosis.bat on Windows),
+* [osmctools](https://gitlab.com/osm-c-tools/osmctools),
+* [osmosis](https://github.com/openstreetmap/osmosis),
 * [Osmium Tool](https://osmcode.org/osmium-tool/),
+* [oauth_cookie_client.py](https://github.com/geofabrik/sendfile_osm_oauth_protector/blob/master/oauth_cookie_client.py),
 * [upload.py](https://wiki.openstreetmap.org/wiki/Upload.py) (files used have been modified and placed in [upload.py directory](upload.py), except [osmapi.py](https://github.com/Zverik/osm-bulk-upload/blob/master/osmapi.py)),
-* If used on Windows, Git to run files with .sh extension.
+* text-based web browser to authenticate Upload.py for the first time (tested and works with elinks, after sending authorization request, exit manually by pressing `q`).
 
 [tags_4_addresses.csv](tags_4_addresses.csv) - tags that allow object to have address tags.
 
@@ -41,9 +39,28 @@ cd vzd
 mkdir aw_csv
 ```
 
-Clone this repository in the data directory.
+Install [cli-oauth2](https://github.com/Zverik/cli-oauth2) Python package:
 
-Place [oauth_cookie_client.py](https://github.com/geofabrik/sendfile_osm_oauth_protector/blob/master/oauth_cookie_client.py), [settings.json](settings.json) (set `password`) and [latvia.poly](https://download.geofabrik.de/europe/latvia.poly) in the data directory.
+```sh
+export DIRECTORY=
+cd $DIRECTORY/osm
+sudo apt install python3-venv
+python3 -m venv .osm
+.osm/bin/pip install cli-oauth2
+```
+
+Clone this repository in the osm directory.
+
+Place [oauth_cookie_client.py](https://github.com/geofabrik/sendfile_osm_oauth_protector/blob/master/oauth_cookie_client.py), [settings.json](settings.json) (set `password`), [latvia.poly](https://download.geofabrik.de/europe/latvia.poly) and *.sh files used for data update (see [Source data update](README.md#source-data-update) and [OSM data update](README.md#osm-data-update)) in the data directory.
+
+Make shell and Python scripts executable:
+
+```sh
+export DIRECTORY=
+cd $DIRECTORY/osm
+find . -type f -name "*.py" -exec chmod +x {} \;
+chmod +x *.sh
+```
 
 Set up PostgreSQL database:
 
@@ -62,6 +79,8 @@ Set up PostgreSQL database:
 
    ```sql
    CREATE DATABASE osm;
+
+   ALTER DATABASE osm OWNER TO osm;
 
    GRANT ALL
      ON DATABASE osm
@@ -130,26 +149,14 @@ Set up PostgreSQL database:
 
 2. [vzd_cadastre.sh](vzd_cadastre.sh) - download and import in the local PostgreSQL database open data of the State Land Service Cadastre Information System (set `DIRECTORY`, `PGPASSWORD`, `IP_ADDRESS` and `PORT` variables). Remove `.exe` if run under Linux. To be run weekly.
 
-3. [csp_vzd_borders_addresses.sh](csp_vzd_borders_addresses.sh) - download and import in the local PostgreSQL database open data of the Central Statistical Bureau of Latvia and the State Land Service (borders and address points) (set `DIRECTORY`, `PGPASSWORD`, `IP_ADDRESS` and `PORT` variables). To be run on working days. For the first time, run also [adreses_his.sql](adreses_his.sql).
-
-## OSM historical data update
-
-To be run daily.
-
-1. Download latest internal OSM history data from Geofabrik: `wget -q -O latvia-internal.osh.pbf -N --no-cookies --header "Cookie: $(cat cookie.txt | cut -d ';' -f 1)" https://osm-internal.download.geofabrik.de/europe/latvia-internal.osh.pbf`.
-2. Convert to the [OPL file format](https://osmcode.org/opl-file-format/): `osmium cat latvia-internal.osh.pbf -o latvia-internal.osm.opl`.
-3. [history.sh](history.sh) - preprocess and update data in the local PostgreSQL database (set `DIRECTORY`, `PGPASSWORD`, `IP_ADDRESS` and `PORT` variables).
+3. [csp_vzd_borders_addresses.sh](csp_vzd_borders_addresses.sh) - download and import in the local PostgreSQL database open data of the Central Statistical Bureau of Latvia and the State Land Service (borders and address points) (set `DIRECTORY`, `PGPASSWORD`, `IP_ADDRESS` and `PORT` variables). To be run on working days.
 
 ## OSM data update
 
-To be run daily.
-
-1. [osm_1.sh](osm_1.sh) - import [tags_4_addresses.csv](tags_4_addresses.csv) in the local PostgreSQL database replacing existing data and download OSM data of Latvia (combine most recent data from Geofabrik and changes made afterwards) (set `DIRECTORY`, `PGPASSWORD`, `IP_ADDRESS` and `PORT` variables, uncomment [line 14](https://github.com/Davis-Klavins/osm-latvia-bot/blob/main/osm_1.sh#L14) in production to use [tags_4_addresses.csv](tags_4_addresses.csv) from GitHub).
-2. [osm_2.bat](osm_2.bat) - update OSM data in the local PostgreSQL database and derive osmChange file (set `DIRECTORY`, `PGPASSWORD`, `IP_ADDRESS` and `PORT` variables). Large amount of changes lead to an error. Must be rewritten and merged with [osm_1.sh](osm_1.sh) and [osm_3.sh](osm_3.sh) to run under Linux.
-4. [osm_3.sh](osm_3.sh) - split osmChange file and upload changes (set `DIRECTORY` variable and [OSM user password](osm_3.sh#L8)). Separate changeset is created for every 10 000 elements and closed. Post ways and relations with missing tags that previously had only address tags for manual review to [OSM Latvija Zulip chat](https://osmlatvija.zulipchat.com/).
+[osm.sh](osm.sh) - download, process and update OSM data of Latvia (set `DIRECTORY`, `PGPASSWORD`, `IP_ADDRESS` and `PORT` variables, [OSM user password](osm.sh#L19), [Zulip bot API key](osm.sh#L21), uncomment [line 30](https://github.com/Davis-Klavins/osm-latvia-bot/blob/main/osm.sh#L30) in production to use [tags_4_addresses.csv](tags_4_addresses.csv) from GitHub). To be run daily.
 
 ## Optional
 
-To change tags of an open changeset, e.g., comment, run [set-changeset-tag.py](upload.py/optional/set-changeset-tag.py) (change `changeset-id` to changeset ID and edit comment; username and password to be provided interactively): `py set-changeset-tag.py changeset-id comment "Comment."`.
+To change tags of an open changeset, e.g., comment, run [set-changeset-tag.py](upload.py/optional/set-changeset-tag.py) (change `changeset-id` to changeset ID and edit comment; username and password to be provided interactively): `set-changeset-tag.py changeset-id comment "Comment."`.
 
-To close changeset, run [close.py](upload.py/optional/close.py) (change `changeset-id` to changeset ID; username and password to be provided interactively): `py close.py changeset-id`.
+To close changeset, run [close.py](upload.py/optional/close.py) (change `changeset-id` to changeset ID; username and password to be provided interactively): `close.py changeset-id`.

@@ -1,7 +1,7 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 # vim: fileencoding=utf-8 encoding=utf-8 et sw=4
 
-# Modified by Dāvis Kļaviņš (https://github.com/Davis-Klavins) on July 7, 2022. Included ssl lib.
+# Modified by Dāvis Kļaviņš (https://github.com/Davis-Klavins) on December 20, 2024. Included ssl lib, converted to Python 3.
 
 # Copyright (C) 2009 Jacek Konieczny <jajcus@jajcus.net>
 # Copyright (C) 2009 Andrzej Zaborowski <balrogg@gmail.com>
@@ -33,10 +33,10 @@ import traceback
 import codecs
 import locale
 
-import httplib
+import http.client
 
 import xml.etree.cElementTree as ElementTree
-import urlparse
+import urllib.parse
 
 import ssl
 ssl._create_default_https_context = ssl._create_unverified_context
@@ -72,22 +72,22 @@ class OSM_API(object):
         pass
 
     def msg(self, mesg):
-        sys.stderr.write(u"\r%s…                        " % (self.progress_msg))
-        sys.stderr.write(u"\r%s… %s" % (self.progress_msg, mesg))
+        sys.stderr.write("\r%s…                        " % (self.progress_msg))
+        sys.stderr.write("\r%s… %s" % (self.progress_msg, mesg))
         sys.stderr.flush()
 
     def request(self, conn, method, url, body, headers, progress):
         if progress:
-            self.msg(u"making request")
+            self.msg("making request")
             conn.putrequest(method, url)
-            self.msg(u"sending headers")
+            self.msg("sending headers")
             if body:
                 conn.putheader('Content-Length', str(len(body)))
-            for hdr, value in headers.iteritems():
+            for hdr, value in headers.items():
                 conn.putheader(hdr, value)
-            self.msg(u"end of headers")
+            self.msg("end of headers")
             conn.endheaders()
-            self.msg(u" 0%")
+            self.msg(" 0%")
             if body:
                 start = 0
                 size = len(body)
@@ -98,16 +98,16 @@ class OSM_API(object):
                     end = min(size, start + chunk)
                     conn.send(body[start:end])
                     start = end
-                    self.msg(u"%2i%%" % (start * 100 / size))
+                    self.msg("%2i%%" % (start * 100 / size))
         else:
-            self.msg(u" ")
+            self.msg(" ")
             conn.request(method, url, body, headers)
 
     def _run_request(self, method, url, body = None, progress = 0, content_type = "text/xml"):
-        url = urlparse.urljoin(self.url, url)
-        purl = urlparse.urlparse(url)
+        url = urllib.parse.urljoin(self.url, url)
+        purl = urllib.parse.urlparse(url)
         if purl.scheme != "https":
-            raise ValueError, "Unsupported url scheme: %r" % (purl.scheme,)
+            raise ValueError("Unsupported url scheme: %r" % (purl.scheme,))
         if ":" in purl.netloc:
             host, port = purl.netloc.split(":", 1)
             port = int(port)
@@ -124,35 +124,35 @@ class OSM_API(object):
         try_no_auth = 0
 
         if not try_no_auth and not self.username:
-            raise HTTPError, "Need a username"
+            raise HTTPError("Need a username")
 
         try:
-            self.msg(u"connecting")
-            conn = httplib.HTTPSConnection(host, port)
+            self.msg("connecting")
+            conn = http.client.HTTPSConnection(host, port)
 #            conn.set_debuglevel(10)
 
             if try_no_auth:
                 self.request(conn, method, url, body, headers, progress)
-                self.msg(u"waiting for status")
+                self.msg("waiting for status")
                 response = conn.getresponse()
 
-            if not try_no_auth or (response.status == httplib.UNAUTHORIZED and
+            if not try_no_auth or (response.status == http.client.UNAUTHORIZED and
                     self.username):
                 if try_no_auth:
                     conn.close()
-                    self.msg(u"re-connecting")
-                    conn = httplib.HTTPSConnection(host, port)
+                    self.msg("re-connecting")
+                    conn = http.client.HTTPSConnection(host, port)
 #                    conn.set_debuglevel(10)
 
                 creds = self.username + ":" + self.password
                 headers["Authorization"] = "Basic " + \
                         creds.encode("base64").strip()
                 self.request(conn, method, url, body, headers, progress)
-                self.msg(u"waiting for status")
+                self.msg("waiting for status")
                 response = conn.getresponse()
 
-            if response.status == httplib.OK:
-                self.msg(u"reading response")
+            if response.status == http.client.OK:
+                self.msg("reading response")
                 sys.stderr.flush()
                 response_body = response.read()
             else:
@@ -164,14 +164,14 @@ class OSM_API(object):
 
     def get_changeset_tags(self):
         if self.changeset is None:
-            raise RuntimeError, "Changeset not opened"
-        self.progress_msg = u"Getting changeset tags"
-        self.msg(u"")
+            raise RuntimeError("Changeset not opened")
+        self.progress_msg = "Getting changeset tags"
+        self.msg("")
         reply = self._run_request("GET", "/api/0.6/changeset/" +
                 str(self.changeset), None)
         root = ElementTree.XML(reply)
         if root.tag != "osm" or root[0].tag != "changeset":
-            print >>sys.stderr, u"API returned unexpected XML!"
+            print("API returned unexpected XML!", file=sys.stderr)
             sys.exit(1)
 
         for element in root[0]:
@@ -179,12 +179,12 @@ class OSM_API(object):
                     "v" in element.attrib:
                 self.tags[element.attrib["k"]] = element.attrib["v"]
 
-        self.msg(u"done.")
-        print >>sys.stderr, u""
+        self.msg("done.")
+        print("", file=sys.stderr)
 
     def set_changeset_tags(self):
-        self.progress_msg = u"Setting new changeset tags"
-        self.msg(u"")
+        self.progress_msg = "Setting new changeset tags"
+        self.msg("")
 
         root = ElementTree.Element("osm")
         tree = ElementTree.ElementTree(root)
@@ -196,8 +196,8 @@ class OSM_API(object):
         self._run_request("PUT", "/api/0.6/changeset/" +
                 str(self.changeset), ElementTree.tostring(root, "utf-8"))
 
-        self.msg(u"done, too.")
-        print >>sys.stderr, u""
+        self.msg("done, too.")
+        print("", file=sys.stderr)
 
 try:
     this_dir = os.path.dirname(__file__)
@@ -206,8 +206,8 @@ try:
     except:
         version = 1
     if len(sys.argv) < 3 or (len(sys.argv) & 2):
-        print >>sys.stderr, u"Synopsis:"
-        print >>sys.stderr, u"    %s <changeset> <key> <value> [...]"
+        print("Synopsis:", file=sys.stderr)
+        print("    %s <changeset> <key> <value> [...]", file=sys.stderr)
         sys.exit(1)
 
     args = []
@@ -232,13 +232,13 @@ try:
     if 'user' in param:
         login = param['user']
     else:
-        login = raw_input("OSM login: ")
+        login = input("OSM login: ")
     if not login:
         sys.exit(1)
     if 'pass' in param:
         password = param['pass']
     else:
-        password = raw_input("OSM password: ")
+        password = input("OSM password: ")
     if not password:
         sys.exit(1)
 
@@ -246,12 +246,12 @@ try:
     api.changeset = int(args[0])
 
     api.get_changeset_tags()
-    api.tags.update(zip(args[1::2], args[2::2]))
+    api.tags.update(list(zip(args[1::2], args[2::2])))
     api.set_changeset_tags()
 except HTTPError as err:
-    print >>sys.stderr, err
+    print(err, file=sys.stderr)
     sys.exit(1)
-except Exception,err:
-    print >>sys.stderr, repr(err)
+except Exception as err:
+    print(repr(err), file=sys.stderr)
     traceback.print_exc(file=sys.stderr)
     sys.exit(1)

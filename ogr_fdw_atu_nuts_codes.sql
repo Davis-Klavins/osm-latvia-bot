@@ -1,7 +1,7 @@
 DROP SERVER IF EXISTS atu_nuts_codes CASCADE;
 
 CREATE SERVER atu_nuts_codes FOREIGN DATA WRAPPER ogr_fdw OPTIONS (
-  datasource 'D:\osm\csp\atu_nuts_codes.csv'
+  datasource '/data/osm/csp/atu_nuts_codes.csv'
   ,format 'CSV'
   );
 

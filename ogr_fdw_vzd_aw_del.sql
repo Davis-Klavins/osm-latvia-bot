@@ -1,7 +1,7 @@
 DROP SERVER IF EXISTS vzd_aw_del CASCADE;
 
 CREATE SERVER vzd_aw_del FOREIGN DATA WRAPPER ogr_fdw OPTIONS (
-  datasource 'D:\osm\vzd\aw_del\aw_eka_del.xlsx'
+  datasource '/data/osm/vzd/aw_del/aw_eka_del.xlsx'
   ,format 'XLSX'
   );
 

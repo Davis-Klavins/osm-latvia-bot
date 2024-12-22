@@ -95,35 +95,36 @@ WHERE a.tags ?| (
 ORDER BY id;
 
 --Delete all tags in Latvia from nodes containing "addr", except "addr:unit", "addr:door", "addr:flats", "addr:floor" and "operator:addr*".
-WITH s
-AS (
-  SELECT a.id
-    ,a.tags - (
-      SELECT array_agg(tag)
-      FROM tags
-      WHERE tag LIKE '%addr%'
-        AND tag NOT LIKE 'addr:unit'
-        AND tag NOT LIKE 'addr:door'
-        AND tag NOT LIKE 'addr:flats'
-        AND tag NOT LIKE 'addr:floor'
-        AND tag NOT LIKE 'operator:addr%'
-      ) tags
-  FROM nodes a
-  INNER JOIN nodes_lv b ON a.id = b.id
-  WHERE a.tags ?| (
-      SELECT array_agg(tag)
-      FROM tags
-      WHERE tag LIKE '%addr%'
-        AND tag NOT LIKE 'addr:unit'
-        AND tag NOT LIKE 'addr:door'
-        AND tag NOT LIKE 'addr:flats'
-        AND tag NOT LIKE 'addr:floor'
-        AND tag NOT LIKE 'operator:addr%'
-      )
-  )
+CREATE TEMPORARY TABLE nodes_ids AS
+SELECT a.id
+  ,a.tags - (
+    SELECT array_agg(tag)
+    FROM tags
+    WHERE tag LIKE '%addr%'
+      AND tag NOT LIKE 'addr:unit'
+      AND tag NOT LIKE 'addr:door'
+      AND tag NOT LIKE 'addr:flats'
+      AND tag NOT LIKE 'addr:floor'
+      AND tag NOT LIKE 'operator:addr%'
+    ) tags
+FROM nodes a
+INNER JOIN nodes_lv b ON a.id = b.id
+WHERE a.tags ?| (
+    SELECT array_agg(tag)
+    FROM tags
+    WHERE tag LIKE '%addr%'
+      AND tag NOT LIKE 'addr:unit'
+      AND tag NOT LIKE 'addr:door'
+      AND tag NOT LIKE 'addr:flats'
+      AND tag NOT LIKE 'addr:floor'
+      AND tag NOT LIKE 'operator:addr%'
+    );
+
+ALTER TABLE nodes_ids ADD PRIMARY KEY (id);
+
 UPDATE nodes
 SET tags = s.tags
-FROM s
+FROM nodes_ids s
 WHERE nodes.id = s.id;
 
 --Delete tags that resemble addresses or indicate that there is no address.
@@ -447,12 +448,13 @@ INNER JOIN way_geometry g ON a.id = g.way_id
 INNER JOIN vzd.adreses_ekas_sadalitas v ON ST_Within(v.geom, g.geom)
 INNER JOIN c ON a.id = c.id
 LEFT OUTER JOIN vzd.adreses_his_ekas_previous p ON v.adr_cd = p.adr_cd
+LEFT OUTER JOIN (
+  SELECT tags -> 'ref:LV:addr' adr_cd
+  FROM nodes
+  WHERE tags ? 'ref:LV:addr'
+  ) n ON v.adr_cd::TEXT = n.adr_cd
 WHERE a.tags ? 'building'
-  AND v.adr_cd NOT IN (
-    SELECT CAST(tags -> 'ref:LV:addr' AS INT) adr_cd
-    FROM nodes
-    WHERE tags ? 'ref:LV:addr'
-    );
+  AND n.adr_cd IS NULL;
 
 ALTER TABLE ways_addr_add ADD PRIMARY KEY (id);
 
@@ -492,12 +494,13 @@ INNER JOIN relations_geometry g ON a.id = g.id
 INNER JOIN vzd.adreses_ekas_sadalitas v ON ST_Within(v.geom, g.geom)
 INNER JOIN c ON a.id = c.id
 LEFT OUTER JOIN vzd.adreses_his_ekas_previous p ON v.adr_cd = p.adr_cd
+LEFT OUTER JOIN (
+  SELECT tags -> 'ref:LV:addr' adr_cd
+  FROM nodes
+  WHERE tags ? 'ref:LV:addr'
+  ) n ON v.adr_cd::TEXT = n.adr_cd
 WHERE a.tags ? 'building'
-  AND v.adr_cd NOT IN (
-    SELECT CAST(tags -> 'ref:LV:addr' AS INT) adr_cd
-    FROM nodes
-    WHERE tags ? 'ref:LV:addr'
-    );
+  AND n.adr_cd IS NULL;
 
 ALTER TABLE relations_addr_add ADD PRIMARY KEY (id);
 
@@ -520,42 +523,41 @@ WHERE relations.id = s.id;
 
 --Add remaining addresses for building polygons from the State Address Register. Polygon covers more than half of building polygon in cadaster containing address point from which the address is taken. Only address codes not already assigned to isolated dwellings.
 ---Ways.
+CREATE TEMPORARY TABLE ways_addr_add_2_ids AS
+SELECT a.id
+FROM ways a
+INNER JOIN way_geometry g ON a.id = g.way_id
+INNER JOIN vzd.nivkis_buves n ON ST_Intersects(g.geom, n.geom)
+INNER JOIN vzd.adreses_ekas_sadalitas v ON ST_Within(v.geom, n.geom)
+LEFT OUTER JOIN (
+  SELECT id
+  FROM ways
+  WHERE tags ? 'ref:LV:addr'
+  ) f ON a.id = f.id
+WHERE a.tags ? 'building'
+  AND ST_Area(g.geom) > 0
+  AND ST_Area(ST_Intersection(g.geom, n.geom)) / ST_Area(g.geom) > 0.5
+  AND f.id IS NULL
+GROUP BY a.id
+HAVING COUNT(*) = 1;
+
+ALTER TABLE ways_addr_add_2_ids ADD PRIMARY KEY (id);
+
 CREATE TEMPORARY TABLE ways_addr_add_2 AS
-WITH c
-AS (
-  SELECT a.id
-  FROM ways a
-  INNER JOIN way_geometry g ON a.id = g.way_id
-  INNER JOIN vzd.nivkis_buves n ON ST_Intersects(g.geom, n.geom)
-  INNER JOIN vzd.adreses_ekas_sadalitas v ON ST_Within(v.geom, n.geom)
-  LEFT OUTER JOIN (
-    SELECT id
-    FROM ways
-    WHERE tags ? 'ref:LV:addr'
-    ) f ON a.id = f.id
-  WHERE a.tags ? 'building'
-    AND ST_Area(g.geom) > 0
-    AND ST_Area(ST_Intersection(g.geom, n.geom)) / ST_Area(g.geom) > 0.5
-    AND f.id IS NULL
-  GROUP BY a.id
-  HAVING COUNT(*) = 1
-  )
 SELECT a.id
   ,(a.tags || hstore('addr:country', 'LV') || hstore('addr:district', v.novads) || hstore('addr:city', COALESCE(v.pilseta, v.ciems)) || hstore('addr:subdistrict', v.pagasts) || hstore('addr:street', v.iela) || hstore('addr:housename', v.nosaukums) || hstore('addr:housenumber', v.nr) || hstore('addr:postcode', v.atrib) || hstore('ref:LV:addr', v.adr_cd::TEXT) || hstore('old_addr:housename', p.nosaukums) || hstore('old_addr:housenumber', p.nr) || hstore('old_addr:street', p.iela)) - 'addr:district=>NULL, addr:city=>NULL, addr:subdistrict=>NULL, addr:street=>NULL, addr:housename=>NULL, addr:housenumber=>NULL, addr:postcode=>NULL, old_addr:housename=>NULL, old_addr:housenumber=>NULL, old_addr:street=>NULL'::hstore tags
 FROM ways a
 INNER JOIN way_geometry g ON a.id = g.way_id
 INNER JOIN vzd.nivkis_buves n ON ST_Intersects(g.geom, n.geom)
 INNER JOIN vzd.adreses_ekas_sadalitas v ON ST_Within(v.geom, n.geom)
-INNER JOIN c ON a.id = c.id
+INNER JOIN ways_addr_add_2_ids c ON a.id = c.id
 LEFT OUTER JOIN vzd.adreses_his_ekas_previous p ON v.adr_cd = p.adr_cd
+LEFT OUTER JOIN nodes d ON v.adr_cd::TEXT = d.tags -> 'ref:LV:addr'
+  AND d.tags ? 'ref:LV:addr'
 WHERE a.tags ? 'building'
   AND ST_Area(g.geom) > 0
   AND ST_Area(ST_Intersection(g.geom, n.geom)) / ST_Area(g.geom) > 0.5
-  AND v.adr_cd NOT IN (
-    SELECT CAST(tags -> 'ref:LV:addr' AS INT) adr_cd
-    FROM nodes
-    WHERE tags ? 'ref:LV:addr'
-    );
+  AND d.id IS NULL;
 
 ALTER TABLE ways_addr_add_2 ADD PRIMARY KEY (id);
 
@@ -577,39 +579,40 @@ FROM ways_addr_add_2 s
 WHERE ways.id = s.id;
 
 ---Relations.
+CREATE TEMPORARY TABLE relations_addr_add_2_ids AS
+SELECT a.id
+FROM relations a
+INNER JOIN relations_geometry g ON a.id = g.id
+INNER JOIN vzd.nivkis_buves n ON ST_Intersects(g.geom, n.geom)
+INNER JOIN vzd.adreses_ekas_sadalitas v ON ST_Within(v.geom, n.geom)
+LEFT OUTER JOIN (
+  SELECT id
+  FROM relations
+  WHERE tags ? 'ref:LV:addr'
+  ) f ON a.id = f.id
+WHERE a.tags ? 'building'
+  AND ST_Area(g.geom) > 0
+  AND ST_Area(ST_Intersection(g.geom, n.geom)) / ST_Area(g.geom) > 0.5
+  AND f.id IS NULL
+GROUP BY a.id
+HAVING COUNT(*) = 1;
+
+ALTER TABLE relations_addr_add_2_ids ADD PRIMARY KEY (id);
+
 CREATE TEMPORARY TABLE relations_addr_add_2 AS
-WITH c
-AS (
-  SELECT a.id
-  FROM relations a
-  INNER JOIN relations_geometry g ON a.id = g.id
-  INNER JOIN vzd.nivkis_buves n ON ST_Intersects(g.geom, n.geom)
-  INNER JOIN vzd.adreses_ekas_sadalitas v ON ST_Within(v.geom, n.geom)
-  LEFT OUTER JOIN (
-    SELECT id
-    FROM relations
-    WHERE tags ? 'ref:LV:addr'
-    ) f ON a.id = f.id
-  WHERE a.tags ? 'building'
-    AND ST_Area(g.geom) > 0
-    AND ST_Area(ST_Intersection(g.geom, n.geom)) / ST_Area(g.geom) > 0.5
-    AND f.id IS NULL
-  GROUP BY a.id
-  HAVING COUNT(*) = 1
-  )
 SELECT a.id
   ,(a.tags || hstore('addr:country', 'LV') || hstore('addr:district', v.novads) || hstore('addr:city', COALESCE(v.pilseta, v.ciems)) || hstore('addr:subdistrict', v.pagasts) || hstore('addr:street', v.iela) || hstore('addr:housename', v.nosaukums) || hstore('addr:housenumber', v.nr) || hstore('addr:postcode', v.atrib) || hstore('ref:LV:addr', v.adr_cd::TEXT) || hstore('old_addr:housename', p.nosaukums) || hstore('old_addr:housenumber', p.nr) || hstore('old_addr:street', p.iela)) - 'addr:district=>NULL, addr:city=>NULL, addr:subdistrict=>NULL, addr:street=>NULL, addr:housename=>NULL, addr:housenumber=>NULL, addr:postcode=>NULL, old_addr:housename=>NULL, old_addr:housenumber=>NULL, old_addr:street=>NULL'::hstore tags
 FROM relations a
 INNER JOIN relations_geometry g ON a.id = g.id
 INNER JOIN vzd.nivkis_buves n ON ST_Intersects(g.geom, n.geom)
 INNER JOIN vzd.adreses_ekas_sadalitas v ON ST_Within(v.geom, n.geom)
-INNER JOIN c ON a.id = c.id
+INNER JOIN relations_addr_add_2_ids c ON a.id = c.id
 LEFT OUTER JOIN vzd.adreses_his_ekas_previous p ON v.adr_cd = p.adr_cd
 WHERE a.tags ? 'building'
   AND ST_Area(g.geom) > 0
   AND ST_Area(ST_Intersection(g.geom, n.geom)) / ST_Area(g.geom) > 0.5
-  AND v.adr_cd NOT IN (
-    SELECT CAST(tags -> 'ref:LV:addr' AS INT) adr_cd
+  AND v.adr_cd::TEXT NOT IN (
+    SELECT tags -> 'ref:LV:addr' adr_cd
     FROM nodes
     WHERE tags ? 'ref:LV:addr'
     );
@@ -689,10 +692,10 @@ WHERE tags = ''::hstore
     SELECT DISTINCT member_id
     FROM relation_members
     WHERE member_type = 'W')
-      AND id IN (
-        SELECT id
-        FROM ways_old
-        );
+  AND id IN (
+    SELECT id
+    FROM ways_old
+    );
 
 INSERT INTO ways_relations_del (link)
 SELECT 'https://www.openstreetmap.org/way/' || id || '/history'
@@ -752,27 +755,30 @@ SELECT a.id
 FROM nodes a
 INNER JOIN nodes_old o ON a.id = o.id
 INNER JOIN vzd.adreses_ekas_sadalitas v ON o.tags -> 'ref:LV:addr' = v.adr_cd::TEXT
-LEFT JOIN vzd.adreses_his_ekas_previous p ON v.adr_cd = p.adr_cd
+LEFT OUTER JOIN vzd.adreses_his_ekas_previous p ON v.adr_cd = p.adr_cd
 LEFT OUTER JOIN nodes_unnest t ON a.id = t.id
   AND t.tag NOT LIKE 'addr:%'
   AND t.tag NOT LIKE 'old_addr:%'
   AND t.tag NOT LIKE 'ref:LV:addr'
+LEFT OUTER JOIN (
+  SELECT tags -> 'ref:LV:addr' adr_cd
+  FROM ways
+  WHERE tags ? 'ref:LV:addr'
+  ) w ON v.adr_cd::TEXT = w.adr_cd
+LEFT OUTER JOIN (
+  SELECT tags -> 'ref:LV:addr' adr_cd
+  FROM relations
+  WHERE tags ? 'ref:LV:addr'
+  ) r ON v.adr_cd::TEXT = r.adr_cd
+LEFT OUTER JOIN (
+  SELECT tags -> 'ref:LV:addr' adr_cd
+  FROM nodes
+  WHERE tags ? 'ref:LV:addr'
+  ) n ON v.adr_cd::TEXT = n.adr_cd
 WHERE t.id IS NULL
-  AND v.adr_cd NOT IN (
-    SELECT CAST(tags -> 'ref:LV:addr' AS INT) adr_cd
-    FROM ways
-    WHERE tags ? 'ref:LV:addr'
-    )
-  AND v.adr_cd NOT IN (
-    SELECT CAST(tags -> 'ref:LV:addr' AS INT) adr_cd
-    FROM relations
-    WHERE tags ? 'ref:LV:addr'
-    )
-  AND v.adr_cd NOT IN (
-    SELECT CAST(tags -> 'ref:LV:addr' AS INT) adr_cd
-    FROM nodes
-    WHERE tags ? 'ref:LV:addr'
-    );
+  AND w.adr_cd IS NULL
+  AND r.adr_cd IS NULL
+  AND n.adr_cd IS NULL;
 
 ALTER TABLE nodes_addr_add_5 ADD PRIMARY KEY (id);
 
@@ -889,10 +895,7 @@ WHERE (
     AND nr IS NOT NULL
     );
 
-CREATE INDEX adreses_ekas_sadalitas_tmp_geom_idx
-    ON adreses_ekas_sadalitas_tmp USING gist
-    (geom)
-    TABLESPACE pg_default;
+CREATE INDEX adreses_ekas_sadalitas_tmp_geom_idx ON adreses_ekas_sadalitas_tmp USING GIST (geom);
 
 CREATE TEMPORARY TABLE nodes_addr_add AS
 SELECT a.id
@@ -907,24 +910,27 @@ LEFT OUTER JOIN nodes_unnest t ON a.id = t.id
   AND t.tag NOT LIKE 'ref:LV:addr'
   AND t.tag NOT LIKE 'source:addr'
 CROSS JOIN LATERAL(SELECT v.*, v.geom <-> a.geom AS dist FROM adreses_ekas_sadalitas_tmp v WHERE REPLACE(o.tags -> 'addr:housename'::TEXT, ' ', '') LIKE REPLACE(v.nosaukums, ' ', '') ORDER BY dist LIMIT 1) v
-LEFT JOIN vzd.adreses_his_ekas_previous p ON v.adr_cd = p.adr_cd
+LEFT OUTER JOIN vzd.adreses_his_ekas_previous p ON v.adr_cd = p.adr_cd
+LEFT OUTER JOIN (
+  SELECT tags -> 'ref:LV:addr' adr_cd
+  FROM ways
+  WHERE tags ? 'ref:LV:addr'
+  ) w ON v.adr_cd::TEXT = w.adr_cd
+LEFT OUTER JOIN (
+  SELECT tags -> 'ref:LV:addr' adr_cd
+  FROM relations
+  WHERE tags ? 'ref:LV:addr'
+  ) r ON v.adr_cd::TEXT = r.adr_cd
+LEFT OUTER JOIN (
+  SELECT tags -> 'ref:LV:addr' adr_cd
+  FROM nodes
+  WHERE tags ? 'ref:LV:addr'
+  ) n ON v.adr_cd::TEXT = n.adr_cd
 WHERE t.id IS NULL
   AND v.dist < 0.01
-  AND v.adr_cd NOT IN (
-    SELECT CAST(tags -> 'ref:LV:addr' AS INT) adr_cd
-    FROM ways
-    WHERE tags ? 'ref:LV:addr'
-    )
-  AND v.adr_cd NOT IN (
-    SELECT CAST(tags -> 'ref:LV:addr' AS INT) adr_cd
-    FROM relations
-    WHERE tags ? 'ref:LV:addr'
-    )
-  AND v.adr_cd NOT IN (
-    SELECT CAST(tags -> 'ref:LV:addr' AS INT) adr_cd
-    FROM nodes
-    WHERE tags ? 'ref:LV:addr'
-    );
+  AND w.adr_cd IS NULL
+  AND r.adr_cd IS NULL
+  AND n.adr_cd IS NULL;
 
 ALTER TABLE nodes_addr_add ADD PRIMARY KEY (id);
 
@@ -970,24 +976,27 @@ LEFT OUTER JOIN nodes_unnest t ON a.id = t.id
   AND t.tag NOT LIKE 'source:addr'
 CROSS JOIN LATERAL(SELECT v.*, v.geom <-> a.geom AS dist FROM vzd.adreses_ekas_sadalitas v WHERE REPLACE(o.tags -> 'addr:housenumber'::TEXT, ' ', '') LIKE REPLACE(v.nr, ' ', '')
     AND REPLACE(o.tags -> 'addr:street'::TEXT, ' ', '') LIKE REPLACE(v.iela, ' ', '') ORDER BY dist LIMIT 1) v
-LEFT JOIN vzd.adreses_his_ekas_previous p ON v.adr_cd = p.adr_cd
+LEFT OUTER JOIN vzd.adreses_his_ekas_previous p ON v.adr_cd = p.adr_cd
+LEFT OUTER JOIN (
+  SELECT tags -> 'ref:LV:addr' adr_cd
+  FROM ways
+  WHERE tags ? 'ref:LV:addr'
+  ) w ON v.adr_cd::TEXT = w.adr_cd
+LEFT OUTER JOIN (
+  SELECT tags -> 'ref:LV:addr' adr_cd
+  FROM relations
+  WHERE tags ? 'ref:LV:addr'
+  ) r ON v.adr_cd::TEXT = r.adr_cd
+LEFT OUTER JOIN (
+  SELECT tags -> 'ref:LV:addr' adr_cd
+  FROM nodes
+  WHERE tags ? 'ref:LV:addr'
+  ) n ON v.adr_cd::TEXT = n.adr_cd
 WHERE t.id IS NULL
   AND v.dist < 0.01
-  AND v.adr_cd NOT IN (
-    SELECT CAST(tags -> 'ref:LV:addr' AS INT) adr_cd
-    FROM ways
-    WHERE tags ? 'ref:LV:addr'
-    )
-  AND v.adr_cd NOT IN (
-    SELECT CAST(tags -> 'ref:LV:addr' AS INT) adr_cd
-    FROM relations
-    WHERE tags ? 'ref:LV:addr'
-    )
-  AND v.adr_cd NOT IN (
-    SELECT CAST(tags -> 'ref:LV:addr' AS INT) adr_cd
-    FROM nodes
-    WHERE tags ? 'ref:LV:addr'
-    );
+  AND w.adr_cd IS NULL
+  AND r.adr_cd IS NULL
+  AND n.adr_cd IS NULL;
 
 ALTER TABLE nodes_addr_add_2 ADD PRIMARY KEY (id);
 
@@ -1093,22 +1102,25 @@ SELECT - ROW_NUMBER() OVER() id
   ,(hstore('addr:country', 'LV') || hstore('addr:district', a.novads) || hstore('addr:city', COALESCE(a.pilseta, a.ciems)) || hstore('addr:subdistrict', a.pagasts) || hstore('addr:street', a.iela) || hstore('addr:housename', a.nosaukums) || hstore('addr:housenumber', a.nr) || hstore('addr:postcode', a.atrib) || hstore('ref:LV:addr', a.adr_cd::TEXT) || hstore('old_addr:housename', p.nosaukums) || hstore('old_addr:housenumber', p.nr) || hstore('old_addr:street', p.iela)) - 'addr:district=>NULL, addr:city=>NULL, addr:subdistrict=>NULL, addr:street=>NULL, addr:housename=>NULL, addr:housenumber=>NULL, addr:postcode=>NULL, old_addr:housename=>NULL, old_addr:housenumber=>NULL, old_addr:street=>NULL'::hstore tags
   ,geom
 FROM vzd.adreses_ekas_sadalitas a
-LEFT JOIN vzd.adreses_his_ekas_previous p ON a.adr_cd = p.adr_cd
-WHERE a.adr_cd NOT IN (
-    SELECT CAST(tags -> 'ref:LV:addr' AS INT) adr_cd
-    FROM ways
-    WHERE tags ? 'ref:LV:addr'
-    )
-AND a.adr_cd NOT IN (
-    SELECT CAST(tags -> 'ref:LV:addr' AS INT) adr_cd
-    FROM relations
-    WHERE tags ? 'ref:LV:addr'
-    )
-AND a.adr_cd NOT IN (
-    SELECT CAST(tags -> 'ref:LV:addr' AS INT) adr_cd
-    FROM nodes
-    WHERE tags ? 'ref:LV:addr'
-    );
+LEFT OUTER JOIN vzd.adreses_his_ekas_previous p ON a.adr_cd = p.adr_cd
+LEFT OUTER JOIN (
+  SELECT tags -> 'ref:LV:addr' adr_cd
+  FROM ways
+  WHERE tags ? 'ref:LV:addr'
+  ) w ON a.adr_cd::TEXT = w.adr_cd
+LEFT OUTER JOIN (
+  SELECT tags -> 'ref:LV:addr' adr_cd
+  FROM relations
+  WHERE tags ? 'ref:LV:addr'
+  ) r ON a.adr_cd::TEXT = r.adr_cd
+LEFT OUTER JOIN (
+  SELECT tags -> 'ref:LV:addr' adr_cd
+  FROM nodes
+  WHERE tags ? 'ref:LV:addr'
+  ) n ON a.adr_cd::TEXT = n.adr_cd
+WHERE w.adr_cd IS NULL
+  AND r.adr_cd IS NULL
+  AND n.adr_cd IS NULL;
 
 ALTER TABLE nodes_addr_add_6 ADD PRIMARY KEY (id);
 
@@ -1254,15 +1266,16 @@ WHERE b.member_role LIKE 'outer'
 CREATE TEMPORARY TABLE tags_4_addresses_ways AS
 WITH t
 AS (
-  SELECT id
-    ,UNNEST((%# tags) [1:999] [1]) tag
-    ,UNNEST((%# tags) [1:999] [2:2]) val
-  FROM ways
-  WHERE id NOT IN (
-      SELECT id
-      FROM ways
-      WHERE tags ? 'ref:LV:addr'
-      )
+  SELECT a.id
+    ,UNNEST((%# a.tags) [1:999] [1]) tag
+    ,UNNEST((%# a.tags) [1:999] [2:2]) val
+  FROM ways a
+  LEFT OUTER JOIN (
+    SELECT id
+    FROM ways
+    WHERE tags ? 'ref:LV:addr'
+    ) b ON a.id = b.id
+  WHERE b.id IS NULL
   )
 SELECT DISTINCT t.id
 FROM t
@@ -1499,13 +1512,14 @@ WHERE relations.id = s.id;
 CREATE TEMPORARY TABLE tags_4_addresses_nodes AS
 WITH t
 AS (
-  SELECT *
-  FROM nodes_unnest
-  WHERE id NOT IN (
-      SELECT id
-      FROM nodes
-      WHERE tags ? 'ref:LV:addr'
-      )
+  SELECT a.*
+  FROM nodes_unnest a
+  LEFT OUTER JOIN (
+    SELECT id
+    FROM nodes
+    WHERE tags ? 'ref:LV:addr'
+    ) b ON a.id = b.id
+  WHERE b.id IS NULL
   )
 SELECT DISTINCT t.id
 FROM t
@@ -1613,13 +1627,14 @@ WHERE nodes.id = s.id;
 CREATE TEMPORARY TABLE tags_4_addresses_nodes_2 AS
 WITH t
 AS (
-  SELECT *
-  FROM nodes_unnest
-  WHERE id NOT IN (
-      SELECT id
-      FROM nodes
-      WHERE tags ? 'ref:LV:addr'
-      )
+  SELECT a.*
+  FROM nodes_unnest a
+  LEFT OUTER JOIN (
+    SELECT id
+    FROM nodes
+    WHERE tags ? 'ref:LV:addr'
+    ) b ON a.id = b.id
+  WHERE b.id IS NULL
   )
 SELECT DISTINCT t.id
 FROM t

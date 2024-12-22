@@ -30,6 +30,9 @@ CREATE TABLE vzd.aw_ciems_his (
   ,dat_mod TEXT NOT NULL
   ,dat_beig TEXT NOT NULL
   ,std TEXT
+  ,nosaukums TEXT
+  ,vkur_cd INT NOT NULL
+  ,vkur_tips SMALLINT NOT NULL
   );
 
 --aw_dziv.
@@ -64,6 +67,9 @@ CREATE TABLE vzd.aw_dziv_his (
   ,dat_mod TEXT NOT NULL
   ,dat_beig TEXT NOT NULL
   ,std TEXT
+  ,nosaukums TEXT
+  ,vkur_cd INT NOT NULL
+  ,vkur_tips SMALLINT NOT NULL
   );
 
 --aw_eka.
@@ -104,8 +110,11 @@ CREATE TABLE vzd.aw_eka_his (
   ,tips_cd SMALLINT NOT NULL
   ,dat_sak TEXT NOT NULL
   ,dat_mod TEXT NOT NULL
-  ,dat_beig TEXT NOT NULL
+  ,dat_beig TEXT
   ,std TEXT
+  ,nosaukums TEXT
+  ,vkur_cd INT NOT NULL
+  ,vkur_tips SMALLINT NOT NULL
   );
 
 --aw_iela.
@@ -140,6 +149,9 @@ CREATE TABLE vzd.aw_iela_his (
   ,dat_mod TEXT NOT NULL
   ,dat_beig TEXT NOT NULL
   ,std TEXT
+  ,nosaukums TEXT
+  ,vkur_cd INT NOT NULL
+  ,vkur_tips SMALLINT NOT NULL
   );
 
 --aw_novads.
@@ -174,6 +186,9 @@ CREATE TABLE vzd.aw_novads_his (
   ,dat_mod TEXT NOT NULL
   ,dat_beig TEXT NOT NULL
   ,std TEXT
+  ,nosaukums TEXT
+  ,vkur_cd INT NOT NULL
+  ,vkur_tips SMALLINT NOT NULL
   );
 
 --aw_pagasts.
@@ -208,6 +223,9 @@ CREATE TABLE vzd.aw_pagasts_his (
   ,dat_mod TEXT NOT NULL
   ,dat_beig TEXT NOT NULL
   ,std TEXT
+  ,nosaukums TEXT
+  ,vkur_cd INT NOT NULL
+  ,vkur_tips SMALLINT NOT NULL
   );
 
 --aw_pilseta.
@@ -242,6 +260,9 @@ CREATE TABLE vzd.aw_pilseta_his (
   ,dat_mod TEXT NOT NULL
   ,dat_beig TEXT NOT NULL
   ,std TEXT
+  ,nosaukums TEXT
+  ,vkur_cd INT NOT NULL
+  ,vkur_tips SMALLINT NOT NULL
   );
 
 --aw_ppils.

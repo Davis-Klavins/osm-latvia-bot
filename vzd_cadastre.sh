@@ -13,7 +13,7 @@ export PORT=
 cd $DIRECTORY/vzd
 wget -q https://data.gov.lv/dati/dataset/be841486-4af9-4d38-aa14-6502a2ddb517/resource/2aeea249-6948-4713-92c2-e01543ea0f33/download/address.zip
 mkdir address
-unzip -o -q address.zip -d address
+7za x address.zip -y -bsp0 -bso0 -oaddress
 rm *.zip
 psql -h $IP_ADDRESS -p $PORT -U osm -d osm -w -c "CREATE TABLE IF NOT EXISTS vzd.nivkis_adreses_tmp (data XML);"
 cd address
@@ -37,7 +37,7 @@ do
   curl "$FILE" -o ${FILE##*/}
 done
 
-unzip -o -q \*.zip
+7za x /*.zip -y -bsp0 -bso0
 rm *.zip
 cd ..
 APPEND=0
@@ -69,7 +69,7 @@ psql -h $IP_ADDRESS -p $PORT -U osm -d osm -w -c "CALL vzd.nivkis()"
 #mkdir building
 #cd building
 #wget -q https://data.gov.lv/dati/dataset/be841486-4af9-4d38-aa14-6502a2ddb517/resource/9fe29b57-07cd-4458-b22c-b0b9f2bc8915/download/building.zip
-#unzip -q building.zip
+#7za x building.zip -y -bsp0 -bso0
 #rm building.zip
 #psql -h $IP_ADDRESS -p $PORT -U osm -d osm -w -c "CREATE TABLE IF NOT EXISTS vzd.nivkis_buves_attr_tmp (data XML);"
 

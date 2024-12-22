@@ -1,7 +1,7 @@
 DROP SERVER IF EXISTS vzd_shp CASCADE;
 
 CREATE SERVER vzd_shp FOREIGN DATA WRAPPER ogr_fdw OPTIONS (
-  datasource 'D:\osm\vzd', 
+  datasource '/data/osm/vzd', 
   format 'ESRI Shapefile'
 );
 

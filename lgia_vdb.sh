@@ -12,7 +12,10 @@ cd $DIRECTORY
 
 # Download the Place Names Database of the Latvian Geospatial Information Agency.
 cd lgia
-# https://stackoverflow.com/a/11826500
-wget -q -O - https://www.lgia.gov.lv/en/place-name-data-open-data | grep -o '<a href="https://s3.storage.pub.lvdc.gov.lv/lgia-opendata/citi/vdb/.*.xlsx".*>' | sed -e 's/<a /\n<a /g' | sed -e 's/<a .*href=['"'"'"]//' -e 's/["'"'"'].*$//' -e '/^$/ d' | xargs wget -q -O VDB_OBJEKTI.xlsx
+wget -q -O - https://www.lgia.gov.lv/lv/place-names-data-open-data | grep -o '<a href="https://s3.storage.pub.lvdc.gov.lv/lgia-opendata/citi/vdb/CSV_[0-9]\{8\}.zip".*>' | sed -E 's/^.*href=["'"'"']([^"'"'"']*)["'"'"'].*$/\1/' | wget -i -
+7za x *.zip -y -bsp0 -bso0
+rm *.zip
+iconv -f Windows-1257 -t UTF-8 */*.csv -o vdb_orig.csv
+rm -rf -- */
 
 psql -h $IP_ADDRESS -p $PORT -U osm -d osm -w -c "CALL lgia.vdb()"

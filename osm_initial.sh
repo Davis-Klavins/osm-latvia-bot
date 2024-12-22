@@ -10,7 +10,7 @@ wget -q https://data.gov.lv/dati/dataset/f4c3be02-cca3-4fd1-b3ea-c3050a155852/re
 
 ## Densely populated areas.
 wget -q https://data.gov.lv/dati/dataset/2c07c211-0d78-49d3-9500-20b6f54f2a63/resource/93c8a5ed-0930-45f1-afeb-1105b6d5a7ca/download/dpa_2019_public.zip
-unzip -o -q dpa_2019_public.zip
+7za x dpa_2019_public.zip -y -bsp0 -bso0
 rm *.zip
 mv dpa_2019_public dpa
 cd dpa
@@ -23,14 +23,17 @@ cd ..
 mkdir hl
 cd hl
 wget -q https://data.gov.lv/dati/dataset/c615b96a-4ae2-4a0b-bf22-7b67f7e9bbf4/resource/ae8ce5f6-2120-430e-a2fb-1fd7df1e7b85/download/vesturiskas_zemes.zip
-unzip -o -q vesturiskas_zemes.zip
+7za x vesturiskas_zemes.zip -y -bsp0 -bso0
 rm *.zip
 
 # Download the Place Names Database of the Latvian Geospatial Information Agency.
 cd ../..
 cd lgia
-# https://stackoverflow.com/a/11826500
-wget -q -O - https://www.lgia.gov.lv/en/place-name-data-open-data | grep -o '<a href="https://s3.storage.pub.lvdc.gov.lv/lgia-opendata/citi/vdb/.*.xlsx".*>' | sed -e 's/<a /\n<a /g' | sed -e 's/<a .*href=['"'"'"]//' -e 's/["'"'"'].*$//' -e '/^$/ d' | xargs wget -q -O VDB_OBJEKTI.xlsx
+wget -q -O - https://www.lgia.gov.lv/lv/place-names-data-open-data | grep -o '<a href="https://s3.storage.pub.lvdc.gov.lv/lgia-opendata/citi/vdb/CSV_[0-9]\{8\}.zip".*>' | sed -E 's/^.*href=["'"'"']([^"'"'"']*)["'"'"'].*$/\1/' | wget -i -
+7za x *.zip -y -bsp0 -bso0
+rm *.zip
+iconv -f Windows-1257 -t UTF-8 */*.csv -o vdb_orig.csv
+rm -rf -- */
 
 # Download open data of the State Land Service.
 cd ..
@@ -38,7 +41,7 @@ cd vzd
 
 ## Borders of administrative and territorial units.
 wget -q https://data.gov.lv/dati/dataset/0c5e1a3b-0097-45a9-afa9-7f7262f3f623/resource/f539e8df-d4e4-4fc1-9f94-d25b662a4c38/download/aw_shp.zip
-unzip -o -q aw_shp.zip
+7za x aw_shp.zip -y -bsp0 -bso0
 rm *.zip
 rm Autoceli.*
 rm Pilsetas.*
@@ -51,10 +54,10 @@ rm Pagasti.*
 ## Addresses (points).
 cd aw_csv
 wget -q https://data.gov.lv/dati/dataset/0c5e1a3b-0097-45a9-afa9-7f7262f3f623/resource/1d3cbdf2-ee7d-4743-90c7-97d38824d0bf/download/aw_csv.zip
-unzip -o -q aw_csv.zip
+7za x aw_csv.zip -y -bsp0 -bso0
 rm *.zip
 wget -q https://data.gov.lv/dati/dataset/0c5e1a3b-0097-45a9-afa9-7f7262f3f623/resource/c3d36546-f92c-4822-a0c4-ee7f1b7760a4/download/aw_his_csv.zip
-unzip -o -q aw_his_csv.zip
+7za x aw_his_csv.zip -y -bsp0 -bso0
 rm *.zip
 
 ## Coordinates of deleted addresses of buildings. Script based on https://gist.github.com/laacz/8dfb7b69221790eb8d88e5fb91b9b088.

@@ -53,8 +53,7 @@ SELECT id
       ) + 1, dat_sak) dat_sak
   ,dat_mod
   ,dat_beig
-FROM vzd.adreses_his
-WHERE adr_cd_his IS NULL; --Exclude entries with historical codes of addressation objects (cases when one address belonged to multiple objects).
+FROM vzd.adreses_his;
 
 --Correct entries where postal code doesn't have prefix "LV-".
 UPDATE adreses_his_dat_sak
@@ -1082,8 +1081,7 @@ SELECT *
 FROM vzd.adreses_his a
 LEFT JOIN vzd.adreses_his_ekas_split b ON a.id = b.id
 WHERE a.tips_cd = 108
-  AND b.id IS NULL
-  AND a.adr_cd_his IS NULL;
+  AND b.id IS NULL;
 */
 
 /*
@@ -1097,7 +1095,6 @@ WHERE --ciems IS NULL AND
   AND pagasts IS NULL
   AND novads IS NULL
   AND rajons IS NULL
-  AND b.adr_cd_his IS NULL
 ORDER BY b.std;
 */
 

@@ -1,7 +1,7 @@
-#! /usr/bin/env python2
+#!/usr/bin/env python3
 # vim: fileencoding=utf-8 encoding=utf-8 et sw=4
 
-# Modified by Dāvis Kļaviņš (https://github.com/Davis-Klavins) on October 13, 2023.
+# Modified by Dāvis Kļaviņš (https://github.com/Davis-Klavins) on December 20, 2024. Converted to Python 3.
 
 # Copyright (C) 2009 Andrzej Zaborowski <balrogg@gmail.com>
 #
@@ -194,8 +194,8 @@ try:
     # Commented due to error "WindowsError: [Error 2] The system cannot find the file specified". Doesn't seem to be used afterwards.
     # version = subprocess.Popen(["svnversion", this_dir], stdout = subprocess.PIPE).communicate()[0].strip()
     if len(sys.argv) not in (2,):
-        print >>sys.stderr, u"Synopsis:"
-        print >>sys.stderr, u"    %s <file_name>"
+        print("Synopsis:", file=sys.stderr)
+        print("    %s <file_name>", file=sys.stderr)
         sys.exit(1)
 
     filename = sys.argv[1]
@@ -204,22 +204,22 @@ try:
     else:
         num_parts = 2
     if not os.path.exists(filename):
-        print >>sys.stderr, u"File %r doesn't exist!" % (filename,)
+        print("File %r doesn't exist!" % (filename,), file=sys.stderr)
         sys.exit(1)
     if filename.endswith(".osc"):
         filename_base = filename[:-4]
     else:
         filename_base = filename
 
-    print >>sys.stderr, u"Parsing osmChange..."
+    print("Parsing osmChange...", file=sys.stderr)
     tree = ElementTree.parse(filename)
     root = tree.getroot()
     if root.tag != "osmChange" or (root.attrib.get("version") != "0.3" and
             root.attrib.get("version") != "0.6"):
-        print >>sys.stderr, u"File %s is not a v0.3 osmChange file!" % (filename,)
+        print("File %s is not a v0.3 osmChange file!" % (filename,), file=sys.stderr)
         sys.exit(1)
 
-    print >>sys.stderr, u"Building dependency trees..."
+    print("Building dependency trees...", file=sys.stderr)
     # Note: assumes each element appearing only once - easy to work around
     # (we should really detect those and compress all operations on any given
     #  item into 0 (creation + deletion) or 1 operation (any other scenario).)
@@ -274,18 +274,18 @@ try:
         if not opers[name]["depended"]:
             update_refs(name, opers[name]["scale"])
 
-    print >>sys.stderr, u"Sorting references..."
+    print("Sorting references...", file=sys.stderr)
     for operation in ops:
         root.remove(operation)
     if opers: # Take a random starting point
-        geo = opers[opers.keys()[0]]["bbox"][0]
+        geo = opers[list(opers.keys())[0]]["bbox"][0]
         geo = (-1000, -1000)
         geo = globalbbox[0]
     globalscale = (globalbbox[1][0] - globalbbox[0][0] +
             globalbbox[1][1] - globalbbox[0][1])
     queueup(opers)
 
-    print >>sys.stderr, u"Writing osmChange..."
+    print("Writing osmChange...", file=sys.stderr)
     opattrs = { "generator": "smarter-sort.py", "version": "0.3" }
     popname = "desert storm"
 
@@ -305,9 +305,9 @@ try:
         comment_file.close()
         comment_fn = filename_base + "-sorted.comment"
         comment_file = codecs.open(comment_fn, "w", "utf-8")
-        print >> comment_file, comment
+        print(comment, file=comment_file)
         comment_file.close()
-except Exception,err:
-    print >>sys.stderr, repr(err)
+except Exception as err:
+    print(repr(err), file=sys.stderr)
     traceback.print_exc(file=sys.stderr)
     sys.exit(1)

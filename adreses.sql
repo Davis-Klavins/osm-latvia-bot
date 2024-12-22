@@ -152,7 +152,7 @@ CREATE TABLE vzd.adreses (
   ,sort_nos TEXT NOT NULL
   ,atrib TEXT
   ,dat_sak DATE NOT NULL
-  ,dat_mod TIMESTAMP NOT NULL
+  ,dat_mod DATE NOT NULL
   ,dat_beig DATE
   );
 
@@ -184,7 +184,7 @@ COMMENT ON COLUMN vzd.adreses.atrib IS 'Rajoniem, novadiem, pagastiem un pilsēt
 
 COMMENT ON COLUMN vzd.adreses.dat_sak IS 'Adresācijas objekta izveidošanas vai pirmreizējās reģistrācijas datums, ja nav zināms precīzs adresācijas objekta izveides datums.';
 
-COMMENT ON COLUMN vzd.adreses.dat_mod IS 'Datums un laiks, kad pēdējo reizi informācijas sistēmā tehniski modificēts ieraksts/dati par adresācijas objektu (piemēram, aktualizēts statuss, apstiprinājuma pakāpe, pievienots atribūts u.c.) vai mainīts pilnais adreses pieraksts.';
+COMMENT ON COLUMN vzd.adreses.dat_mod IS 'Datums, kad pēdējo reizi informācijas sistēmā tehniski modificēts ieraksts/dati par adresācijas objektu (piemēram, aktualizēts statuss, apstiprinājuma pakāpe, pievienots atribūts u.c.) vai mainīts pilnais adreses pieraksts.';
 
 COMMENT ON COLUMN vzd.adreses.dat_beig IS 'Adresācijas objekta likvidācijas datums, ja adresācijas objekts beidza pastāvēt.';
 
@@ -215,18 +215,10 @@ SELECT kods
   ,vkur_tips
   ,TRIM(regexp_replace(nosaukums, '\s+', ' ', 'g'))
   ,TRIM(regexp_replace(sort_nos, '\s+', ' ', 'g'))
-  ,CASE 
-    WHEN atrib LIKE ''
-      THEN NULL
-    ELSE atrib
-    END
+  ,atrib
   ,dat_sak::DATE
-  ,to_timestamp(dat_mod, 'dd.mm.yyyy HH24:MI:SS')::TIMESTAMP
-  ,CASE 
-    WHEN dat_beig LIKE ''
-      THEN NULL
-    ELSE dat_beig::DATE
-    END
+  ,dat_mod::DATE
+  ,dat_beig::DATE
 FROM vzd.aw_dziv;
 
 ---Buildings.
@@ -256,18 +248,10 @@ SELECT kods
   ,vkur_tips
   ,TRIM(regexp_replace(nosaukums, '\s+', ' ', 'g'))
   ,TRIM(regexp_replace(sort_nos, '\s+', ' ', 'g'))
-  ,CASE 
-    WHEN atrib LIKE ''
-      THEN NULL
-    ELSE atrib
-    END
+  ,atrib
   ,dat_sak::DATE
-  ,to_timestamp(dat_mod, 'dd.mm.yyyy HH24:MI:SS')::TIMESTAMP
-  ,CASE 
-    WHEN dat_beig LIKE ''
-      THEN NULL
-    ELSE dat_beig::DATE
-    END
+  ,dat_mod::DATE
+  ,dat_beig::DATE
 FROM vzd.aw_eka;
 
 ---Correct typos.
@@ -323,18 +307,10 @@ SELECT kods
   ,vkur_tips
   ,TRIM(regexp_replace(nosaukums, '\s+', ' ', 'g'))
   ,TRIM(regexp_replace(sort_nos, '\s+', ' ', 'g'))
-  ,CASE 
-    WHEN atrib LIKE ''
-      THEN NULL
-    ELSE atrib
-    END
+  ,atrib
   ,dat_sak::DATE
-  ,to_timestamp(dat_mod, 'dd.mm.yyyy HH24:MI:SS')::TIMESTAMP
-  ,CASE 
-    WHEN dat_beig LIKE ''
-      THEN NULL
-    ELSE dat_beig::DATE
-    END
+  ,dat_mod::DATE
+  ,dat_beig::DATE
 FROM vzd.aw_iela;
 
 ---Villages.
@@ -364,18 +340,10 @@ SELECT kods
   ,vkur_tips
   ,TRIM(regexp_replace(nosaukums, '\s+', ' ', 'g'))
   ,TRIM(regexp_replace(sort_nos, '\s+', ' ', 'g'))
-  ,CASE 
-    WHEN atrib LIKE ''
-      THEN NULL
-    ELSE atrib
-    END
+  ,atrib
   ,dat_sak::DATE
-  ,to_timestamp(dat_mod, 'dd.mm.yyyy HH24:MI:SS')::TIMESTAMP
-  ,CASE 
-    WHEN dat_beig LIKE ''
-      THEN NULL
-    ELSE dat_beig::DATE
-    END
+  ,dat_mod::DATE
+  ,dat_beig::DATE
 FROM vzd.aw_ciems;
 
 ---Cities and towns.
@@ -405,18 +373,10 @@ SELECT kods
   ,vkur_tips
   ,TRIM(regexp_replace(nosaukums, '\s+', ' ', 'g'))
   ,TRIM(regexp_replace(sort_nos, '\s+', ' ', 'g'))
-  ,CASE 
-    WHEN atrib LIKE ''
-      THEN NULL
-    ELSE atrib
-    END
+  ,atrib
   ,dat_sak::DATE
-  ,to_timestamp(dat_mod, 'dd.mm.yyyy HH24:MI:SS')::TIMESTAMP
-  ,CASE 
-    WHEN dat_beig LIKE ''
-      THEN NULL
-    ELSE dat_beig::DATE
-    END
+  ,dat_mod::DATE
+  ,dat_beig::DATE
 FROM vzd.aw_pilseta;
 
 ---Rural territories.
@@ -446,18 +406,10 @@ SELECT kods
   ,vkur_tips
   ,TRIM(regexp_replace(nosaukums, '\s+', ' ', 'g'))
   ,TRIM(regexp_replace(sort_nos, '\s+', ' ', 'g'))
-  ,CASE 
-    WHEN atrib LIKE ''
-      THEN NULL
-    ELSE atrib
-    END
+  ,atrib
   ,dat_sak::DATE
-  ,to_timestamp(dat_mod, 'dd.mm.yyyy HH24:MI:SS')::TIMESTAMP
-  ,CASE 
-    WHEN dat_beig LIKE ''
-      THEN NULL
-    ELSE dat_beig::DATE
-    END
+  ,dat_mod::DATE
+  ,dat_beig::DATE
 FROM vzd.aw_pagasts;
 
 ---Municipalities.
@@ -487,18 +439,10 @@ SELECT kods
   ,vkur_tips
   ,TRIM(regexp_replace(nosaukums, '\s+', ' ', 'g'))
   ,TRIM(regexp_replace(sort_nos, '\s+', ' ', 'g'))
-  ,CASE 
-    WHEN atrib LIKE ''
-      THEN NULL
-    ELSE atrib
-    END
+  ,atrib
   ,dat_sak::DATE
-  ,to_timestamp(dat_mod, 'dd.mm.yyyy HH24:MI:SS')::TIMESTAMP
-  ,CASE 
-    WHEN dat_beig LIKE ''
-      THEN NULL
-    ELSE dat_beig::DATE
-    END
+  ,dat_mod::DATE
+  ,dat_beig::DATE
 FROM vzd.aw_novads;
 
 ---Districts (until June 30 2009).
@@ -528,18 +472,10 @@ SELECT kods
   ,vkur_tips
   ,TRIM(regexp_replace(nosaukums, '\s+', ' ', 'g'))
   ,TRIM(regexp_replace(sort_nos, '\s+', ' ', 'g'))
-  ,CASE 
-    WHEN atrib LIKE ''
-      THEN NULL
-    ELSE atrib
-    END
+  ,atrib
   ,dat_sak::DATE
-  ,to_timestamp(dat_mod, 'dd.mm.yyyy HH24:MI:SS')::TIMESTAMP
-  ,CASE 
-    WHEN dat_beig LIKE ''
-      THEN NULL
-    ELSE dat_beig::DATE
-    END
+  ,dat_mod::DATE
+  ,dat_beig::DATE
 FROM vzd.aw_rajons;
 
 ---Administrative districts of Riga.
@@ -771,6 +707,9 @@ CREATE TABLE vzd.adreses_his (
   ,adr_cd_his INT
   ,tips_cd SMALLINT NOT NULL
   ,std TEXT
+  ,nosaukums TEXT
+  ,vkur_cd INT NOT NULL
+  ,vkur_tips SMALLINT NOT NULL
   ,dat_sak DATE NOT NULL
   ,dat_mod TIMESTAMP NOT NULL
   ,dat_beig DATE NULL
@@ -781,6 +720,9 @@ COMMENT ON COLUMN vzd.adreses_his.adr_cd IS 'Adresācijas objekta kods.';
 COMMENT ON COLUMN vzd.adreses_his.adr_cd_his IS 'Adresācijas objekta vēsturiskais kods (gadījumos, kad viena adrese bija lietota vairākiem objektiem).';
 COMMENT ON COLUMN vzd.adreses_his.tips_cd IS 'Adresācijas objekta tipa kods.';
 COMMENT ON COLUMN vzd.adreses_his.std IS 'Adresācijas objekta pilnais vēsturiskais adreses pieraksts.';
+COMMENT ON COLUMN vzd.adreses_his.nosaukums IS 'Adresācijas objekta vēsturiskais nosaukums.';
+COMMENT ON COLUMN vzd.adreses_his.vkur_cd IS 'Tā adresācijas objekta kods, kam hierarhiski pakļauts attiecīgais adresācijas objekts.';
+COMMENT ON COLUMN vzd.adreses_his.vkur_tips IS 'Tā adresācijas objekta tipa kods, kam hierarhiski pakļauts attiecīgais adresācijas objekts.';
 COMMENT ON COLUMN vzd.adreses_his.dat_sak IS 'Adresācijas objekta izveidošanas vai pirmreizējās reģistrācijas datums, ja nav zināms precīzs adresācijas objekta izveides datums.';
 COMMENT ON COLUMN vzd.adreses_his.dat_mod IS 'Datums un laiks, kad pēdējo reizi informācijas sistēmā tehniski modificēts ieraksts/dati par adresācijas objektu (piemēram, aktualizēts statuss, apstiprinājuma pakāpe, pievienots atribūts u.c.) vai mainīts pilnais adreses pieraksts.';
 COMMENT ON COLUMN vzd.adreses_his.dat_beig IS 'Adresācijas objekta likvidācijas datums.';
@@ -791,6 +733,9 @@ INSERT INTO vzd.adreses_his (
   adr_cd
   ,tips_cd
   ,std
+  ,nosaukums
+  ,vkur_cd
+  ,vkur_tips
   ,dat_sak
   ,dat_mod
   ,dat_beig
@@ -798,16 +743,15 @@ INSERT INTO vzd.adreses_his (
 SELECT kods
   ,tips_cd
   ,TRIM(regexp_replace(std, '\s+', ' ', 'g'))
+  ,nosaukums
+  ,vkur_cd
+  ,vkur_tips
   ,dat_sak::DATE
-  ,to_timestamp(dat_mod, 'dd.mm.yyyy HH24:MI:SS')::TIMESTAMP
-  ,CASE 
-    WHEN dat_beig LIKE ''
-      THEN NULL
-    ELSE dat_beig::DATE
-    END
+  ,dat_mod::DATE
+  ,dat_beig::DATE
 FROM vzd.aw_dziv_his
-WHERE to_timestamp(dat_mod, 'dd.mm.yyyy HH24:MI:SS')::TIMESTAMP > (
-    SELECT MAX(dat_mod)
+WHERE dat_mod::DATE > (
+    SELECT COALESCE(MAX(dat_mod), '1900-01-01')
     FROM vzd.adreses_his
     WHERE tips_cd = 109
     );
@@ -818,6 +762,9 @@ INSERT INTO vzd.adreses_his (
   ,adr_cd_his
   ,tips_cd
   ,std
+  ,nosaukums
+  ,vkur_cd
+  ,vkur_tips
   ,dat_sak
   ,dat_mod
   ,dat_beig
@@ -826,16 +773,15 @@ SELECT kods
   ,kods_his
   ,tips_cd
   ,TRIM(regexp_replace(std, '\s+', ' ', 'g'))
+  ,TRIM(regexp_replace(nosaukums, '\s+', ' ', 'g'))
+  ,vkur_cd
+  ,vkur_tips
   ,dat_sak::DATE
-  ,to_timestamp(dat_mod, 'dd.mm.yyyy HH24:MI:SS')::TIMESTAMP
-  ,CASE 
-    WHEN dat_beig LIKE ''
-      THEN NULL
-    ELSE dat_beig::DATE
-    END
+  ,dat_mod::DATE
+  ,dat_beig::DATE
 FROM vzd.aw_eka_his
-WHERE to_timestamp(dat_mod, 'dd.mm.yyyy HH24:MI:SS')::TIMESTAMP > (
-    SELECT MAX(dat_mod)
+WHERE dat_mod::DATE > (
+    SELECT COALESCE(MAX(dat_mod), '1900-01-01')
     FROM vzd.adreses_his
     WHERE tips_cd = 108
     );
@@ -845,6 +791,9 @@ INSERT INTO vzd.adreses_his (
   adr_cd
   ,tips_cd
   ,std
+  ,nosaukums
+  ,vkur_cd
+  ,vkur_tips
   ,dat_sak
   ,dat_mod
   ,dat_beig
@@ -852,16 +801,15 @@ INSERT INTO vzd.adreses_his (
 SELECT kods
   ,tips_cd
   ,TRIM(regexp_replace(std, '\s+', ' ', 'g'))
+  ,nosaukums
+  ,vkur_cd
+  ,vkur_tips
   ,dat_sak::DATE
-  ,to_timestamp(dat_mod, 'dd.mm.yyyy HH24:MI:SS')::TIMESTAMP
-  ,CASE 
-    WHEN dat_beig LIKE ''
-      THEN NULL
-    ELSE dat_beig::DATE
-    END
+  ,dat_mod::DATE
+  ,dat_beig::DATE
 FROM vzd.aw_iela_his
-WHERE to_timestamp(dat_mod, 'dd.mm.yyyy HH24:MI:SS')::TIMESTAMP > (
-    SELECT MAX(dat_mod)
+WHERE dat_mod::DATE > (
+    SELECT COALESCE(MAX(dat_mod), '1900-01-01')
     FROM vzd.adreses_his
     WHERE tips_cd = 107
     );
@@ -871,6 +819,9 @@ INSERT INTO vzd.adreses_his (
   adr_cd
   ,tips_cd
   ,std
+  ,nosaukums
+  ,vkur_cd
+  ,vkur_tips
   ,dat_sak
   ,dat_mod
   ,dat_beig
@@ -878,16 +829,15 @@ INSERT INTO vzd.adreses_his (
 SELECT kods
   ,tips_cd
   ,TRIM(regexp_replace(std, '\s+', ' ', 'g'))
+  ,nosaukums
+  ,vkur_cd
+  ,vkur_tips
   ,dat_sak::DATE
-  ,to_timestamp(dat_mod, 'dd.mm.yyyy HH24:MI:SS')::TIMESTAMP
-  ,CASE 
-    WHEN dat_beig LIKE ''
-      THEN NULL
-    ELSE dat_beig::DATE
-    END
+  ,dat_mod::DATE
+  ,dat_beig::DATE
 FROM vzd.aw_ciems_his
-WHERE to_timestamp(dat_mod, 'dd.mm.yyyy HH24:MI:SS')::TIMESTAMP > (
-    SELECT MAX(dat_mod)
+WHERE dat_mod::DATE > (
+    SELECT COALESCE(MAX(dat_mod), '1900-01-01')
     FROM vzd.adreses_his
     WHERE tips_cd = 106
     );
@@ -897,6 +847,9 @@ INSERT INTO vzd.adreses_his (
   adr_cd
   ,tips_cd
   ,std
+  ,nosaukums
+  ,vkur_cd
+  ,vkur_tips
   ,dat_sak
   ,dat_mod
   ,dat_beig
@@ -904,16 +857,15 @@ INSERT INTO vzd.adreses_his (
 SELECT kods
   ,tips_cd
   ,TRIM(regexp_replace(std, '\s+', ' ', 'g'))
+  ,nosaukums
+  ,vkur_cd
+  ,vkur_tips
   ,dat_sak::DATE
-  ,to_timestamp(dat_mod, 'dd.mm.yyyy HH24:MI:SS')::TIMESTAMP
-  ,CASE 
-    WHEN dat_beig LIKE ''
-      THEN NULL
-    ELSE dat_beig::DATE
-    END
+  ,dat_mod::DATE
+  ,dat_beig::DATE
 FROM vzd.aw_pilseta_his
-WHERE to_timestamp(dat_mod, 'dd.mm.yyyy HH24:MI:SS')::TIMESTAMP > (
-    SELECT MAX(dat_mod)
+WHERE dat_mod::DATE > (
+    SELECT COALESCE(MAX(dat_mod), '1900-01-01')
     FROM vzd.adreses_his
     WHERE tips_cd = 104
     );
@@ -923,6 +875,9 @@ INSERT INTO vzd.adreses_his (
   adr_cd
   ,tips_cd
   ,std
+  ,nosaukums
+  ,vkur_cd
+  ,vkur_tips
   ,dat_sak
   ,dat_mod
   ,dat_beig
@@ -930,16 +885,15 @@ INSERT INTO vzd.adreses_his (
 SELECT kods
   ,tips_cd
   ,TRIM(regexp_replace(std, '\s+', ' ', 'g'))
+  ,nosaukums
+  ,vkur_cd
+  ,vkur_tips
   ,dat_sak::DATE
-  ,to_timestamp(dat_mod, 'dd.mm.yyyy HH24:MI:SS')::TIMESTAMP
-  ,CASE 
-    WHEN dat_beig LIKE ''
-      THEN NULL
-    ELSE dat_beig::DATE
-    END
+  ,dat_mod::DATE
+  ,dat_beig::DATE
 FROM vzd.aw_pagasts_his
-WHERE to_timestamp(dat_mod, 'dd.mm.yyyy HH24:MI:SS')::TIMESTAMP > (
-    SELECT MAX(dat_mod)
+WHERE dat_mod::DATE > (
+    SELECT COALESCE(MAX(dat_mod), '1900-01-01')
     FROM vzd.adreses_his
     WHERE tips_cd = 105
     );
@@ -949,6 +903,9 @@ INSERT INTO vzd.adreses_his (
   adr_cd
   ,tips_cd
   ,std
+  ,nosaukums
+  ,vkur_cd
+  ,vkur_tips
   ,dat_sak
   ,dat_mod
   ,dat_beig
@@ -956,16 +913,15 @@ INSERT INTO vzd.adreses_his (
 SELECT kods
   ,tips_cd
   ,TRIM(regexp_replace(std, '\s+', ' ', 'g'))
+  ,nosaukums
+  ,vkur_cd
+  ,vkur_tips
   ,dat_sak::DATE
-  ,to_timestamp(dat_mod, 'dd.mm.yyyy HH24:MI:SS')::TIMESTAMP
-  ,CASE 
-    WHEN dat_beig LIKE ''
-      THEN NULL
-    ELSE dat_beig::DATE
-    END
+  ,dat_mod::DATE
+  ,dat_beig::DATE
 FROM vzd.aw_novads_his
-WHERE to_timestamp(dat_mod, 'dd.mm.yyyy HH24:MI:SS')::TIMESTAMP > (
-    SELECT MAX(dat_mod)
+WHERE dat_mod::DATE > (
+    SELECT COALESCE(MAX(dat_mod), '1900-01-01')
     FROM vzd.adreses_his
     WHERE tips_cd = 113
     );
