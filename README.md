@@ -78,9 +78,8 @@ Set up PostgreSQL database:
 3. Create database to store OSM data.
 
    ```sql
-   CREATE DATABASE osm;
-
-   ALTER DATABASE osm OWNER TO osm;
+   CREATE DATABASE osm
+     WITH OWNER = osm LC_COLLATE = 'lv_LV.UTF-8' LC_CTYPE = 'lv_LV.UTF-8' TEMPLATE template0;
 
    GRANT ALL
      ON DATABASE osm
