@@ -1,4 +1,8 @@
 #!/bin/bash
+
+# Stops the execution of the script in case of an error.
+set -e
+
 # Directory where data are stored locally.
 export DIRECTORY=
 # Password of PostgreSQL user osm.
@@ -33,6 +37,7 @@ rm Pagasti.*
 psql -h $IP_ADDRESS -p $PORT -U osm -d osm -w -c "CALL vzd.territorial_units()"
 
 ## Addresses (points).
+rm -rf aw_csv
 mkdir aw_csv
 cd aw_csv
 wget -q https://data.gov.lv/dati/dataset/6b06a7e8-dedf-4705-a47b-2a7c51177473/resource/0d3810f4-1ac0-4fba-8b10-0188084a361b/download/aw_ciems.csv
