@@ -11,7 +11,7 @@ Written for Ubuntu Server 24.04. Prerequisites that need to be additionally inst
 * [Osmium Tool](https://osmcode.org/osmium-tool/),
 * [oauth_cookie_client.py](https://github.com/geofabrik/sendfile_osm_oauth_protector/blob/master/oauth_cookie_client.py),
 * [upload.py](https://wiki.openstreetmap.org/wiki/Upload.py) (files used have been modified and placed in [upload.py directory](upload.py), except [osmapi.py](https://github.com/Zverik/osm-bulk-upload/blob/master/osmapi.py)),
-* text-based web browser to authenticate Upload.py for the first time (tested and works with elinks, after sending authorization request, exit manually by pressing `q`).
+* text-based web browser to authenticate Upload.py for the first time (tested and works with elinks, after sending authorization request, exit manually by pressing `q`). It is also possible to copy tokens.json file from another machine to $HOME/.config/PythonCliAuth.
 
 [tags_4_addresses.csv](tags_4_addresses.csv) - tags that allow object to have address tags.
 
@@ -148,7 +148,7 @@ Set up PostgreSQL database:
 
 2. [vzd_cadastre.sh](vzd_cadastre.sh) - download and import in the local PostgreSQL database open data of the State Land Service Cadastre Information System (set `DIRECTORY`, `PGPASSWORD`, `IP_ADDRESS` and `PORT` variables). Remove `.exe` if run under Linux. To be run weekly.
 
-3. [csp_vzd_borders_addresses.sh](csp_vzd_borders_addresses.sh) - download and import in the local PostgreSQL database open data of the Central Statistical Bureau of Latvia and the State Land Service (borders and address points) (set `DIRECTORY`, `PGPASSWORD`, `IP_ADDRESS` and `PORT` variables). To be run on working days.
+3. [csp_vzd_borders_addresses.sh](csp_vzd_borders_addresses.sh) - download and import in the local PostgreSQL database open data of the Central Statistical Bureau of Latvia and the State Land Service (borders and address points) (set `DIRECTORY`, `PGPASSWORD`, `IP_ADDRESS` and `PORT` variables). To be run from Tuesday till Saturday as data in the State Address Register are updated on working days only.
 
 ## OSM data update
 
