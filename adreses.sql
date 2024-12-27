@@ -696,6 +696,8 @@ COMMENT ON COLUMN vzd.adreses_ekas_sadalitas.std IS 'Adresācijas objekta pilnai
 
 COMMENT ON COLUMN vzd.adreses_ekas_sadalitas.geom IS 'Ģeometrija.';
 
+CREATE UNIQUE INDEX ON vzd.adreses_ekas_sadalitas (adr_cd);
+
 CREATE INDEX adreses_ekas_sadalitas_geom_idx ON vzd.adreses_ekas_sadalitas USING GIST (geom);
 
 --Historical notations of addresses.
