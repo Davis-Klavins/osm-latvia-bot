@@ -136,12 +136,18 @@ for num in `seq 1 $parts`; do
 done
 deactivate
 
+# Delete OsmChange (splitted parts) and comment files.
+rm *part*.osc
+rm *.comment
+rm *.diff.xml
+
 # Concatenate Zulip message text and ways_relations_del.csv contents into a variable.
 message="${text} $(cat ${file_path})"
 
 # Post message to OSM Latvija Zulip chat on ways and relations with missing tags that previously had only address tags for manual review.
 if ! [ -s $file_path ];then
     echo -e "No deleted ways and relations."
+    rm ways_relations_del.csv
     exit
 fi
 
@@ -153,8 +159,4 @@ curl -X POST https://osmlatvija.zulipchat.com/api/v1/messages \
 `    --data-urlencode topic="Deleted ways and relations by latvia-bot for review" `\
     --data-urlencode "${message}"
 
-# Delete OsmChange (splitted parts) and comment files and ways_relations_del.csv.
-rm *part*.osc
-rm *.comment
-rm *.diff.xml
 rm ways_relations_del.csv
