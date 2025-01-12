@@ -25,7 +25,7 @@ CREATE TABLE vzd.nivkis_buves_attr (
   ,"BuildingPregCount" SMALLINT
   ,"BuildingAcceptionYears" SMALLINT[]
   ,"BuildingExploitYear" SMALLINT
-  ,"BuildingDeprecation" SMALLINT
+  ,"BuildingDeprecation" TEXT
   ,"BuildingDepValDate" DATE
   ,"BuildingSurveyDate" DATE
   ,"NotForLandBook" BOOLEAN
@@ -115,7 +115,7 @@ SELECT DISTINCT (XPATH('/BuildingItemData/BuildingBasicData/BuildingCadastreNr/t
   ,(XPATH('/BuildingItemData/BuildingBasicData/BuildingPregCount/text()', "BuildingItemData")) [1]::TEXT::SMALLINT "BuildingPregCount"
   ,(XPATH('/BuildingItemData/BuildingBasicData/BuildingAcceptionYears/text()', "BuildingItemData")) [1]::TEXT "BuildingAcceptionYears"
   ,(XPATH('/BuildingItemData/BuildingBasicData/BuildingExploitYear/text()', "BuildingItemData")) [1]::TEXT::SMALLINT "BuildingExploitYear"
-  ,(XPATH('/BuildingItemData/BuildingBasicData/BuildingDeprecation/text()', "BuildingItemData")) [1]::TEXT::SMALLINT "BuildingDeprecation"
+  ,(XPATH('/BuildingItemData/BuildingBasicData/BuildingDeprecation/text()', "BuildingItemData")) [1]::TEXT "BuildingDeprecation"
   ,(XPATH('/BuildingItemData/BuildingBasicData/BuildingDepValDate/text()', "BuildingItemData")) [1]::TEXT::DATE "BuildingDepValDate"
   ,(XPATH('/BuildingItemData/BuildingBasicData/BuildingSurveyDate/text()', "BuildingItemData")) [1]::TEXT::DATE "BuildingSurveyDate"
   ,(XPATH('/BuildingItemData/BuildingBasicData/NotForLandBook/text()', "BuildingItemData")) [1]::TEXT "NotForLandBook"
