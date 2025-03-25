@@ -169,7 +169,7 @@ CREATE TABLE ways_old (
   ,nodes BIGINT []
   );
 
----Insert all ways in Latvia that have at least one tag containing "addr", except "addr:unit" and "operator:addr*".
+---Insert all ways in Latvia that have at least one tag containing "addr", except "addr:unit", "addr:floor" and "operator:addr*".
 INSERT INTO ways_old (
   id
   ,version
@@ -193,11 +193,12 @@ WHERE a.tags ?| (
     FROM tags
     WHERE tag LIKE '%addr%'
       AND tag NOT LIKE 'addr:unit'
+      AND tag NOT LIKE 'addr:floor'
       AND tag NOT LIKE 'operator:addr%'
     )
 ORDER BY id;
 
---Delete all tags in Latvia from ways containing "addr", except "addr:unit" and "operator:addr*".
+--Delete all tags in Latvia from ways containing "addr", except "addr:unit", "addr:floor" and "operator:addr*".
 WITH s
 AS (
   SELECT a.id
@@ -206,6 +207,7 @@ AS (
       FROM tags
       WHERE tag LIKE '%addr%'
         AND tag NOT LIKE 'addr:unit'
+        AND tag NOT LIKE 'addr:floor'
         AND tag NOT LIKE 'operator:addr%'
       ) tags
   FROM ways a
@@ -215,6 +217,7 @@ AS (
       FROM tags
       WHERE tag LIKE '%addr%'
         AND tag NOT LIKE 'addr:unit'
+        AND tag NOT LIKE 'addr:floor'
         AND tag NOT LIKE 'operator:addr%'
       )
   )
