@@ -34,7 +34,6 @@ import traceback
 import codecs
 import locale
 
-import locale, codecs
 locale.setlocale(locale.LC_ALL, "en_US.UTF-8")
 encoding = locale.getlocale()[1]
 sys.stdout = codecs.getwriter(encoding)(sys.stdout, errors = "replace")
