@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # vim: fileencoding=utf-8 encoding=utf-8 et sw=4
 
-# Modified by Dāvis Kļaviņš (https://github.com/Davis-Klavins) on April 19, 2025. Fixed change of attribute ref to id, duplicate importing of modules, converted to Python 3.
+# Modified by Dāvis Kļaviņš (https://github.com/Davis-Klavins) on April 21, 2025. Fixed change of attribute ref to id, duplicate importing of modules, converted to Python 3.
 
 # Copyright (C) 2009 Jacek Konieczny <jajcus@jajcus.net>
 # Copyright (C) 2009 Andrzej Zaborowski <balrogg@gmail.com>
@@ -36,8 +36,8 @@ import locale
 
 locale.setlocale(locale.LC_ALL, "en_US.UTF-8")
 encoding = locale.getlocale()[1]
-sys.stdout = codecs.getwriter(encoding)(sys.stdout, errors = "replace")
-sys.stderr = codecs.getwriter(encoding)(sys.stderr, errors = "replace")
+sys.stdout.reconfigure(encoding = encoding, errors = "replace")
+sys.stderr.reconfigure(encoding = encoding, errors = "replace")
 
 if len(sys.argv) < 2 or sys.argv[1] == "--help":
     print("Synopsis:", file=sys.stderr)
