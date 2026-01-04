@@ -94,7 +94,7 @@ WHERE a.tags ?| (
     )
 ORDER BY id;
 
---Delete all tags in Latvia from nodes containing "addr", except "addr:unit", "addr:door", "addr:flats", "addr:floor" and "operator:addr*".
+--Delete all tags in Latvia from nodes containing "addr", except "addr:unit", "addr:door", "addr:flats", "addr:floor", "operator:addr*", and "ref:LV:addr" if "place" = "hamlet" (see https://osmlatvija.zulipchat.com/#narrow/channel/358602-general/topic/VZD.20kodi.20OSM.20teritoriju.2Fadmin.20iedal.C4.ABjumiem).
 CREATE TEMPORARY TABLE nodes_ids AS
 SELECT a.id
   ,a.tags - (
@@ -106,6 +106,10 @@ SELECT a.id
       AND tag NOT LIKE 'addr:flats'
       AND tag NOT LIKE 'addr:floor'
       AND tag NOT LIKE 'operator:addr%'
+      AND NOT (
+        tag = 'ref:LV:addr'
+        AND a.tags @> '"place"=>"hamlet"'
+        )
     ) tags
 FROM nodes a
 INNER JOIN nodes_lv b ON a.id = b.id
@@ -198,7 +202,7 @@ WHERE a.tags ?| (
     )
 ORDER BY id;
 
---Delete all tags in Latvia from ways containing "addr", except "addr:unit", "addr:floor" and "operator:addr*".
+--Delete all tags in Latvia from ways containing "addr", except "addr:unit", "addr:floor", "operator:addr*", and "ref:LV:addr" if "place" = "hamlet" (see https://osmlatvija.zulipchat.com/#narrow/channel/358602-general/topic/VZD.20kodi.20OSM.20teritoriju.2Fadmin.20iedal.C4.ABjumiem).
 WITH s
 AS (
   SELECT a.id
@@ -209,6 +213,10 @@ AS (
         AND tag NOT LIKE 'addr:unit'
         AND tag NOT LIKE 'addr:floor'
         AND tag NOT LIKE 'operator:addr%'
+        AND NOT (
+          tag = 'ref:LV:addr'
+          AND a.tags @> '"place"=>"hamlet"'
+          )
       ) tags
   FROM ways a
   INNER JOIN ways_lv b ON a.id = b.id
@@ -293,7 +301,7 @@ WHERE a.tags ?| (
     )
 ORDER BY id;
 
---Delete all tags in Latvia from relations containing "addr", except "addr:region" and "operator:addr*".
+--Delete all tags in Latvia from relations containing "addr", except "addr:region", "operator:addr*", and "ref:LV:addr" if "admin_level" is used or "place" = "hamlet" (see https://osmlatvija.zulipchat.com/#narrow/channel/358602-general/topic/VZD.20kodi.20OSM.20teritoriju.2Fadmin.20iedal.C4.ABjumiem).
 WITH s
 AS (
   SELECT a.id
@@ -303,6 +311,13 @@ AS (
       WHERE tag LIKE '%addr%'
         AND tag NOT LIKE 'addr:region'
         AND tag NOT LIKE 'operator:addr%'
+        AND NOT (
+          tag = 'ref:LV:addr'
+          AND (
+            a.tags ? 'admin_level'
+            OR a.tags @> '"place"=>"hamlet"'
+            )
+          )
       ) tags
   FROM relations a
   INNER JOIN relations_lv b ON a.id = b.id
