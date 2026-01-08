@@ -152,7 +152,7 @@ Set up PostgreSQL database:
 
 ## OSM data update
 
-[osm.sh](osm.sh) - download, process and update OSM data of Latvia (set `DIRECTORY`, `PGPASSWORD`, `IP_ADDRESS` and `PORT` variables, [OSM user password](osm.sh#L19), [Zulip bot API key](osm.sh#L21), uncomment [line 30](https://github.com/Davis-Klavins/osm-latvia-bot/blob/main/osm.sh#L30) in production to use [tags_4_addresses.csv](tags_4_addresses.csv) from GitHub). To be run daily.
+[osm.sh](osm.sh) - download, process and update OSM data of Latvia (set `email`, `DIRECTORY`, `PGPASSWORD`, `IP_ADDRESS` and `PORT` variables, [OSM user password](osm.sh#L54), [Zulip bot API key](osm.sh#L56), uncomment [line 65](https://github.com/Davis-Klavins/osm-latvia-bot/blob/main/osm.sh#L65) in production to use [tags_4_addresses.csv](tags_4_addresses.csv) from GitHub). To be run daily.
 
 ## Optional
 

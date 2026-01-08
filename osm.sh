@@ -3,6 +3,41 @@
 # Stops the execution of the script in case of an error.
 set -e
 
+# Variables for log file and email sending.
+script_name=$(basename "$0")
+script_name_base="${script_name%.*}"
+logfile="/tmp/${script_name_base}_$(date +%s).log"
+email=""
+subject="$script_name failed on $(hostname)"
+
+# Save script output (stdout and stderr) to log file.
+exec > >(tee "$logfile") 2>&1
+
+error_occurred=false
+
+# Function to send email if script fails.
+on_error() {
+    error_occurred=true
+
+    {
+        echo -e "\n---\nScript failed at $(date +"%d.%m.%Y %H:%M:%S")."
+        echo -e "\nRAM usage at failure:"
+        free -h
+        echo -e "\nStorage usage at failure:"
+        df -h
+    } >> "$logfile"
+}
+
+send_email() {
+    if [[ "$error_occurred" == true ]]; then
+        mail -s "$subject" "$email" < "$logfile"
+        rm "$logfile"
+    fi
+}
+
+trap on_error ERR
+trap send_email EXIT
+
 # Directory where data are stored locally.
 export DIRECTORY=
 # Password of PostgreSQL user osm.
@@ -76,9 +111,11 @@ psql -h $IP_ADDRESS -p $PORT -U osm -d osm -w -c "CALL history.history()"
 wget -q -O latvia-latest-internal.osm.pbf -N --no-cookies --header "Cookie: $(cat cookie.txt | cut -d ';' -f 1)" https://osm-internal.download.geofabrik.de/europe/latvia-latest-internal.osm.pbf
 
 # Apply changes made after Geofabrik extract has been created.
+set +e
 osmupdate latvia-latest-internal.osm.pbf latvia-latest-internal-updated.o5m --base-url=http://download.openstreetmap.fr/replication/europe/minute/
 osmconvert latvia-latest-internal-updated.o5m -B=latvia.poly --complete-ways --complete-multipolygons --complete-boundaries -o=latvia-latest-internal.osm.pbf
-rm latvia-latest-internal-updated.o5m
+rm -f latvia-latest-internal-updated.o5m
+set -e
 
 # Execute PostgreSQL procedure that recreates tables and functions needed to maintain OSM data.
 psql -h $IP_ADDRESS -p $PORT -U osm -d osm -w -c "CALL pgsnapshot_schema()"
