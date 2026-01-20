@@ -397,10 +397,13 @@ AS (
   INNER JOIN way_geometry c ON b.member_id = c.way_id
   LEFT OUTER JOIN relation_members bi ON a.id = bi.relation_id
     AND bi.member_role LIKE 'inner'
+  LEFT OUTER JOIN way_geometry ci ON bi.member_id = ci.way_id
+    AND ST_GeometryType(ci.geom) = 'ST_LineString'
   WHERE tags ? 'building'
     AND b.member_role LIKE 'outer'
     AND ST_GeometryType(c.geom) = 'ST_LineString'
     AND bi.relation_id IS NULL
+    AND ci.way_id IS NULL
   GROUP BY a.id
   )
 SELECT id
@@ -1231,10 +1234,13 @@ AS (
   INNER JOIN way_geometry c ON b.member_id = c.way_id
   LEFT OUTER JOIN relation_members bi ON a.id = bi.relation_id
     AND bi.member_role LIKE 'inner'
+  LEFT OUTER JOIN way_geometry ci ON bi.member_id = ci.way_id
+    AND ST_GeometryType(ci.geom) = 'ST_LineString'
   INNER JOIN tags_4_addresses_relations t ON a.id = t.id
   WHERE b.member_role LIKE 'outer'
     AND ST_GeometryType(c.geom) = 'ST_LineString'
     AND bi.relation_id IS NULL
+    AND ci.way_id IS NULL
   GROUP BY a.id
   )
 SELECT id
