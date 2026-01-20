@@ -4,7 +4,7 @@ LANGUAGE 'plpgsql'
 
 AS $BODY$BEGIN
 
---Downloaded from https://github.com/openstreetmap/osmosis/blob/master/package/script/contrib/CreateGeometryForWays.sql, replaced Collect with ST_Collect, increased ST_NumPoints to 4 and excluded ways that have been clipped (don't have all nodes) during osmupdate with *.poly file.
+--Downloaded from https://github.com/openstreetmap/osmosis/blob/main/osmosis/src/dist/script/contrib/CreateGeometryForWays.sql, replaced Collect with ST_Collect, increased ST_NumPoints to 4 and excluded ways that have been clipped (don't have all nodes) during osmupdate with *.poly file.
 
 -------------------------------------------------------------------------------
 -- The following script creates a new table for the pgsql simple schema for storing full way geometries.
@@ -107,3 +107,4 @@ END;
 $BODY$;
 
 REVOKE ALL ON PROCEDURE way_geometry() FROM PUBLIC;
+
